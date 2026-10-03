@@ -34,6 +34,34 @@
 
 入口：搜索页标题右侧的麦克风按钮。
 
+### 桌面歌词小组件
+
+Android 桌面 4×1 小组件（AppWidget），把「正在播放」连同**逐行歌词**直接摆到桌面上，
+不用打开 App：
+
+| 区域 | 内容 |
+| --- | --- |
+| 左侧 | 专辑封面（异步下载，缩放到 128×128 后写入，按 URL 去重） |
+| 右侧上方 | 歌名（跑马灯）+ **当前歌词行**（单行跑马灯，自动横向滚动） |
+| 右侧中间 | 上一首 / 播放暂停 / 下一首，点击即可控制 |
+| 右侧底部 | 只读播放进度条 |
+
+几个值得说明的实现点：
+
+- **歌词跟着原生时间轴走**：每行切换由原生桌面歌词的 `onLyricLinePlay` 事件驱动
+  （原生层推进，比 JS 定时器可靠），因此小组件歌词与 App 内歌词、桌面歌词三者同步。
+- **没有歌词就降级**：没有歌词时歌词位回退显示歌手名，未播放时显示「未在播放」。
+- **状态可恢复**：歌名、歌手、歌词、进度都写入 `SharedPreferences`（`MusicWidgetPrefs`），
+  Launcher 重启或小组件重建后仍能显示上次的内容。
+- **点击按钮不会卡死**：按钮通过 `PendingIntent` 广播到 `AppWidgetProvider`，再由它转发成
+  `INTERNAL_*` 广播交给播放服务，并用独立事件名回传 JS，避免广播回环。
+
+两个性能取舍：歌词用 **full update**（部分 Launcher 对 partial update 处理不可靠），节流 200ms；
+进度条用 **partial update + `setProgressBar`**（属性更新开销小），节流 500ms —— 都是为了避开高频广播风暴。
+
+尺寸 `minWidth 250dp / minHeight 70dp`，仅支持横向拉伸（`resizeMode="horizontal"`），
+`updatePeriodMillis="0"` 表示不靠系统轮询刷新，全部由 App 主动推送。
+
 ### 其它
 
 - 播放历史（播放满 2 分钟或 50% 计入）
@@ -70,6 +98,12 @@ src/core/musicRecognition/      听歌识曲：采集、三引擎、结果合并
   afp.ts                        AFP 指纹桥（与隐藏 WebView 通信）
 src/components/MusicRecognition/ 识曲面板与隐藏 WebView
 android/app/src/main/assets/afp/ AFP 指纹资源（wasm），来源见该目录 README
+
+src/utils/nativeModules/musicWidget.ts       桌面歌词小组件的 RN 侧封装
+src/core/init/player/lyric.ts                歌词行 / 播放进度的推送时机
+android/app/src/main/java/.../widget/        小组件原生实现（Provider + RN 模块）
+android/app/src/main/res/layout/widget_music_4x1.xml   小组件布局
+android/app/src/main/res/xml/widget_music_info.xml     小组件元信息
 ```
 
 ## 免责声明
