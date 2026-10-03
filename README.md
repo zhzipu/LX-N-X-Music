@@ -90,6 +90,27 @@ cd android && ./gradlew assembleDebug
 adb install -r -d android/app/build/outputs/apk/debug/LX-N-X-Music-v1.0.0-arm64-v8a.apk
 ```
 
+### 正式版（release）
+
+正式版**不用**先跑 `npm run bundle-android` —— Gradle 会自动打 release 的 JS bundle
+并过一遍 Hermes 编译（`--dev false` + R8 压缩，产物大约只有 debug 的三分之一）。
+
+```bash
+cd android && ./gradlew assembleRelease
+# 产物 → android/app/build/outputs/apk/release/
+```
+
+两个必须知道的坑：
+
+1. **bundle 撞名**：只要跑过 `npm run bundle-android`，`android/app/src/main/assets/index.android.bundle`
+   就会存在；它会和 release 自动生成的 bundle 冲突。打正式版前先把它删掉或移到别处
+   （debug 编译前再 `npm run bundle-android` 放回去）。
+2. **需要签名材料**：`android/app/lxnx-release.keystore` 与 `android/keystore.properties`
+   —— 两者都在 `.gitignore` 里，需自行生成。字段格式见 `build.gradle` 的 `signingConfigs`
+   （`MYAPP_UPLOAD_STORE_FILE` / `_STORE_PASSWORD` / `_KEY_ALIAS` / `_KEY_PASSWORD`）。
+
+包名：正式版 `com.lxnx.music`，debug 版 `com.lxnx.music.dev` —— 两者可以同时装在一台机器上。
+
 ## 目录说明
 
 ```
