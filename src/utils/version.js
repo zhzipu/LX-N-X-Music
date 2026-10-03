@@ -8,7 +8,7 @@ const abis = ['arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86', 'universal']
 
 const address = [
   [
-    `https://raw.githubusercontent.com/${author.name}/${name}/master/publish/version.json`,
+    `https://raw.githubusercontent.com/${author.name}/${name}/main/publish/version.json`,
     'direct',
   ],
   // ['https://registry.npmjs.org/lx-music-mobile-version-info/latest', 'npm'],
