@@ -422,7 +422,7 @@ export default ({ onClose }: { onClose: () => void }) => {
             <View style={styles.debugBox}>
               {round ? (
                 <Text size={10} color={theme['c-font-label']} style={styles.debugText}>
-                  {`第 ${round.index}/${SUBMIT_AT_SECONDS.length} 轮 · 提交于 ${round.atSecond.toFixed(1)}s · 音频 ${round.audioSeconds.toFixed(1)}s${round.error ? ` · ${round.error}` : ''}`}
+                  {`第 ${round.index}/${SUBMIT_AT_SECONDS.length} 轮 · 提交于 ${round.atSecond.toFixed(1)}s · 音频 ${round.audioSeconds.toFixed(1)}s · 通道 ${round.engines.map((engine) => ENGINE_LABEL[engine]).join('/') || '无'}${round.error ? ` · ${round.error}` : ''}`}
                 </Text>
               ) : null}
               {captureStats ? (

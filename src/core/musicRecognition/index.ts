@@ -17,7 +17,7 @@
 import { recognizeByKugou } from './engines/kugou'
 import { recognizeByNetease } from './engines/netease'
 import { recognizeByShazam } from './engines/shazam'
-import { isAmbiguousRecognition, mergeResults, summarizeReports } from './decision'
+import { ENGINE_ORDER, isAmbiguousRecognition, mergeResults, summarizeReports } from './decision'
 import { RecognitionError } from './types'
 import type {
   EngineReport,
@@ -42,6 +42,20 @@ export {
 export { selectConsensusKey, isAmbiguousRecognition, mergeResults, ENGINE_ORDER } from './decision'
 export type { CaptureStats, CaptureResult } from './capture'
 export { searchRecognitionResult, buildSearchKeyword } from './search'
+
+/** 每个引擎的调用入口，集中一处，便于按需挑选要跑哪些引擎 */
+const ENGINE_RUNNERS: Record<
+  RecognitionEngine,
+  (
+    samples: Int16Array,
+    signal?: AbortSignal,
+    onDetail?: (text: string) => void
+  ) => Promise<RecognitionResult[]>
+> = {
+  shazam: (samples, signal, onDetail) => recognizeByShazam(samples, { signal, onDetail }),
+  netease: (samples, signal, onDetail) => recognizeByNetease(samples, { signal, onDetail }),
+  kugou: (samples, signal, onDetail) => recognizeByKugou(samples, { signal, onDetail }),
+}
 
 interface EngineTask {
   engine: RecognitionEngine
@@ -110,6 +124,11 @@ export const buildOutcome = (items: SettledEngine[]): RecognitionOutcome => {
 
 export interface RecognizeOptions {
   signal?: AbortSignal
+  /**
+   * 只跑这些引擎（顺序无关，结果仍按 `ENGINE_ORDER` 优先级排序）。
+   * 缺省跑全部三个。多轮会话用它把「已经出过结果的通道」排除在后续提交之外。
+   */
+  engines?: RecognitionEngine[]
   /** 每个引擎返回后的回调，用于在 UI 上逐个点亮结果 */
   onEngineDone?: (report: EngineReport, results: RecognitionResult[]) => void
   /**
@@ -126,26 +145,22 @@ export interface RecognizeOptions {
 /**
  * 对采集到的采样点做识别。采样点必须是 16kHz / 单声道 / s16le。
  * 各引擎并行执行，任一引擎失败不影响其它引擎。
+ *
+ * 默认跑全部三个引擎；传 `engines` 可以只跑其中一部分（多轮会话里
+ * 「已出结果的通道」不再参与后续提交，就是靠这个做到的）。
  */
 export const recognize = async (
   samples: Int16Array,
   options: RecognizeOptions = {}
 ): Promise<RecognitionOutcome> => {
-  const { signal, onEngineDone, onPartial } = options
-  const tasks: EngineTask[] = [
-    {
-      engine: 'shazam',
-      run: (taskSignal, onDetail) => recognizeByShazam(samples, { signal: taskSignal, onDetail }),
-    },
-    {
-      engine: 'netease',
-      run: (taskSignal, onDetail) => recognizeByNetease(samples, { signal: taskSignal, onDetail }),
-    },
-    {
-      engine: 'kugou',
-      run: (taskSignal, onDetail) => recognizeByKugou(samples, { signal: taskSignal, onDetail }),
-    },
-  ]
+  const { signal, onEngineDone, onPartial, engines } = options
+  const tasks: EngineTask[] = (engines ?? ENGINE_ORDER).map((engine) => ({
+    engine,
+    run: (taskSignal, onDetail) => ENGINE_RUNNERS[engine](samples, taskSignal, onDetail),
+  }))
+
+  // 一个引擎都没有（调用方已经没东西可提交了）：直接给空结果，别让它误判成「识别完成」
+  if (!tasks.length) return buildOutcome([])
 
   const settled: SettledEngine[] = []
   await Promise.all(

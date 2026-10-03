@@ -8,8 +8,12 @@
  * 结果按引擎累积：同一引擎后一轮命中会覆盖前一轮，没命中则保留已有结果 ——
  * 所以列表只会越补越全，不会因为某一轮失手就把已经识别到的歌抹掉。
  *
+ * **通道退场**：某个引擎一旦给出结果，结果就直接贴在列表上，该引擎**不再参与后续提交**
+ * （既省掉重复的网络请求，也避免同一通道的同一首歌在列表里反复刷新）。
+ * 只有还没出结果的引擎会继续在后面的轮次里被提交。
+ *
  * 结束条件（先满足先结束）：
- * 1. 某一轮跑完后三个引擎都已命中 —— 再录下去也不会带来新信息，立刻停录音；
+ * 1. 某一轮跑完后三个引擎都已给出结果 —— 没有可提交的通道了，立刻停录音；
  * 2. 跑到最后一个时间点，用完整音频提交后结束；
  * 3. 用户点「完成」—— 停录音并用完整音频补一轮（先等在跑的轮次跑完）。
  *
@@ -55,9 +59,11 @@ export interface RecognitionRound {
   last: boolean
   /** 该轮提交的音频时长（秒） */
   audioSeconds: number
+  /** 该轮实际提交的引擎（已出结果的通道不在此列） */
+  engines: RecognitionEngine[]
   /** 该轮耗时（毫秒） */
   durationMs: number
-  /** 该轮跑完后三个引擎是否都已命中 */
+  /** 该轮跑完后三个引擎是否都已给出结果 */
   allMatched: boolean
   /** 该轮没能正常跑完的原因（音频太短、录音已停等），排查用 */
   error?: string
@@ -125,8 +131,15 @@ export const createRecognitionSession = (
   const currentOutcome = (): RecognitionOutcome =>
     buildOutcome(ENGINE_ORDER.filter((engine) => slots.has(engine)).map((engine) => slots.get(engine)!))
 
-  const allMatched = (): boolean =>
-    ENGINE_ORDER.every((engine) => slots.get(engine)?.report.status === 'matched')
+  /**
+   * 还没给出结果的引擎。
+   * 已经出过结果的通道直接退场，不再参与后续提交。
+   */
+  const pendingEngines = (): RecognitionEngine[] =>
+    ENGINE_ORDER.filter((engine) => !slots.get(engine)?.results.length)
+
+  /** 三个通道都已给出结果 → 再录下去不会有新信息 */
+  const allMatched = (): boolean => pendingEngines().length === 0
 
   const stopTimer = () => {
     if (timer) {
@@ -187,6 +200,12 @@ export const createRecognitionSession = (
     // 否则 peek 会撞上已经释放的麦克风
     if (aborted || settled || (stopped && !last)) return
 
+    // 只把「还没给出结果的通道」送去提交；已经出结果的通道从此不再参与
+    const engines = pendingEngines()
+    // 没有可提交的通道：非收尾轮直接跳过，不必白读一次音频；
+    // 收尾轮仍要走完 —— 它负责把麦克风关掉
+    if (!engines.length && !last) return
+
     startedRounds += 1
     const index = startedRounds
     const beganAt = Date.now()
@@ -205,14 +224,19 @@ export const createRecognitionSession = (
         atSecond,
         last,
         audioSeconds,
+        engines,
         durationMs: 0,
         allMatched: false,
       })
 
-      if (audioSeconds < MIN_ROUND_SECONDS) {
+      if (!engines.length) {
+        error = '所有通道都已给出结果，本轮无通道可提交'
+      } else if (audioSeconds < MIN_ROUND_SECONDS) {
         error = `音频太短（${audioSeconds.toFixed(1)}s），跳过本轮`
       } else {
+        // 传 engines：已出结果的通道从一开始就不参与，不再产生重复请求
         await recognize(captured.samples, {
+          engines,
           onEngineDone: (report, results) => {
             applyEngine(report, results, index)
             if (!aborted) events.onUpdate(currentOutcome())
@@ -229,13 +253,14 @@ export const createRecognitionSession = (
         atSecond,
         last,
         audioSeconds,
+        engines,
         durationMs: Date.now() - beganAt,
         allMatched: allMatched(),
         error,
       })
 
       if (!aborted && !settled && !stopped && allMatched()) {
-        // 三个引擎都给到结果了，没必要继续录
+        // 三个通道都给到结果了，没必要继续录
         nextIndex = points.length
         stopped = true
         void capture
