@@ -18,14 +18,25 @@ import { createStyle, toast } from '@/utils/tools'
 import { useI18n } from '@/lang'
 import { BorderWidths } from '@/theme'
 import {
+  CAPTURE_SECONDS,
+  ENGINE_ORDER,
   MIN_CAPTURE_SECONDS,
+  SUBMIT_AT_SECONDS,
+  abortCapture,
+  finishCapture,
+  peekCapture,
+  startCapture,
   type CaptureStats,
   type EngineReport,
   type RecognitionEngine,
   type RecognitionOutcome,
   type RecognitionResult,
 } from '@/core/musicRecognition'
-import { CAPTURE_SECONDS, abortCapture, finishCapture, recognize, startCapture } from '@/core/musicRecognition'
+import {
+  createRecognitionSession,
+  type RecognitionRound,
+  type RecognitionSession,
+} from '@/core/musicRecognition/session'
 import { searchRecognitionResult } from '@/core/musicRecognition/search'
 import AfpHidden from './AfpHidden'
 
@@ -36,9 +47,6 @@ const ENGINE_LABEL: Record<RecognitionEngine, string> = {
   netease: '网易云',
   kugou: '酷狗',
 }
-
-/** 固定展示顺序：引擎按完成先后回调，chip 顺序若跟着回调走会来回跳 */
-const ENGINE_ORDER: RecognitionEngine[] = ['shazam', 'netease', 'kugou']
 
 /**
  * 引擎状态标签。`report` 为空 = 该引擎还在跑（识别中），
@@ -118,22 +126,15 @@ export default ({ onClose }: { onClose: () => void }) => {
   const [remaining, setRemaining] = useState(CAPTURE_SECONDS)
   const [outcome, setOutcome] = useState<RecognitionOutcome | null>(null)
   const [captureStats, setCaptureStats] = useState<CaptureStats | null>(null)
+  const [round, setRound] = useState<RecognitionRound | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
 
   const mountedRef = useRef(true)
-  const busyRef = useRef(false)
-  const deadlineRef = useRef(0)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const sessionRef = useRef<RecognitionSession | null>(null)
 
   const pulse = useRef(new Animated.Value(0)).current
+  const recording = stage === 'recording'
   const recognizing = stage === 'recognizing'
-
-  const clearTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-  }
 
   const handleSearch = useCallback(
     (result: RecognitionResult) => {
@@ -144,46 +145,18 @@ export default ({ onClose }: { onClose: () => void }) => {
     [onClose, t]
   )
 
-  /** 停止采集 → 跑所有引擎 */
-  const stopAndRecognize = useCallback(async () => {
-    if (busyRef.current) return
-    busyRef.current = true
-    clearTimer()
-    if (mountedRef.current) setStage('recognizing')
-
-    try {
-      const { samples, stats } = await finishCapture()
-      if (!mountedRef.current) return
-      setCaptureStats(stats)
-      // 整段全静音：没有任何识别价值，直接给「没听到声音」的提示，不发请求（也避免服务端做无谓的指纹计算）
-      if (stats.silent) {
-        setOutcome({ match: null, alternatives: [], ambiguous: false, reports: [] })
-        setStage('done')
-        return
-      }
-      // 先到先展示：任一引擎返回就刷新一次列表，后面的引擎返回后再并进来
-      const result = await recognize(samples, {
-        onPartial: (partial) => {
-          if (!mountedRef.current) return
-          setOutcome(partial)
-        },
-      })
-      if (!mountedRef.current) return
-      setOutcome(result)
-      setStage('done')
-    } catch (err: any) {
-      if (!mountedRef.current) return
-      setErrorMessage(err?.message ?? t('music_recognition_failed'))
-      setStage('error')
-    } finally {
-      busyRef.current = false
-    }
-  }, [t])
-
-  /** 开始一次采集，到点自动停止 */
+  /**
+   * 开始一次识别：录音不中断，到第 3/7/10/13 秒各自动提交一次，
+   * 任一平台先出结果就先展示，后续平台的结果再补进列表（细节见 core/session.ts）。
+   */
   const beginCapture = useCallback(async () => {
+    // 上一次会话可能还在（用户点「重新识别」），先把它连同麦克风一起收掉
+    sessionRef.current?.abort()
+    sessionRef.current = null
+
     setOutcome(null)
     setCaptureStats(null)
+    setRound(null)
     setErrorMessage('')
     setStage('starting')
     setRemaining(CAPTURE_SECONDS)
@@ -201,27 +174,49 @@ export default ({ onClose }: { onClose: () => void }) => {
       return
     }
 
-    setStage('recording')
-    deadlineRef.current = Date.now() + CAPTURE_SECONDS * 1000
-    clearTimer()
-    timerRef.current = setInterval(() => {
-      const left = Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000))
-      if (mountedRef.current) setRemaining(left)
-      if (left <= 0) {
-        clearTimer()
-        void stopAndRecognize()
+    const session = createRecognitionSession(
+      { peek: peekCapture, finish: finishCapture, abort: abortCapture },
+      {
+        onUpdate: (next) => {
+          if (mountedRef.current) setOutcome(next)
+        },
+        onStats: (captured, info) => {
+          if (!mountedRef.current) return
+          setRound(info)
+          // 整段全静音就没必要往下发请求了，但轮次会继续，UI 照常展示提示
+          setCaptureStats(captured.stats)
+        },
+        onRoundDone: (info) => {
+          if (!mountedRef.current) return
+          setRound(info)
+          if (info.allMatched) setRemaining(0)
+        },
+        onTick: (tick) => {
+          if (!mountedRef.current) return
+          setRemaining(Math.ceil(tick.remainingSeconds))
+          setStage(tick.recording ? 'recording' : tick.recognizing ? 'recognizing' : 'done')
+        },
+        onEnd: () => {
+          if (mountedRef.current) setStage('done')
+        },
       }
-    }, 250)
-  }, [stopAndRecognize, t])
+    )
+    sessionRef.current = session
+    setStage('recording')
+  }, [t])
 
   useEffect(() => {
     mountedRef.current = true
     void beginCapture()
     return () => {
       mountedRef.current = false
-      clearTimer()
       // 面板关闭时如果还在录音，必须把麦克风释放掉
-      void abortCapture()
+      if (sessionRef.current) {
+        sessionRef.current.abort()
+        sessionRef.current = null
+      } else {
+        void abortCapture()
+      }
     }
     // 只在挂载时启动一次
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -245,8 +240,13 @@ export default ({ onClose }: { onClose: () => void }) => {
   }, [pulse, stage])
 
   const handleClose = () => {
-    clearTimer()
-    if (stage === 'recording' || stage === 'starting') void abortCapture()
+    // 卸载时的 cleanup 也会兜底，这里先收一次，避免麦克风多占一会儿
+    if (sessionRef.current) {
+      sessionRef.current.abort()
+      sessionRef.current = null
+    } else {
+      void abortCapture()
+    }
     onClose()
   }
 
@@ -268,7 +268,9 @@ export default ({ onClose }: { onClose: () => void }) => {
       )
     }
 
-    if (stage === 'recording') {
+    // 录音中但还没有任何平台返回结果 → 显示麦克风动画与倒计时；
+    // 一旦有平台先出结果，就落到下面的结果列表，边展示边继续录
+    if (recording && !outcome?.match) {
       return (
         <View style={styles.center}>
           <View style={styles.micWrap}>
@@ -312,20 +314,18 @@ export default ({ onClose }: { onClose: () => void }) => {
       )
     }
 
-    // 识别中但还没有任何平台返回 → 先转圈；只要有平台先返回，
-    // 就落到下面的结果列表，边展示边等其它平台
-    if (stage === 'recognizing' && !outcome?.match) {
-      return (
-        <View style={styles.center}>
-          <Loading size={30} />
-          <Text size={15} style={styles.stateText}>
-            {t('music_recognition_recognizing')}
-          </Text>
-        </View>
-      )
-    }
-
     if (!outcome?.match) {
+      // 还没跑完 → 转圈等；确实结束了才报「没有识别到」
+      if (stage !== 'done') {
+        return (
+          <View style={styles.center}>
+            <Loading size={30} />
+            <Text size={15} style={styles.stateText}>
+              {t('music_recognition_recognizing')}
+            </Text>
+          </View>
+        )
+      }
       return (
         <View style={styles.center}>
           <Icon name="search-2" size={30} color={theme['c-font-label']} />
@@ -345,7 +345,7 @@ export default ({ onClose }: { onClose: () => void }) => {
 
     return (
       <ScrollView style={styles.resultScroll} keyboardShouldPersistTaps="always">
-        {/* 还在识别中就先不提「可能误识别」—— 更高优先级的引擎可能还没返回 */}
+        {/* 还在录 / 还在识别时先不提「可能误识别」—— 更高优先级的引擎可能还没返回 */}
         {outcome.ambiguous && stage === 'done' ? (
           <Text size={12} color={theme['c-font-label']} style={styles.ambiguousTip}>
             {t('music_recognition_ambiguous')}
@@ -363,11 +363,13 @@ export default ({ onClose }: { onClose: () => void }) => {
             ))}
           </>
         ) : null}
-        {stage === 'recognizing' ? (
+        {recording || recognizing ? (
           <View style={styles.pendingRow}>
             <Loading size={12} />
             <Text size={11} color={theme['c-font-label']} style={styles.pendingText}>
-              {t('music_recognition_partial_hint')}
+              {recording
+                ? t('music_recognition_recording_hint', { second: remaining })
+                : t('music_recognition_partial_hint')}
             </Text>
           </View>
         ) : null}
@@ -376,8 +378,8 @@ export default ({ onClose }: { onClose: () => void }) => {
   }
 
   const engineReports = outcome?.reports ?? []
-  // 识别中即使还没有引擎返回，也把三个 chip 摆出来（显示「识别中」）
-  const showEngineReports = stage === 'recognizing' || engineReports.length > 0
+  // 录音/识别期间即使还没有引擎返回，也把三个 chip 摆出来（显示「识别中」）
+  const showEngineReports = recording || recognizing || engineReports.length > 0
 
   return (
     <Modal
@@ -416,8 +418,13 @@ export default ({ onClose }: { onClose: () => void }) => {
           ) : null}
 
           {__DEV__ &&
-          (captureStats || engineReports.some((report) => report.detail || report.message)) ? (
+          (round || captureStats || engineReports.some((report) => report.detail || report.message)) ? (
             <View style={styles.debugBox}>
+              {round ? (
+                <Text size={10} color={theme['c-font-label']} style={styles.debugText}>
+                  {`第 ${round.index}/${SUBMIT_AT_SECONDS.length} 轮 · 提交于 ${round.atSecond.toFixed(1)}s · 音频 ${round.audioSeconds.toFixed(1)}s${round.error ? ` · ${round.error}` : ''}`}
+                </Text>
+              ) : null}
               {captureStats ? (
                 <Text size={10} color={theme['c-font-label']} style={styles.debugText}>
                   {`采集 ${captureStats.durationMs}ms / ${(captureStats.samples / 16000).toFixed(1)}s 音源=${captureStats.source} 峰值=${captureStats.peak}(原生${captureStats.nativePeak}) RMS=${captureStats.rms} 零占比=${(captureStats.zeroRatio * 100).toFixed(0)}%(最长${(captureStats.maxZeroRunMs / 1000).toFixed(1)}s) ${captureStats.silent ? '静音!' : captureStats.lowSignal ? '低信号!' : '有声'}`}
@@ -455,7 +462,8 @@ export default ({ onClose }: { onClose: () => void }) => {
                 }}
                 disabled={!canFinish}
                 onPress={() => {
-                  void stopAndRecognize()
+                  // 停录音 + 用完整音频再补一轮（等正在跑的轮次先跑完）
+                  sessionRef.current?.finishNow()
                 }}
               >
                 <Text size={14} color={theme['c-button-font-selected']}>
@@ -465,13 +473,12 @@ export default ({ onClose }: { onClose: () => void }) => {
             ) : (
               <TouchableOpacity
                 style={{ ...styles.primaryBtn, backgroundColor: theme['c-button-background'] }}
-                disabled={recognizing}
                 onPress={() => {
                   void beginCapture()
                 }}
               >
                 <Text size={14} color={theme['c-button-font']}>
-                  {recognizing ? t('music_recognition_recognizing') : t('music_recognition_retry')}
+                  {t('music_recognition_retry')}
                 </Text>
               </TouchableOpacity>
             )}

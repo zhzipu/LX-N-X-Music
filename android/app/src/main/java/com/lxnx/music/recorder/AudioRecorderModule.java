@@ -432,6 +432,45 @@ public class AudioRecorderModule extends ReactContextBaseJavaModule {
     }
   }
 
+  /**
+   * 读取「到目前为止」已采集的 PCM，**不停止录音**。
+   *
+   * 用于识曲的「边录边多次提交」：到第 3/7/10 秒时各取一份快照送去识别，麦克风继续录，
+   * 音频越攒越长，后面的轮次自然能拿到更完整的片段。
+   *
+   * 线程安全：ByteArrayOutputStream 的 write()/toByteArray() 都是 synchronized，
+   * 采集线程同时在写也不会读到半个样本；且不能持有 lock 去取（会和 stop() 抢锁）。
+   */
+  @ReactMethod
+  public void peek(Promise promise) {
+    ByteArrayOutputStream buffer;
+    synchronized (lock) {
+      buffer = pcmBuffer;
+      if (buffer == null) {
+        promise.reject("NOT_RECORDING", "当前没有进行中的录音");
+        return;
+      }
+    }
+
+    byte[] bytes = buffer.toByteArray();
+    WritableMap result = Arguments.createMap();
+    result.putString("base64", Base64.encodeToString(bytes, Base64.NO_WRAP));
+    result.putInt("sampleRate", sampleRate);
+    result.putInt("channels", 1);
+    result.putInt("bytes", bytes.length);
+    result.putDouble("duration", bytes.length / 2.0 / sampleRate * 1000);
+    result.putString("source", sourceName);
+    // 下面三项是诊断用的累计统计，跨线程读可能略有延迟，只用于排查，不作为判据
+    result.putInt("peak", peakAbs);
+    result.putDouble(
+      "rms",
+      sampleCount > 0 ? Math.sqrt((double) squareSum / sampleCount) : 0
+    );
+    result.putBoolean("silenceProbeFailed", silenceProbeFailed);
+    result.putString("probe", probeSummary);
+    promise.resolve(result);
+  }
+
   @ReactMethod
   public void isRecording(Promise promise) {
     promise.resolve(recording);

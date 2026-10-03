@@ -7,18 +7,31 @@
 import { PermissionsAndroid, Platform } from 'react-native'
 import {
   cancelRecording,
+  peekRecording,
   startRecording,
   stopRecording,
+  type RecordingStopResult,
 } from '@/utils/nativeModules/audioRecorder'
 import { base64ToBytes } from './vendor/base64'
 import { bytesToInt16 } from './utils'
 import { CapturePermissionError, CaptureTooShortError } from './types'
 
 export const CAPTURE_SAMPLE_RATE = 16000
-/** 单次采集时长：Shazam 指纹按 12 秒切分，超过 12 秒也无意义 */
-export const CAPTURE_SECONDS = 12
+/**
+ * 自动提交的时间点（秒）。到点就把「当前已录到的音频」送去识别一次，**录音不中断**，
+ * 所以越靠后的轮次拿到的是越完整的片段。
+ *
+ * 注意：网易云的 AFP matcher 只认固定 **6 秒**窗口（见 `afp.ts`），
+ * 所以 3 秒那一轮基本只有酷狗/Shazam 可能命中，网易云要到 7 秒那轮才有戏；
+ * Shazam 需要同一 track 至少两段印证，10 秒以下只会发一段请求，实际也要 10 秒那轮。
+ */
+export const SUBMIT_AT_SECONDS = [3, 7, 10, 13]
+/** 单次采集的最长时长：最后一个自动提交点之后停止录音 */
+export const CAPTURE_SECONDS = SUBMIT_AT_SECONDS[SUBMIT_AT_SECONDS.length - 1]
 /** 低于这个长度基本不可能识别成功，直接判失败 */
 export const MIN_CAPTURE_SECONDS = 3
+/** 单轮识别的音频太短就跳过（避免给引擎喂几百毫秒的碎片） */
+export const MIN_ROUND_SECONDS = 1
 
 /** 一次采集的体检数据，用来定位「采到静音」这类问题 */
 export interface CaptureStats {
@@ -127,14 +140,10 @@ const LOW_SIGNAL_ZERO_RATIO = 0.5
 /** 连续静音超过这个时长也认为不可用（哪怕整体占比不高） */
 const LOW_SIGNAL_ZERO_RUN_MS = 3000
 
-/** 停止采集并把 PCM 转成采样点，数据不足时抛错 */
-export const finishCapture = async (): Promise<CaptureResult> => {
-  const result = await stopRecording()
+/** 把原生返回的 PCM 组装成 `CaptureResult`（不含长度校验，peek 与 stop 共用） */
+const toCaptureResult = (result: RecordingStopResult): CaptureResult => {
   const decoded = base64ToBytes(result.base64 ?? '')
   const samples = bytesToInt16(decoded)
-  if (samples.length < MIN_CAPTURE_SECONDS * CAPTURE_SAMPLE_RATE) {
-    throw new CaptureTooShortError()
-  }
   const level = measureLevel(samples)
   const silent = level.peak === 0
   return {
@@ -157,6 +166,23 @@ export const finishCapture = async (): Promise<CaptureResult> => {
         (level.zeroRatio > LOW_SIGNAL_ZERO_RATIO || level.maxZeroRunMs > LOW_SIGNAL_ZERO_RUN_MS),
     },
   }
+}
+
+/** 停止采集并把 PCM 转成采样点，数据不足时抛错 */
+export const finishCapture = async (): Promise<CaptureResult> => {
+  const captured = toCaptureResult(await stopRecording())
+  if (captured.samples.length < MIN_CAPTURE_SECONDS * CAPTURE_SAMPLE_RATE) {
+    throw new CaptureTooShortError()
+  }
+  return captured
+}
+
+/**
+ * 读取当前已采集的音频，**不停止录音**（多轮提交时用）。
+ * 不做长度校验：拿到的就是「那一刻的进度」，长度够不够交给调用方判断。
+ */
+export const peekCapture = async (): Promise<CaptureResult> => {
+  return toCaptureResult(await peekRecording())
 }
 
 /** 主流程之外的中断（用户取消 / 页面离开） */

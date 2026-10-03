@@ -44,6 +44,12 @@ export const startRecording = (sampleRate: number): Promise<RecordingStartResult
 
 export const stopRecording = (): Promise<RecordingStopResult> => ensureModule().stop()
 
+/**
+ * 读取「到目前为止」已采集的音频，**不停止录音**。
+ * 返回结构与 `stopRecording` 一致，用于边录边多次提交识别。
+ */
+export const peekRecording = (): Promise<RecordingStopResult> => ensureModule().peek()
+
 export const cancelRecording = (): Promise<boolean> => ensureModule().cancel()
 
 export const isRecording = (): Promise<boolean> => ensureModule().isRecording()

@@ -25,7 +25,11 @@ export const selectConsensusKey = (keys: string[]): string | null => {
 export const isAmbiguousRecognition = (matchedEngines: RecognitionEngine[]): boolean =>
   !matchedEngines.includes('shazam')
 
-const DEFAULT_PRIORITY: RecognitionEngine[] = ['shazam', 'netease', 'kugou']
+/**
+ * 引擎优先级，越靠前越可信。**同时决定 UI 上引擎标签的展示顺序**，
+ * 所以只在这里定义一份，别在别处再抄一遍。
+ */
+export const ENGINE_ORDER: RecognitionEngine[] = ['netease', 'kugou', 'shazam']
 
 export interface MergeOptions {
   /** 引擎优先级，越靠前越可信 */
@@ -42,7 +46,7 @@ export const mergeResults = (
   groups: Array<{ engine: RecognitionEngine; results: RecognitionResult[] }>,
   options: MergeOptions = {}
 ): RecognitionResult[] => {
-  const { priority = DEFAULT_PRIORITY, limit = 8 } = options
+  const { priority = ENGINE_ORDER, limit = 8 } = options
   const rankOf = (engine: RecognitionEngine) => {
     const index = priority.indexOf(engine)
     return index < 0 ? priority.length : index

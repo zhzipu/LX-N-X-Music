@@ -30,13 +30,16 @@ export * from './types'
 export {
   startCapture,
   finishCapture,
+  peekCapture,
   abortCapture,
   ensureRecordPermission,
   CAPTURE_SECONDS,
   CAPTURE_SAMPLE_RATE,
   MIN_CAPTURE_SECONDS,
+  MIN_ROUND_SECONDS,
+  SUBMIT_AT_SECONDS,
 } from './capture'
-export { selectConsensusKey, isAmbiguousRecognition, mergeResults } from './decision'
+export { selectConsensusKey, isAmbiguousRecognition, mergeResults, ENGINE_ORDER } from './decision'
 export type { CaptureStats, CaptureResult } from './capture'
 export { searchRecognitionResult, buildSearchKeyword } from './search'
 
@@ -45,7 +48,7 @@ interface EngineTask {
   run: (signal?: AbortSignal, onDetail?: (text: string) => void) => Promise<RecognitionResult[]>
 }
 
-interface SettledEngine {
+export interface SettledEngine {
   engine: RecognitionEngine
   results: RecognitionResult[]
   report: EngineReport
@@ -89,8 +92,10 @@ const runEngine = async (
 /**
  * 用「已返回的引擎」算一次结果。
  * 增量场景下每个引擎返回都会调用一次，所以这里必须是纯函数、不能有副作用。
+ *
+ * `session.ts` 的多轮累积也复用它 —— 把「每个引擎的最新状态」当成一次结果即可。
  */
-const buildOutcome = (items: SettledEngine[]): RecognitionOutcome => {
+export const buildOutcome = (items: SettledEngine[]): RecognitionOutcome => {
   const merged = mergeResults(items.map((item) => ({ engine: item.engine, results: item.results })))
   const reports = items.map((item) => item.report)
   const { matched } = summarizeReports(reports)
