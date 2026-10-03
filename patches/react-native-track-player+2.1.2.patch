@@ -1,0 +1,964 @@
+diff --git a/node_modules/react-native-track-player/android/build/.transforms/153ca396aa1c892158c3cf3c8392080d/results.bin b/node_modules/react-native-track-player/android/build/.transforms/153ca396aa1c892158c3cf3c8392080d/results.bin
+new file mode 100644
+index 0000000..0d259dd
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/.transforms/153ca396aa1c892158c3cf3c8392080d/results.bin
+@@ -0,0 +1 @@
++o/classes
+diff --git a/node_modules/react-native-track-player/android/build/.transforms/153ca396aa1c892158c3cf3c8392080d/transformed/classes/classes_dex/classes.dex b/node_modules/react-native-track-player/android/build/.transforms/153ca396aa1c892158c3cf3c8392080d/transformed/classes/classes_dex/classes.dex
+new file mode 100644
+index 0000000..6704353
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/.transforms/153ca396aa1c892158c3cf3c8392080d/transformed/classes/classes_dex/classes.dex differ
+diff --git a/node_modules/react-native-track-player/android/build/generated/source/buildConfig/debug/com/guichaguri/trackplayer/BuildConfig.java b/node_modules/react-native-track-player/android/build/generated/source/buildConfig/debug/com/guichaguri/trackplayer/BuildConfig.java
+new file mode 100644
+index 0000000..7c5bdcc
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/generated/source/buildConfig/debug/com/guichaguri/trackplayer/BuildConfig.java
+@@ -0,0 +1,10 @@
++/**
++ * Automatically generated file. DO NOT MODIFY
++ */
++package com.guichaguri.trackplayer;
++
++public final class BuildConfig {
++  public static final boolean DEBUG = Boolean.parseBoolean("true");
++  public static final String LIBRARY_PACKAGE_NAME = "com.guichaguri.trackplayer";
++  public static final String BUILD_TYPE = "debug";
++}
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml b/node_modules/react-native-track-player/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+new file mode 100644
+index 0000000..7c0a1c5
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+@@ -0,0 +1,32 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="com.guichaguri.trackplayer" >
++
++    <uses-sdk android:minSdkVersion="21" />
++
++    <uses-permission android:name="android.permission.WAKE_LOCK" />
++    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
++
++    <application>
++
++        <!-- The main service, handles playback, playlists and media buttons -->
++        <service
++            android:name="com.guichaguri.trackplayer.service.MusicService"
++            android:enabled="true"
++            android:exported="true" >
++            <intent-filter>
++                <action android:name="android.intent.action.MEDIA_BUTTON" />
++            </intent-filter>
++        </service>
++
++        <!-- A receiver that will receive media buttons. Required on pre-lollipop devices -->
++        <receiver
++            android:name="androidx.media.session.MediaButtonReceiver"
++            android:exported="true" >
++            <intent-filter>
++                <action android:name="android.intent.action.MEDIA_BUTTON" />
++            </intent-filter>
++        </receiver>
++    </application>
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json b/node_modules/react-native-track-player/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+new file mode 100644
+index 0000000..9e610f2
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+@@ -0,0 +1,18 @@
++{
++  "version": 3,
++  "artifactType": {
++    "type": "AAPT_FRIENDLY_MERGED_MANIFESTS",
++    "kind": "Directory"
++  },
++  "applicationId": "com.guichaguri.trackplayer",
++  "variantName": "debug",
++  "elements": [
++    {
++      "type": "SINGLE",
++      "filters": [],
++      "attributes": [],
++      "outputFile": "AndroidManifest.xml"
++    }
++  ],
++  "elementType": "File"
++}
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar b/node_modules/react-native-track-player/android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar
+new file mode 100644
+index 0000000..76a84d5
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties b/node_modules/react-native-track-player/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+new file mode 100644
+index 0000000..1211b1e
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+@@ -0,0 +1,6 @@
++aarFormatVersion=1.0
++aarMetadataVersion=1.0
++minCompileSdk=1
++minCompileSdkExtension=0
++minAndroidGradlePluginVersion=1.0.0
++coreLibraryDesugaringEnabled=false
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json b/node_modules/react-native-track-player/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+new file mode 100644
+index 0000000..9e26dfe
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+@@ -0,0 +1 @@
++{}
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/annotations_typedef_file/debug/extractDebugAnnotations/typedefs.txt b/node_modules/react-native-track-player/android/build/intermediates/annotations_typedef_file/debug/extractDebugAnnotations/typedefs.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar b/node_modules/react-native-track-player/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar
+new file mode 100644
+index 0000000..c16178e
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar b/node_modules/react-native-track-player/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar
+new file mode 100644
+index 0000000..31f1f8a
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt b/node_modules/react-native-track-player/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt
+new file mode 100644
+index 0000000..cabb2a9
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt
+@@ -0,0 +1,7 @@
++int drawable forward 0x0
++int drawable next 0x0
++int drawable pause 0x0
++int drawable play 0x0
++int drawable previous 0x0
++int drawable rewind 0x0
++int drawable stop 0x0
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_forward.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_forward.png.flat
+new file mode 100644
+index 0000000..0b44495
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_forward.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_next.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_next.png.flat
+new file mode 100644
+index 0000000..c0bcd56
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_next.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_pause.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_pause.png.flat
+new file mode 100644
+index 0000000..669e28f
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_pause.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_play.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_play.png.flat
+new file mode 100644
+index 0000000..c232900
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_play.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_previous.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_previous.png.flat
+new file mode 100644
+index 0000000..81cc07d
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_previous.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_rewind.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_rewind.png.flat
+new file mode 100644
+index 0000000..b7dec75
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_rewind.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_stop.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_stop.png.flat
+new file mode 100644
+index 0000000..db1053c
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-hdpi-v4_stop.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_forward.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_forward.png.flat
+new file mode 100644
+index 0000000..3dcce55
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_forward.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_next.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_next.png.flat
+new file mode 100644
+index 0000000..af3d9e7
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_next.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_pause.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_pause.png.flat
+new file mode 100644
+index 0000000..73e8b0b
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_pause.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_play.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_play.png.flat
+new file mode 100644
+index 0000000..b5c3eb5
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_play.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_previous.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_previous.png.flat
+new file mode 100644
+index 0000000..817ac1e
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_previous.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_rewind.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_rewind.png.flat
+new file mode 100644
+index 0000000..a17f519
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_rewind.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_stop.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_stop.png.flat
+new file mode 100644
+index 0000000..95e8d59
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-mdpi-v4_stop.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_forward.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_forward.png.flat
+new file mode 100644
+index 0000000..de5fd8f
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_forward.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_next.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_next.png.flat
+new file mode 100644
+index 0000000..1f1a73d
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_next.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_pause.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_pause.png.flat
+new file mode 100644
+index 0000000..ea4fe34
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_pause.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_play.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_play.png.flat
+new file mode 100644
+index 0000000..bcc60c5
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_play.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_previous.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_previous.png.flat
+new file mode 100644
+index 0000000..8fd89c3
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_previous.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_rewind.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_rewind.png.flat
+new file mode 100644
+index 0000000..ce4eb06
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_rewind.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_stop.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_stop.png.flat
+new file mode 100644
+index 0000000..b3c4e92
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xhdpi-v4_stop.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_forward.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_forward.png.flat
+new file mode 100644
+index 0000000..b77dfaa
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_forward.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_next.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_next.png.flat
+new file mode 100644
+index 0000000..c7b765a
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_next.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_pause.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_pause.png.flat
+new file mode 100644
+index 0000000..a2f82a3
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_pause.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_play.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_play.png.flat
+new file mode 100644
+index 0000000..d4ddaa3
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_play.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_previous.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_previous.png.flat
+new file mode 100644
+index 0000000..7d9e8eb
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_previous.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_rewind.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_rewind.png.flat
+new file mode 100644
+index 0000000..5213276
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_rewind.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_stop.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_stop.png.flat
+new file mode 100644
+index 0000000..ed33e0b
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxhdpi-v4_stop.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_forward.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_forward.png.flat
+new file mode 100644
+index 0000000..b7fe6e3
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_forward.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_next.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_next.png.flat
+new file mode 100644
+index 0000000..3990e6f
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_next.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_pause.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_pause.png.flat
+new file mode 100644
+index 0000000..323a6ac
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_pause.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_play.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_play.png.flat
+new file mode 100644
+index 0000000..7da85ce
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_play.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_previous.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_previous.png.flat
+new file mode 100644
+index 0000000..143ad91
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_previous.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_rewind.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_rewind.png.flat
+new file mode 100644
+index 0000000..23ca215
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_rewind.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_stop.png.flat b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_stop.png.flat
+new file mode 100644
+index 0000000..f87da9c
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/compiled_local_resources/debug/compileDebugLibraryResources/out/drawable-xxxhdpi-v4_stop.png.flat differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/incremental/debug-mergeJavaRes/merge-state b/node_modules/react-native-track-player/android/build/intermediates/incremental/debug-mergeJavaRes/merge-state
+new file mode 100644
+index 0000000..1c983fc
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/incremental/debug-mergeJavaRes/merge-state differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties b/node_modules/react-native-track-player/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+new file mode 100644
+index 0000000..bee4505
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+@@ -0,0 +1,36 @@
++#Thu Aug 20 16:38:22 HKT 2026
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxhdpi/next.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxhdpi-v4\\next.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-hdpi/previous.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-hdpi-v4\\previous.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxhdpi/stop.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxhdpi-v4\\stop.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-hdpi/forward.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-hdpi-v4\\forward.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xhdpi/previous.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xhdpi-v4\\previous.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xhdpi/forward.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xhdpi-v4\\forward.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-mdpi/forward.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-mdpi-v4\\forward.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-hdpi/rewind.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-hdpi-v4\\rewind.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-mdpi/play.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-mdpi-v4\\play.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxxhdpi/rewind.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxxhdpi-v4\\rewind.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xhdpi/pause.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xhdpi-v4\\pause.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-mdpi/stop.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-mdpi-v4\\stop.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-mdpi/pause.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-mdpi-v4\\pause.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxhdpi/rewind.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxhdpi-v4\\rewind.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxxhdpi/stop.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxxhdpi-v4\\stop.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxxhdpi/next.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxxhdpi-v4\\next.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-mdpi/next.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-mdpi-v4\\next.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-hdpi/play.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-hdpi-v4\\play.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xhdpi/rewind.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xhdpi-v4\\rewind.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxxhdpi/previous.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxxhdpi-v4\\previous.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xhdpi/stop.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xhdpi-v4\\stop.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xhdpi/next.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xhdpi-v4\\next.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxxhdpi/pause.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxxhdpi-v4\\pause.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxhdpi/previous.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxhdpi-v4\\previous.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-hdpi/stop.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-hdpi-v4\\stop.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-hdpi/next.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-hdpi-v4\\next.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxxhdpi/forward.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxxhdpi-v4\\forward.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-hdpi/pause.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-hdpi-v4\\pause.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxhdpi/play.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxhdpi-v4\\play.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxxhdpi/play.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxxhdpi-v4\\play.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxhdpi/forward.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxhdpi-v4\\forward.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xxhdpi/pause.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xxhdpi-v4\\pause.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-mdpi/previous.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-mdpi-v4\\previous.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-xhdpi/play.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-xhdpi-v4\\play.png
++com.guichaguri.trackplayer.react-native-track-player-main-6\:/drawable-mdpi/rewind.png=D\:\\pycode\\lx-netease-music-mobile-main\\node_modules\\react-native-track-player\\android\\build\\intermediates\\packaged_res\\debug\\packageDebugResources\\drawable-mdpi-v4\\rewind.png
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml b/node_modules/react-native-track-player/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+new file mode 100644
+index 0000000..4677cd1
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res"><file name="forward" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-hdpi\forward.png" qualifiers="hdpi-v4" type="drawable"/><file name="next" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-hdpi\next.png" qualifiers="hdpi-v4" type="drawable"/><file name="pause" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-hdpi\pause.png" qualifiers="hdpi-v4" type="drawable"/><file name="play" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-hdpi\play.png" qualifiers="hdpi-v4" type="drawable"/><file name="previous" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-hdpi\previous.png" qualifiers="hdpi-v4" type="drawable"/><file name="rewind" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-hdpi\rewind.png" qualifiers="hdpi-v4" type="drawable"/><file name="stop" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-hdpi\stop.png" qualifiers="hdpi-v4" type="drawable"/><file name="forward" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-mdpi\forward.png" qualifiers="mdpi-v4" type="drawable"/><file name="next" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-mdpi\next.png" qualifiers="mdpi-v4" type="drawable"/><file name="pause" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-mdpi\pause.png" qualifiers="mdpi-v4" type="drawable"/><file name="play" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-mdpi\play.png" qualifiers="mdpi-v4" type="drawable"/><file name="previous" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-mdpi\previous.png" qualifiers="mdpi-v4" type="drawable"/><file name="rewind" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-mdpi\rewind.png" qualifiers="mdpi-v4" type="drawable"/><file name="stop" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-mdpi\stop.png" qualifiers="mdpi-v4" type="drawable"/><file name="forward" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xhdpi\forward.png" qualifiers="xhdpi-v4" type="drawable"/><file name="next" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xhdpi\next.png" qualifiers="xhdpi-v4" type="drawable"/><file name="pause" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xhdpi\pause.png" qualifiers="xhdpi-v4" type="drawable"/><file name="play" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xhdpi\play.png" qualifiers="xhdpi-v4" type="drawable"/><file name="previous" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xhdpi\previous.png" qualifiers="xhdpi-v4" type="drawable"/><file name="rewind" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xhdpi\rewind.png" qualifiers="xhdpi-v4" type="drawable"/><file name="stop" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xhdpi\stop.png" qualifiers="xhdpi-v4" type="drawable"/><file name="forward" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxhdpi\forward.png" qualifiers="xxhdpi-v4" type="drawable"/><file name="next" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxhdpi\next.png" qualifiers="xxhdpi-v4" type="drawable"/><file name="pause" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxhdpi\pause.png" qualifiers="xxhdpi-v4" type="drawable"/><file name="play" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxhdpi\play.png" qualifiers="xxhdpi-v4" type="drawable"/><file name="previous" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxhdpi\previous.png" qualifiers="xxhdpi-v4" type="drawable"/><file name="rewind" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxhdpi\rewind.png" qualifiers="xxhdpi-v4" type="drawable"/><file name="stop" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxhdpi\stop.png" qualifiers="xxhdpi-v4" type="drawable"/><file name="forward" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxxhdpi\forward.png" qualifiers="xxxhdpi-v4" type="drawable"/><file name="next" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxxhdpi\next.png" qualifiers="xxxhdpi-v4" type="drawable"/><file name="pause" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxxhdpi\pause.png" qualifiers="xxxhdpi-v4" type="drawable"/><file name="play" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxxhdpi\play.png" qualifiers="xxxhdpi-v4" type="drawable"/><file name="previous" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxxhdpi\previous.png" qualifiers="xxxhdpi-v4" type="drawable"/><file name="rewind" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxxhdpi\rewind.png" qualifiers="xxxhdpi-v4" type="drawable"/><file name="stop" path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\res\drawable-xxxhdpi\stop.png" qualifiers="xxxhdpi-v4" type="drawable"/></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\debug\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\debug\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\build\generated\res\resValues\debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\build\generated\res\resValues\debug"/></dataSet><mergedItems/></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml b/node_modules/react-native-track-player/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
+new file mode 100644
+index 0000000..4bd212e
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\jniLibs"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\debug\jniLibs"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/incremental/mergeDebugShaders/merger.xml b/node_modules/react-native-track-player/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
+new file mode 100644
+index 0000000..212324c
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\shaders"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\debug\shaders"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/incremental/packageDebugAssets/merger.xml b/node_modules/react-native-track-player/android/build/intermediates/incremental/packageDebugAssets/merger.xml
+new file mode 100644
+index 0000000..8f3b694
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/incremental/packageDebugAssets/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\assets"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\debug\assets"/></dataSet><dataSet config="generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\build\intermediates\shader_assets\debug\compileDebugShaders\out"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/BuildConfig.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/BuildConfig.class
+new file mode 100644
+index 0000000..47cdb57
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/BuildConfig.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/TrackPlayer.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/TrackPlayer.class
+new file mode 100644
+index 0000000..d32e5a6
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/TrackPlayer.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/module/MusicEvents.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/module/MusicEvents.class
+new file mode 100644
+index 0000000..63f66ec
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/module/MusicEvents.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/module/MusicModule.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/module/MusicModule.class
+new file mode 100644
+index 0000000..0bd721b
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/module/MusicModule.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/HeadlessJsTaskService$1.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/HeadlessJsTaskService$1.class
+new file mode 100644
+index 0000000..002f7f6
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/HeadlessJsTaskService$1.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/HeadlessJsTaskService.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/HeadlessJsTaskService.class
+new file mode 100644
+index 0000000..813daa9
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/HeadlessJsTaskService.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicBinder.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicBinder.class
+new file mode 100644
+index 0000000..cb8ec41
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicBinder.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicManager$1.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicManager$1.class
+new file mode 100644
+index 0000000..f2e72aa
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicManager$1.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicManager.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicManager.class
+new file mode 100644
+index 0000000..3a83bc6
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicManager.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicService.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicService.class
+new file mode 100644
+index 0000000..521c4f3
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/MusicService.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/Utils.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/Utils.class
+new file mode 100644
+index 0000000..c212a82
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/Utils.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/metadata/ButtonEvents.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/metadata/ButtonEvents.class
+new file mode 100644
+index 0000000..9b298de
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/metadata/ButtonEvents.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/metadata/MetadataManager$1.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/metadata/MetadataManager$1.class
+new file mode 100644
+index 0000000..91a14ae
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/metadata/MetadataManager$1.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/metadata/MetadataManager.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/metadata/MetadataManager.class
+new file mode 100644
+index 0000000..caea8a5
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/metadata/MetadataManager.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/NowPlayingMetadata.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/NowPlayingMetadata.class
+new file mode 100644
+index 0000000..9464b5f
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/NowPlayingMetadata.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/Track$1.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/Track$1.class
+new file mode 100644
+index 0000000..df134ae
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/Track$1.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/Track.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/Track.class
+new file mode 100644
+index 0000000..27e82e2
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/Track.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/TrackMetadata.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/TrackMetadata.class
+new file mode 100644
+index 0000000..e68c8fd
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/TrackMetadata.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/TrackType.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/TrackType.class
+new file mode 100644
+index 0000000..12ed959
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/models/TrackType.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/player/ExoPlayback.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/player/ExoPlayback.class
+new file mode 100644
+index 0000000..5c1bee6
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/player/ExoPlayback.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/player/LocalPlayback.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/player/LocalPlayback.class
+new file mode 100644
+index 0000000..7d1a93a
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/player/LocalPlayback.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/player/SourceMetadata.class b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/player/SourceMetadata.class
+new file mode 100644
+index 0000000..4904dd1
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/guichaguri/trackplayer/service/player/SourceMetadata.class differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt b/node_modules/react-native-track-player/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+new file mode 100644
+index 0000000..9b2fc1f
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+@@ -0,0 +1,9 @@
++R_DEF: Internal format may change without notice
++local
++drawable forward
++drawable next
++drawable pause
++drawable play
++drawable previous
++drawable rewind
++drawable stop
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt b/node_modules/react-native-track-player/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+new file mode 100644
+index 0000000..20008dd
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+@@ -0,0 +1,50 @@
++1<?xml version="1.0" encoding="utf-8"?>
++2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++3    package="com.guichaguri.trackplayer" >
++4
++5    <uses-sdk android:minSdkVersion="21" />
++6
++7    <uses-permission android:name="android.permission.WAKE_LOCK" />
++7-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:5:5-68
++7-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:5:22-65
++8    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
++8-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:6:5-77
++8-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:6:22-74
++9
++10    <application>
++10-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:8:5-24:19
++11
++12        <!-- The main service, handles playback, playlists and media buttons -->
++13        <service
++13-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:11:9-15:19
++14            android:name="com.guichaguri.trackplayer.service.MusicService"
++14-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:11:18-54
++15            android:enabled="true"
++15-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:11:55-77
++16            android:exported="true" >
++16-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:11:78-101
++17            <intent-filter>
++17-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:12:13-14:29
++18                <action android:name="android.intent.action.MEDIA_BUTTON" />
++18-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:13:17-77
++18-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:13:25-74
++19            </intent-filter>
++20        </service>
++21
++22        <!-- A receiver that will receive media buttons. Required on pre-lollipop devices -->
++23        <receiver
++23-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:18:9-22:20
++24            android:name="androidx.media.session.MediaButtonReceiver"
++24-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:18:19-76
++25            android:exported="true" >
++25-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:18:77-100
++26            <intent-filter>
++26-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:12:13-14:29
++27                <action android:name="android.intent.action.MEDIA_BUTTON" />
++27-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:13:17-77
++27-->D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:13:25-74
++28            </intent-filter>
++29        </receiver>
++30    </application>
++31
++32</manifest>
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/merged_consumer_proguard_file/debug/mergeDebugConsumerProguardFiles/proguard.txt b/node_modules/react-native-track-player/android/build/intermediates/merged_consumer_proguard_file/debug/mergeDebugConsumerProguardFiles/proguard.txt
+new file mode 100644
+index 0000000..c8feeda
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/merged_consumer_proguard_file/debug/mergeDebugConsumerProguardFiles/proguard.txt
+@@ -0,0 +1,3 @@
++
++# Ignore "not found" errors for libraries
++# -dontwarn com.google.android.exoplayer2.**
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/merged_java_res/debug/mergeDebugJavaResource/feature-react-native-track-player.jar b/node_modules/react-native-track-player/android/build/intermediates/merged_java_res/debug/mergeDebugJavaResource/feature-react-native-track-player.jar
+new file mode 100644
+index 0000000..15cb0ec
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/merged_java_res/debug/mergeDebugJavaResource/feature-react-native-track-player.jar differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml b/node_modules/react-native-track-player/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+new file mode 100644
+index 0000000..7c0a1c5
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+@@ -0,0 +1,32 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="com.guichaguri.trackplayer" >
++
++    <uses-sdk android:minSdkVersion="21" />
++
++    <uses-permission android:name="android.permission.WAKE_LOCK" />
++    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
++
++    <application>
++
++        <!-- The main service, handles playback, playlists and media buttons -->
++        <service
++            android:name="com.guichaguri.trackplayer.service.MusicService"
++            android:enabled="true"
++            android:exported="true" >
++            <intent-filter>
++                <action android:name="android.intent.action.MEDIA_BUTTON" />
++            </intent-filter>
++        </service>
++
++        <!-- A receiver that will receive media buttons. Required on pre-lollipop devices -->
++        <receiver
++            android:name="androidx.media.session.MediaButtonReceiver"
++            android:exported="true" >
++            <intent-filter>
++                <action android:name="android.intent.action.MEDIA_BUTTON" />
++            </intent-filter>
++        </receiver>
++    </application>
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json b/node_modules/react-native-track-player/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+new file mode 100644
+index 0000000..0637a08
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+@@ -0,0 +1 @@
++[]
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt b/node_modules/react-native-track-player/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+new file mode 100644
+index 0000000..08f4ebe
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+@@ -0,0 +1 @@
++0 Warning/Error
+\ No newline at end of file
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/forward.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/forward.png
+new file mode 100644
+index 0000000..5e63aa6
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/forward.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/next.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/next.png
+new file mode 100644
+index 0000000..044b6b0
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/next.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/pause.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/pause.png
+new file mode 100644
+index 0000000..4d2ea05
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/pause.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/play.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/play.png
+new file mode 100644
+index 0000000..57c9fa5
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/play.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/previous.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/previous.png
+new file mode 100644
+index 0000000..23faeeb
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/previous.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/rewind.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/rewind.png
+new file mode 100644
+index 0000000..5ef425a
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/rewind.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/stop.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/stop.png
+new file mode 100644
+index 0000000..dfff26c
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-hdpi-v4/stop.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/forward.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/forward.png
+new file mode 100644
+index 0000000..95876fa
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/forward.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/next.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/next.png
+new file mode 100644
+index 0000000..f9c60b7
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/next.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/pause.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/pause.png
+new file mode 100644
+index 0000000..2272d47
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/pause.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/play.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/play.png
+new file mode 100644
+index 0000000..c61e948
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/play.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/previous.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/previous.png
+new file mode 100644
+index 0000000..dac3640
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/previous.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/rewind.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/rewind.png
+new file mode 100644
+index 0000000..5a79970
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/rewind.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/stop.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/stop.png
+new file mode 100644
+index 0000000..b84d2f6
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-mdpi-v4/stop.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/forward.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/forward.png
+new file mode 100644
+index 0000000..f8791aa
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/forward.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/next.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/next.png
+new file mode 100644
+index 0000000..e722d10
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/next.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/pause.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/pause.png
+new file mode 100644
+index 0000000..f49aed7
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/pause.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/play.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/play.png
+new file mode 100644
+index 0000000..a3c80e7
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/play.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/previous.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/previous.png
+new file mode 100644
+index 0000000..01dd12b
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/previous.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/rewind.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/rewind.png
+new file mode 100644
+index 0000000..3b41913
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/rewind.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/stop.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/stop.png
+new file mode 100644
+index 0000000..3ad2c9c
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xhdpi-v4/stop.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/forward.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/forward.png
+new file mode 100644
+index 0000000..b139a7d
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/forward.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/next.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/next.png
+new file mode 100644
+index 0000000..3ee6d75
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/next.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/pause.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/pause.png
+new file mode 100644
+index 0000000..7192ad4
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/pause.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/play.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/play.png
+new file mode 100644
+index 0000000..547ef30
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/play.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/previous.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/previous.png
+new file mode 100644
+index 0000000..1181ec9
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/previous.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/rewind.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/rewind.png
+new file mode 100644
+index 0000000..fcddcf0
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/rewind.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/stop.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/stop.png
+new file mode 100644
+index 0000000..801d341
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxhdpi-v4/stop.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/forward.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/forward.png
+new file mode 100644
+index 0000000..62f2c20
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/forward.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/next.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/next.png
+new file mode 100644
+index 0000000..19c4929
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/next.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/pause.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/pause.png
+new file mode 100644
+index 0000000..660ac65
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/pause.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/play.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/play.png
+new file mode 100644
+index 0000000..be5c062
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/play.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/previous.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/previous.png
+new file mode 100644
+index 0000000..f9186c0
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/previous.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/rewind.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/rewind.png
+new file mode 100644
+index 0000000..1573fb1
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/rewind.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/stop.png b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/stop.png
+new file mode 100644
+index 0000000..5239336
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/packaged_res/debug/packageDebugResources/drawable-xxxhdpi-v4/stop.png differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar b/node_modules/react-native-track-player/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar
+new file mode 100644
+index 0000000..692a5db
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar differ
+diff --git a/node_modules/react-native-track-player/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt b/node_modules/react-native-track-player/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+new file mode 100644
+index 0000000..36fbf3f
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+@@ -0,0 +1,8 @@
++com.guichaguri.trackplayer
++drawable forward
++drawable next
++drawable pause
++drawable play
++drawable previous
++drawable rewind
++drawable stop
+diff --git a/node_modules/react-native-track-player/android/build/outputs/aar/react-native-track-player-debug.aar b/node_modules/react-native-track-player/android/build/outputs/aar/react-native-track-player-debug.aar
+new file mode 100644
+index 0000000..4ef2885
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/outputs/aar/react-native-track-player-debug.aar differ
+diff --git a/node_modules/react-native-track-player/android/build/outputs/logs/manifest-merger-debug-report.txt b/node_modules/react-native-track-player/android/build/outputs/logs/manifest-merger-debug-report.txt
+new file mode 100644
+index 0000000..59be000
+--- /dev/null
++++ b/node_modules/react-native-track-player/android/build/outputs/logs/manifest-merger-debug-report.txt
+@@ -0,0 +1,46 @@
++-- Merging decision tree log ---
++manifest
++ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:2:1-26:12
++INJECTED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:2:1-26:12
++	package
++		INJECTED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml
++	xmlns:android
++		ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:2:11-69
++uses-permission#android.permission.WAKE_LOCK
++ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:5:5-68
++	android:name
++		ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:5:22-65
++uses-permission#android.permission.FOREGROUND_SERVICE
++ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:6:5-77
++	android:name
++		ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:6:22-74
++application
++ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:8:5-24:19
++service#com.guichaguri.trackplayer.service.MusicService
++ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:11:9-15:19
++	android:enabled
++		ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:11:55-77
++	android:exported
++		ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:11:78-101
++	android:name
++		ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:11:18-54
++intent-filter#action:name:android.intent.action.MEDIA_BUTTON
++ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:12:13-14:29
++action#android.intent.action.MEDIA_BUTTON
++ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:13:17-77
++	android:name
++		ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:13:25-74
++receiver#androidx.media.session.MediaButtonReceiver
++ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:18:9-22:20
++	android:exported
++		ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:18:77-100
++	android:name
++		ADDED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml:18:19-76
++uses-sdk
++INJECTED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml reason: use-sdk injection requested
++INJECTED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml
++INJECTED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml
++	android:targetSdkVersion
++		INJECTED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml
++	android:minSdkVersion
++		INJECTED from D:\pycode\lx-netease-music-mobile-main\node_modules\react-native-track-player\android\src\main\AndroidManifest.xml
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/ButtonEvents.class.uniqueId0 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/ButtonEvents.class.uniqueId0
+new file mode 100644
+index 0000000..9b298de
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/ButtonEvents.class.uniqueId0 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/ExoPlayback.class.uniqueId6 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/ExoPlayback.class.uniqueId6
+new file mode 100644
+index 0000000..4c94a30
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/ExoPlayback.class.uniqueId6 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/LocalPlayback.class.uniqueId7 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/LocalPlayback.class.uniqueId7
+new file mode 100644
+index 0000000..7d1a93a
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/LocalPlayback.class.uniqueId7 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MetadataManager$1.class.uniqueId11 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MetadataManager$1.class.uniqueId11
+new file mode 100644
+index 0000000..91a14ae
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MetadataManager$1.class.uniqueId11 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MetadataManager.class.uniqueId13 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MetadataManager.class.uniqueId13
+new file mode 100644
+index 0000000..caea8a5
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MetadataManager.class.uniqueId13 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicBinder.class.uniqueId12 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicBinder.class.uniqueId12
+new file mode 100644
+index 0000000..cb8ec41
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicBinder.class.uniqueId12 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicManager$1.class.uniqueId1 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicManager$1.class.uniqueId1
+new file mode 100644
+index 0000000..f2e72aa
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicManager$1.class.uniqueId1 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicManager.class.uniqueId4 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicManager.class.uniqueId4
+new file mode 100644
+index 0000000..3a83bc6
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicManager.class.uniqueId4 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicModule.class.uniqueId2 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicModule.class.uniqueId2
+new file mode 100644
+index 0000000..391406a
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicModule.class.uniqueId2 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicService.class.uniqueId5 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicService.class.uniqueId5
+new file mode 100644
+index 0000000..521c4f3
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/MusicService.class.uniqueId5 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/SourceMetadata.class.uniqueId8 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/SourceMetadata.class.uniqueId8
+new file mode 100644
+index 0000000..4904dd1
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/SourceMetadata.class.uniqueId8 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/Track$1.class.uniqueId9 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/Track$1.class.uniqueId9
+new file mode 100644
+index 0000000..df134ae
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/Track$1.class.uniqueId9 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/Track.class.uniqueId3 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/Track.class.uniqueId3
+new file mode 100644
+index 0000000..27e82e2
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/Track.class.uniqueId3 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/TrackPlayer.class.uniqueId10 b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/TrackPlayer.class.uniqueId10
+new file mode 100644
+index 0000000..d32e5a6
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/compileTransaction/stash-dir/TrackPlayer.class.uniqueId10 differ
+diff --git a/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin
+new file mode 100644
+index 0000000..f677368
+Binary files /dev/null and b/node_modules/react-native-track-player/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin differ
+diff --git a/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/module/MusicModule.java b/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/module/MusicModule.java
+index dba2794..83caed9 100644
+--- a/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/module/MusicModule.java
++++ b/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/module/MusicModule.java
+@@ -429,6 +429,58 @@ public class MusicModule extends ReactContextBaseJavaModule implements ServiceCo
+         waitForConnection(() -> callback.resolve(binder.getPlayback().getRate()));
+     }
+ 
++    // ====== AudioVisualizer 专用：暴露 ExoPlayer 的 audioSessionId ======
++    // 通过 binder → getPlayback() → Player.getAudioSessionId() 拿本 app 自己的 audio session，
++    // 用于 Visualizer(sessionId) 绑定时频分析，不走麦克风、不抓系统混音。
++    @ReactMethod
++    public void getAudioSessionId(final Promise callback) {
++        try {
++            waitForConnection(() -> {
++                try {
++                    Object player = binder.getPlayback().getPlayer();
++                    if (player == null) { callback.resolve(-1); return; }
++                    // 优先走 Player.getAudioSessionId()（media3 之后版本可能直接加到此接口上）
++                    // 否则反射从 ExoPlayer / ForwardingPlayer 等具体实现上挖方法
++                    int id = -1;
++                    Class<?> c = player.getClass();
++                    // 1) 直接调用方法名
++                    try {
++                        java.lang.reflect.Method m = null;
++                        for (java.lang.reflect.Method cand : c.getMethods()) {
++                            if ("getAudioSessionId".equals(cand.getName())
++                                    && cand.getParameterCount() == 0) {
++                                m = cand; break;
++                            }
++                        }
++                        if (m != null) {
++                            m.setAccessible(true);
++                            Object r = m.invoke(player);
++                            if (r instanceof Integer) id = (Integer) r;
++                        }
++                    } catch (Throwable ignored) { id = -1; }
++                    // 2) 兜底读字段
++                    if (id <= 0) {
++                        Class<?> cc = player.getClass();
++                        while (cc != null && id <= 0) {
++                            try {
++                                java.lang.reflect.Field f = cc.getDeclaredField("audioSessionId");
++                                f.setAccessible(true);
++                                Object r = f.get(player);
++                                if (r instanceof Integer) id = (Integer) r;
++                            } catch (Throwable ignored) {}
++                            cc = cc.getSuperclass();
++                        }
++                    }
++                    callback.resolve(id > 0 ? id : -1);
++                } catch (Throwable t) {
++                    callback.resolve(-1);
++                }
++            });
++        } catch (Throwable t) {
++            callback.resolve(-1);
++        }
++    }
++
+     @ReactMethod
+     public void setRepeatMode(int mode, final Promise callback) {
+         waitForConnection(() -> {
+diff --git a/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/service/metadata/MetadataManager.java b/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/service/metadata/MetadataManager.java
+index 852b89f..689a90b 100644
+--- a/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/service/metadata/MetadataManager.java
++++ b/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/service/metadata/MetadataManager.java
+@@ -74,7 +74,7 @@ public class MetadataManager {
+         this.manager = manager;
+ 
+         String channel = Utils.getNotificationChannel(service);
+-        this.builder = new NotificationCompat.Builder(service, channel);
++        this.builder = new NotificationCompat.Builder(service, channel).setShowWhen(false).setColorized(false);
+         this.session = new MediaSessionCompat(service, "TrackPlayer", null, null);
+ 
+         session.setFlags(MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS);
+@@ -288,8 +288,8 @@ public class MetadataManager {
+ 
+         // Adds the media buttons to the notification
+ 
+-        addAction(previousAction, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS, compact);
+         addAction(rewindAction, PlaybackStateCompat.ACTION_REWIND, compact);
++        addAction(previousAction, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS, compact);
+ 
+         if(playing) {
+             addAction(pauseAction, PlaybackStateCompat.ACTION_PAUSE, compact);
+diff --git a/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/service/player/ExoPlayback.java b/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/service/player/ExoPlayback.java
+index ba1342b..d918f02 100644
+--- a/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/service/player/ExoPlayback.java
++++ b/node_modules/react-native-track-player/android/src/main/java/com/guichaguri/trackplayer/service/player/ExoPlayback.java
+@@ -239,6 +239,11 @@ public abstract class ExoPlayback<T extends Player> implements Player.Listener,
+         return player.getPlaybackParameters().speed;
+     }
+ 
++    /** AudioVisualizer 专用：获取底层 Player（通常是 ExoPlayer），用于拿 audioSessionId */
++    public T getPlayer() {
++        return player;
++    }
++
+     public void setRate(float rate) {
+         player.setPlaybackParameters(new PlaybackParameters(rate, player.getPlaybackParameters().pitch));
+     }

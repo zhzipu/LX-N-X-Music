@@ -1,0 +1,55 @@
+// 本机 maven 镜像注入 + react-android 仓库改道（仅构建时通过 -I 加载，不参与常规构建）
+// 用法：cd android && ./gradlew assembleDebug -I init-mirrors.gradle
+//
+// 背景
+//   1) Maven Central 对 com.facebook.react:react-android 的 .aar 会返回 301，
+//      跳转到 https://repo.reactnative.dev/maven2/...（.pom / .module 却是直接 200）。
+//   2) 本机存在 Wintun/VPN 隧道，repo.reactnative.dev 的 DNS 解析偶发失败，
+//      aar 下载会直接报「不知道这样的主机」，导致各子模块 compileDebugJavaWithJavac 全挂。
+//   3) 阿里云 central 镜像直接提供同一份 aar（HTTP 200，Content-Length 与源站一致），不跳转。
+//
+// 做法
+//   - 把阿里云镜像加到 pluginManagement / dependencyResolutionManagement / 各项目 repositories。
+//   - 把 com.facebook.react 组从 mavenCentral 的内容过滤里**排除**，
+//     使该组的 .pom/.module/.aar 全部由阿里云镜像解析，彻底绕开 301 跳转。
+//     只排除这一个组，其余依赖仍按原顺序走 mavenCentral/google()。
+
+def aliyunCentral = 'https://maven.aliyun.com/repository/central'
+def aliyunGoogle = 'https://maven.aliyun.com/repository/google'
+def aliyunPublic = 'https://maven.aliyun.com/repository/public'
+def aliyunGradlePlugin = 'https://maven.aliyun.com/repository/gradle-plugin'
+
+def addAliyun = { handler ->
+    handler.maven { url = aliyunCentral }
+    handler.maven { url = aliyunGoogle }
+    handler.maven { url = aliyunPublic }
+    handler.maven { url = aliyunGradlePlugin }
+}
+
+// 只把 com.facebook.react 从 Maven Central 摘出去，别的一组不动
+def rerouteReactGroup = { repo ->
+    def repoUrl = repo.url?.toString() ?: ''
+    if (repoUrl.contains('repo.maven.apache.org') || repoUrl.contains('repo1.maven.org')) {
+        repo.content { it.excludeGroupByRegex('com\\.facebook\\.react(\\..*)?') }
+    }
+}
+
+gradle.settingsEvaluated { settings ->
+    addAliyun(settings.pluginManagement.repositories)
+    addAliyun(settings.dependencyResolutionManagement.repositories)
+}
+
+gradle.beforeProject { project ->
+    addAliyun(project.buildscript.repositories)
+    addAliyun(project.repositories)
+
+    // 懒配置：RN Gradle 插件稍后会往各项目加 mavenCentral()，这里保证也被改道
+    project.repositories.withType(org.gradle.api.artifacts.repositories.MavenArtifactRepository).configureEach {
+        rerouteReactGroup(it)
+    }
+    project.afterEvaluate {
+        project.repositories.withType(org.gradle.api.artifacts.repositories.MavenArtifactRepository).all {
+            rerouteReactGroup(it)
+        }
+    }
+}

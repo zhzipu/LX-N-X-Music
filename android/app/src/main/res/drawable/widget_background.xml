@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 毛玻璃液态玻璃效果（通用版本，所有 Android 可用）：
+     多层半透明白色 + 细描边 + 顶部高光渐变叠加，模拟毛玻璃（磨砂玻璃）质感。
+     Android 12+ 启动器（MuMu 12 内核支持）：如果用户开启了壁纸模糊，
+     半透明背景会被 launcher 叠加实时模糊效果，效果更接近真毛玻璃。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 底层：低透明度黑色打底，保证亮桌面上文字仍可读 -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <solid android:color="#0A000000" />
+        </shape>
+    </item>
+
+    <!-- 中层：主要半透明白色磨砂底 -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <solid android:color="#2BFFFFFF" />
+        </shape>
+    </item>
+
+    <!-- 顶层：顶部高光渐变（液态玻璃反射光效果） -->
+    <item android:gravity="top">
+        <shape android:shape="rectangle">
+            <corners
+                android:topLeftRadius="20dp"
+                android:topRightRadius="20dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#44FFFFFF"
+                android:endColor="#00FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- 细描边：液态玻璃边框 -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <stroke
+                android:width="0.5dp"
+                android:color="#66FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

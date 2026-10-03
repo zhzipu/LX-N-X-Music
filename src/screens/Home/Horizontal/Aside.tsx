@@ -1,0 +1,170 @@
+import { memo, useMemo } from 'react'
+import { ScrollView, TouchableOpacity, View } from 'react-native'
+import { useNavActiveId, useStatusbarHeight } from '@/store/common/hook'
+import { useTheme } from '@/store/theme/hook'
+import { Icon } from '@/components/common/Icon'
+import { SvgIcon } from '@/components/common/SvgIcon'
+import { confirmDialog, createStyle, exitApp as backHome } from '@/utils/tools'
+import { NAV_MENUS } from '@/config/constant'
+import type { InitState } from '@/store/common/state'
+// import commonState from '@/store/common/state'
+import { exitApp, setNavActiveId } from '@/core/common'
+import { BorderWidths } from '@/theme'
+import { useSettingValue } from '@/store/setting/hook'
+
+const NAV_WIDTH = 68
+
+const styles = createStyle({
+  container: {
+    flexGrow: 0,
+    // flex: 1,
+    // alignItems: 'center',
+    // justifyContent: 'center',
+    // padding: 10,
+    borderRightWidth: BorderWidths.normal,
+    paddingBottom: 10,
+    width: NAV_WIDTH,
+  },
+  header: {
+    paddingTop: 15,
+    paddingBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerText: {
+    textAlign: 'center',
+    marginLeft: 16,
+  },
+  menus: {
+    flex: 1,
+  },
+  list: {
+    // paddingTop: 10,
+    paddingBottom: 15,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    paddingTop: 15,
+    paddingBottom: 15,
+    // paddingLeft: 25,
+    // paddingRight: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  },
+  iconContent: {
+    // width: 24,
+    // backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    alignItems: 'center',
+  },
+  text: {
+    paddingLeft: 15,
+    // fontWeight: '500',
+  },
+})
+
+const Header = () => {
+  const theme = useTheme()
+  const statusBarHeight = useStatusbarHeight()
+  return (
+    <View style={{ paddingTop: statusBarHeight }}>
+      <View style={styles.header}>
+        <Icon name="logo" color={theme['c-primary-dark-100-alpha-300']} size={22} />
+        {/* <Text style={styles.headerText} size={16} color={theme['c-primary-dark-100-alpha-300']}>LX-N Music</Text> */}
+      </View>
+    </View>
+  )
+}
+
+type IdType = InitState['navActiveId'] | 'nav_exit' | 'back_home'
+
+const renderIcon = (icon: string, size: number, color: string) => {
+  if (icon.startsWith('svg:')) {
+    return <SvgIcon name={icon.slice(4)} size={size} color={color} />
+  }
+  return <Icon name={icon} size={size} color={color} />
+}
+
+const MenuItem = ({
+  id,
+  icon,
+  onPress,
+}: {
+  id: IdType
+  icon: string
+  onPress: (id: IdType) => void
+}) => {
+  // const t = useI18n()
+  const activeId = useNavActiveId()
+  const theme = useTheme()
+
+  return activeId == id ? (
+    <View style={{ ...styles.menuItem, backgroundColor: theme['c-primary-background-hover'] }}>
+      <View style={styles.iconContent}>
+        {renderIcon(icon, 20, theme['c-primary-font-active'])}
+      </View>
+      {/* <Text style={styles.text} size={14} color={theme['c-primary-font']}>{t(id)}</Text> */}
+    </View>
+  ) : (
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={() => {
+        onPress(id)
+      }}
+    >
+      <View style={styles.iconContent}>
+        {renderIcon(icon, 20, theme['c-font-label'])}
+      </View>
+      {/* <Text style={styles.text} size={14}>{t(id)}</Text> */}
+    </TouchableOpacity>
+  )
+}
+
+export default memo(() => {
+  const theme = useTheme()
+  // console.log('render drawer nav')
+  const showBackBtn = useSettingValue('common.showBackBtn')
+  const showExitBtn = useSettingValue('common.showExitBtn')
+  const navStatus = useSettingValue('common.navStatus');
+
+  const handlePress = (id: IdType) => {
+    switch (id) {
+      case 'nav_exit':
+        void confirmDialog({
+          message: global.i18n.t('exit_app_tip'),
+          confirmButtonText: global.i18n.t('list_remove_tip_button'),
+        }).then((isExit) => {
+          if (!isExit) return
+          exitApp('Exit Btn')
+        })
+        return
+      case 'back_home':
+        backHome()
+        return
+    }
+
+    global.app_event.changeMenuVisible(false)
+    setNavActiveId(id as any)
+  }
+
+  const filteredNavMenus = useMemo(() => {
+    return NAV_MENUS.filter(
+      menu => menu.id !== 'nav_play_history' && (menu.id === 'nav_search' || menu.id === 'nav_setting' || (navStatus[menu.id] ?? true))
+    );
+  }, [navStatus]);
+  return (
+    <View style={{ ...styles.container, borderRightColor: theme['c-border-background'] }}>
+      <Header />
+      <ScrollView style={styles.menus}>
+        <View style={styles.list}>
+          {filteredNavMenus.map((menu) => ( // 使用过滤后的菜单
+            <MenuItem key={menu.id} id={menu.id} icon={menu.icon} onPress={handlePress} />
+          ))}
+        </View>
+      </ScrollView>
+      {global.lx.isCarMode && showBackBtn ? <MenuItem id="back_home" icon="home" onPress={handlePress} /> : null}
+      {global.lx.isCarMode && showExitBtn ? <MenuItem id="nav_exit" icon="exit2" onPress={handlePress} /> : null}
+    </View>
+  )
+})

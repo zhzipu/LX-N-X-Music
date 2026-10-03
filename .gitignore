@@ -1,0 +1,94 @@
+# OSX
+#
+.DS_Store
+
+# Xcode
+#
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+ios/.xcode.env.local
+
+# Android/IntelliJ
+#
+build/
+.idea
+.gradle
+local.properties
+keystore.properties
+*.iml
+*.hprof
+.cxx/
+
+# node.js
+#
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# BUCK
+buck-out/
+\.buckd/
+*.keystore
+!debug.keystore
+
+# fastlane
+#
+# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
+# screenshots whenever they are needed.
+# For more information about the recommended setup visit:
+# https://docs.fastlane.tools/best-practices/source-control/
+
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# Bundle artifact
+*.jsbundle
+
+# Ruby / CocoaPods
+/ios/Pods/
+/vendor/bundle/
+
+# testing
+/coverage
+
+# 生成的 JS bundle（用 `npm run bundle-android` 生成，不入库）
+android/app/src/main/assets/index.android.bundle
+
+# 本地工作区（编辑器/助手记忆）
+.workbuddy/
+
+# 本地调试残留：截图
+debug-desktop.png
+debug-screenshot-*.png
+debug-widget-test.png
+desktop_screenshot*.png
+mumu_device.png
+mumu_window.png
+
+# 本地调试残留：临时脚本
+debug_tool.py
+debugger.html
+activate_and_ss.ps1
+enum_windows.ps1
+screenshot.ps1
+ss3.ps1
+test.js
+
+# 本地抓取的账号凭据（网易云 cookie），严禁入库
+wy_cookie_*.txt

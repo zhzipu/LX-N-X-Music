@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AFP</title>
+</head>
+<body>
+<!--
+  网易云 AFP 指纹的本地计算页。
+
+  为什么要用 WebView：AFP 指纹算法是 WebAssembly（afp.wasm），而 React Native 的
+  Hermes 引擎不支持 WebAssembly。WebView 的 V8 内核原生支持 wasm，所以把同目录下的
+  afp.wasm.js / afp.js（网易云官方 Chrome 扩展的实现，MIT）加载进来在本机计算。
+
+  协议：
+    RN → 页面   { type: 'fp', id, pcm }        pcm 是 base64(8kHz 单声道 s16le)
+    页面 → RN   { type: 'ready', ok, detail }  加载完成
+    页面 → RN   { type: 'fp', id, ok, fp }     指纹结果（base64）
+    页面 → RN   { type: 'fp', id, ok: false, error }
+-->
+<script src="./afp.wasm.js"></script>
+<script src="./afp.js"></script>
+<script>
+(function () {
+  var runtimePromise = null
+
+  function post(msg) {
+    try {
+      var body = JSON.stringify(msg)
+      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+        window.ReactNativeWebView.postMessage(body)
+      }
+    } catch (err) {
+      /* 忽略 */
+    }
+  }
+
+  // 复用同一个 Emscripten 运行时：每次新建实例会不断吃掉内存（服务端实测 20 次涨到 120MB+）
+  function getRuntime() {
+    if (runtimePromise) return runtimePromise
+    runtimePromise = new Promise(function (resolve, reject) {
+      var runtime = AudioFingerprintRuntime()
+      var tries = 0
+      var timer = setInterval(function () {
+        if (typeof runtime.ExtractQueryFP === 'function') {
+          clearInterval(timer)
+          resolve(runtime)
+          return
+        }
+        if (++tries > 800) {
+          clearInterval(timer)
+          runtimePromise = null
+          reject(new Error('wasm runtime timeout'))
+        }
+      }, 25)
+    })
+    return runtimePromise
+  }
+
+  function decodeBase64(str) {
+    var binary = atob(str)
+    var out = new Uint8Array(binary.length)
+    for (var i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i)
+    return out
+  }
+
+  function encodeBase64(bytes) {
+    var chunks = []
+    for (var i = 0; i < bytes.length; i += 0x8000) {
+      chunks.push(String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)))
+    }
+    return btoa(chunks.join(''))
+  }
+
+  function compute(id, pcmBase64) {
+    var bytes = decodeBase64(pcmBase64)
+    var count = bytes.length >> 1
+    if (!count) throw new Error('empty pcm')
+    var view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+    // afp.wasm 吃的是 [-1,1) 的 Float32，8kHz 单声道
+    var input = new Float32Array(count)
+    for (var i = 0; i < count; i++) input[i] = view.getInt16(i * 2, true) / 32768
+
+    return getRuntime().then(function (runtime) {
+      var vector = runtime.ExtractQueryFP(input.buffer)
+      var size = vector.size()
+      var out = new Uint8Array(size)
+      for (var t = 0; t < size; t++) out[t] = vector.get(t)
+      // embind 返回的对象要显式释放，否则 wasm 堆会一直涨
+      if (typeof vector.delete === 'function') vector.delete()
+      return encodeBase64(out)
+    })
+  }
+
+  function onMessage(event) {
+    var payload
+    try {
+      var data = typeof event.data === 'string' ? event.data : (event.data && event.data.data)
+      payload = JSON.parse(data)
+    } catch (err) {
+      return
+    }
+    if (!payload || payload.type !== 'fp' || typeof payload.id !== 'string') return
+    try {
+      compute(payload.id, payload.pcm).then(
+        function (fp) {
+          post({ type: 'fp', id: payload.id, ok: true, fp: fp })
+        },
+        function (err) {
+          post({ type: 'fp', id: payload.id, ok: false, error: String((err && err.message) || err) })
+        }
+      )
+    } catch (err) {
+      post({ type: 'fp', id: payload.id, ok: false, error: String((err && err.message) || err) })
+    }
+  }
+
+  document.addEventListener('message', onMessage)
+  window.addEventListener('message', onMessage)
+
+  post({
+    type: 'ready',
+    ok: typeof AudioFingerprintRuntime === 'function' && typeof WASM_BINARY === 'string',
+    detail: 'wasm=' + (typeof WASM_BINARY === 'string' ? 'ok' : 'missing')
+  })
+})()
+</script>
+</body>
+</html>
