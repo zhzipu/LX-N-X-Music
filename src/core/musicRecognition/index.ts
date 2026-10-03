@@ -45,10 +45,16 @@ interface EngineTask {
   run: (signal?: AbortSignal, onDetail?: (text: string) => void) => Promise<RecognitionResult[]>
 }
 
+interface SettledEngine {
+  engine: RecognitionEngine
+  results: RecognitionResult[]
+  report: EngineReport
+}
+
 const runEngine = async (
   task: EngineTask,
   signal: AbortSignal | undefined
-): Promise<{ engine: RecognitionEngine; results: RecognitionResult[]; report: EngineReport }> => {
+): Promise<SettledEngine> => {
   const startedAt = Date.now()
   let detail: string | undefined
   try {
@@ -80,10 +86,36 @@ const runEngine = async (
   }
 }
 
+/**
+ * 用「已返回的引擎」算一次结果。
+ * 增量场景下每个引擎返回都会调用一次，所以这里必须是纯函数、不能有副作用。
+ */
+const buildOutcome = (items: SettledEngine[]): RecognitionOutcome => {
+  const merged = mergeResults(items.map((item) => ({ engine: item.engine, results: item.results })))
+  const reports = items.map((item) => item.report)
+  const { matched } = summarizeReports(reports)
+
+  return {
+    match: merged[0] ?? null,
+    alternatives: merged.slice(1),
+    ambiguous: matched.length > 0 && isAmbiguousRecognition(matched),
+    reports,
+  }
+}
+
 export interface RecognizeOptions {
   signal?: AbortSignal
   /** 每个引擎返回后的回调，用于在 UI 上逐个点亮结果 */
   onEngineDone?: (report: EngineReport, results: RecognitionResult[]) => void
+  /**
+   * 增量结果回调：任一引擎返回后，立刻用「已返回的引擎」重算一次并回调。
+   * 用于让 UI 先把先到的平台结果列出来，后续平台返回时再补进同一个列表。
+   *
+   * 触发顺序是**引擎完成顺序**（不是优先级顺序），因此同一首歌可能先以
+   * `netease` 的身份出现、后又被更高优先级的 `shazam` 顶上 —— 这是预期行为。
+   * 最后一个引擎返回时不再触发（此时 `recognize()` 的返回值就是最终结果）。
+   */
+  onPartial?: (outcome: RecognitionOutcome) => void
 }
 
 /**
@@ -94,7 +126,7 @@ export const recognize = async (
   samples: Int16Array,
   options: RecognizeOptions = {}
 ): Promise<RecognitionOutcome> => {
-  const { signal, onEngineDone } = options
+  const { signal, onEngineDone, onPartial } = options
   const tasks: EngineTask[] = [
     {
       engine: 'shazam',
@@ -110,22 +142,17 @@ export const recognize = async (
     },
   ]
 
-  const settled = await Promise.all(
+  const settled: SettledEngine[] = []
+  await Promise.all(
     tasks.map(async (task) => {
       const outcome = await runEngine(task, signal)
+      settled.push(outcome)
       onEngineDone?.(outcome.report, outcome.results)
-      return outcome
+      // 还有引擎没返回 → 先把当前这批结果推给 UI，别让用户干等最慢的那个
+      if (settled.length < tasks.length) onPartial?.(buildOutcome(settled))
     })
   )
 
-  const merged = mergeResults(settled.map((item) => ({ engine: item.engine, results: item.results })))
-  const reports = settled.map((item) => item.report)
-  const { matched } = summarizeReports(reports)
-
-  return {
-    match: merged[0] ?? null,
-    alternatives: merged.slice(1),
-    ambiguous: matched.length > 0 && isAmbiguousRecognition(matched),
-    reports,
-  }
+  return buildOutcome(settled)
 }
+

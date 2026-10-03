@@ -256,6 +256,8 @@
   "music_recognition_engine_matched": "{engine} matched",
   "music_recognition_engine_no_match": "{engine} no match",
   "music_recognition_engine_error": "{engine} unavailable",
+  "music_recognition_engine_pending": "{engine} identifying…",
+  "music_recognition_partial_hint": "Other engines are still identifying; new matches will be added automatically",
   "music_recognition_tip": "Results are only used for search. The Kugou and NetEase engines upload an audio clip to their services",
   "music_recognition_failed": "Identification failed",
   "music_recognition_retry_later": "Please try again later",

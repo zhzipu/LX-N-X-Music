@@ -257,6 +257,8 @@
   "music_recognition_engine_matched": "{engine} 已识别",
   "music_recognition_engine_no_match": "{engine} 未识别",
   "music_recognition_engine_error": "{engine} 不可用",
+  "music_recognition_engine_pending": "{engine} 识别中…",
+  "music_recognition_partial_hint": "其它平台仍在识别，有新结果会自动补充",
   "music_recognition_tip": "识别结果只会用于搜索。酷狗、网易云引擎会把音频片段上传到对应服务",
   "music_recognition_failed": "识别失败",
   "music_recognition_retry_later": "请稍后重试",

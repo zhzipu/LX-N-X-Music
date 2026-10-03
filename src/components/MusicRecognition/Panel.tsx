@@ -37,28 +37,32 @@ const ENGINE_LABEL: Record<RecognitionEngine, string> = {
   kugou: '酷狗',
 }
 
-// 引擎并行执行，每完成一个就追加一条；未返回的引擎不占位，避免误显示成「未识别」
-const EngineChip = ({ report }: { report: EngineReport }) => {
+/** 固定展示顺序：引擎按完成先后回调，chip 顺序若跟着回调走会来回跳 */
+const ENGINE_ORDER: RecognitionEngine[] = ['shazam', 'netease', 'kugou']
+
+/**
+ * 引擎状态标签。`report` 为空 = 该引擎还在跑（识别中），
+ * 这样用户能看出「已经有结果了，但还有平台没返回」，而不是以为已经跑完。
+ */
+const EngineChip = ({ engine, report }: { engine: RecognitionEngine; report?: EngineReport }) => {
   const t = useI18n()
   const theme = useTheme()
-  const color =
-    report.status === 'matched'
-      ? theme['c-primary-font']
+  const name = ENGINE_LABEL[engine]
+  const color = report?.status === 'matched' ? theme['c-primary-font'] : theme['c-font-label']
+  const label = !report
+    ? t('music_recognition_engine_pending', { engine: name })
+    : report.status === 'matched'
+      ? t('music_recognition_engine_matched', { engine: name })
       : report.status === 'error'
-        ? theme['c-font-label']
-        : theme['c-font-label']
-  const label =
-    report.status === 'matched'
-      ? t('music_recognition_engine_matched', { engine: ENGINE_LABEL[report.engine] })
-      : report.status === 'error'
-        ? t('music_recognition_engine_error', { engine: ENGINE_LABEL[report.engine] })
-        : t('music_recognition_engine_no_match', { engine: ENGINE_LABEL[report.engine] })
+        ? t('music_recognition_engine_error', { engine: name })
+        : t('music_recognition_engine_no_match', { engine: name })
 
   return (
     <View
       style={{
         ...styles.chip,
         borderColor: theme['c-border-background'],
+        opacity: report ? 1 : 0.55,
       }}
     >
       <Text size={11} color={color} numberOfLines={1}>
@@ -113,7 +117,6 @@ export default ({ onClose }: { onClose: () => void }) => {
   const [stage, setStage] = useState<Stage>('starting')
   const [remaining, setRemaining] = useState(CAPTURE_SECONDS)
   const [outcome, setOutcome] = useState<RecognitionOutcome | null>(null)
-  const [reports, setReports] = useState<EngineReport[]>([])
   const [captureStats, setCaptureStats] = useState<CaptureStats | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -158,14 +161,11 @@ export default ({ onClose }: { onClose: () => void }) => {
         setStage('done')
         return
       }
+      // 先到先展示：任一引擎返回就刷新一次列表，后面的引擎返回后再并进来
       const result = await recognize(samples, {
-        onEngineDone: (report) => {
+        onPartial: (partial) => {
           if (!mountedRef.current) return
-          setReports((prev) => {
-            const next = prev.filter((item) => item.engine !== report.engine)
-            next.push(report)
-            return next
-          })
+          setOutcome(partial)
         },
       })
       if (!mountedRef.current) return
@@ -182,7 +182,6 @@ export default ({ onClose }: { onClose: () => void }) => {
 
   /** 开始一次采集，到点自动停止 */
   const beginCapture = useCallback(async () => {
-    setReports([])
     setOutcome(null)
     setCaptureStats(null)
     setErrorMessage('')
@@ -299,17 +298,6 @@ export default ({ onClose }: { onClose: () => void }) => {
       )
     }
 
-    if (stage === 'recognizing') {
-      return (
-        <View style={styles.center}>
-          <Loading size={30} />
-          <Text size={15} style={styles.stateText}>
-            {t('music_recognition_recognizing')}
-          </Text>
-        </View>
-      )
-    }
-
     if (stage === 'error') {
       return (
         <View style={styles.center}>
@@ -319,6 +307,19 @@ export default ({ onClose }: { onClose: () => void }) => {
           </Text>
           <Text size={12} color={theme['c-font-label']} style={styles.hintText}>
             {errorMessage}
+          </Text>
+        </View>
+      )
+    }
+
+    // 识别中但还没有任何平台返回 → 先转圈；只要有平台先返回，
+    // 就落到下面的结果列表，边展示边等其它平台
+    if (stage === 'recognizing' && !outcome?.match) {
+      return (
+        <View style={styles.center}>
+          <Loading size={30} />
+          <Text size={15} style={styles.stateText}>
+            {t('music_recognition_recognizing')}
           </Text>
         </View>
       )
@@ -344,7 +345,8 @@ export default ({ onClose }: { onClose: () => void }) => {
 
     return (
       <ScrollView style={styles.resultScroll} keyboardShouldPersistTaps="always">
-        {outcome.ambiguous ? (
+        {/* 还在识别中就先不提「可能误识别」—— 更高优先级的引擎可能还没返回 */}
+        {outcome.ambiguous && stage === 'done' ? (
           <Text size={12} color={theme['c-font-label']} style={styles.ambiguousTip}>
             {t('music_recognition_ambiguous')}
           </Text>
@@ -356,15 +358,26 @@ export default ({ onClose }: { onClose: () => void }) => {
               {t('music_recognition_other_results')}
             </Text>
             {outcome.alternatives.map((item) => (
-              <ResultRow key={item.id} result={item} onPress={handleSearch} />
+              // 用 providerTrackId 当 key：它跨增量刷新是稳定的，能避免列表重挂载
+              <ResultRow key={item.providerTrackId} result={item} onPress={handleSearch} />
             ))}
           </>
+        ) : null}
+        {stage === 'recognizing' ? (
+          <View style={styles.pendingRow}>
+            <Loading size={12} />
+            <Text size={11} color={theme['c-font-label']} style={styles.pendingText}>
+              {t('music_recognition_partial_hint')}
+            </Text>
+          </View>
         ) : null}
       </ScrollView>
     )
   }
 
-  const showEngineReports = (stage === 'recognizing' || stage === 'done') && reports.length > 0
+  const engineReports = outcome?.reports ?? []
+  // 识别中即使还没有引擎返回，也把三个 chip 摆出来（显示「识别中」）
+  const showEngineReports = stage === 'recognizing' || engineReports.length > 0
 
   return (
     <Modal
@@ -392,14 +405,18 @@ export default ({ onClose }: { onClose: () => void }) => {
 
           {showEngineReports ? (
             <View style={styles.chipRow}>
-              {reports.map((report) => (
-                <EngineChip key={report.engine} report={report} />
+              {ENGINE_ORDER.map((engine) => (
+                <EngineChip
+                  key={engine}
+                  engine={engine}
+                  report={engineReports.find((report) => report.engine === engine)}
+                />
               ))}
             </View>
           ) : null}
 
           {__DEV__ &&
-          (captureStats || reports.some((report) => report.detail || report.message)) ? (
+          (captureStats || engineReports.some((report) => report.detail || report.message)) ? (
             <View style={styles.debugBox}>
               {captureStats ? (
                 <Text size={10} color={theme['c-font-label']} style={styles.debugText}>
@@ -411,7 +428,7 @@ export default ({ onClose }: { onClose: () => void }) => {
                   {`试采 ${captureStats.probe}`}
                 </Text>
               ) : null}
-              {reports
+              {engineReports
                 .filter((report) => report.detail || report.message)
                 .map((report) => (
                   <Text
@@ -554,6 +571,18 @@ const styles = createStyle({
     paddingRight: 16,
     paddingTop: 14,
     paddingBottom: 4,
+  },
+  pendingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 16,
+    paddingRight: 16,
+    paddingTop: 14,
+    paddingBottom: 6,
+  },
+  pendingText: {
+    paddingLeft: 6,
+    lineHeight: 16,
   },
   resultRow: {
     flexDirection: 'row',
