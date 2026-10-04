@@ -90,19 +90,14 @@ declare global {
       'common.navStatus': Partial<Record<NAV_ID_Type, boolean>>;
 
       /**
-       * 主题id
+       * 配色方案 id（13 套之一）。只决定配色，明暗由「跟随系统」或「暗色模式」决定
        */
       'theme.id': string
 
       /**
-       * 亮色主题id
+       * 手动暗色模式。仅在关闭「跟随系统」时生效
        */
-      'theme.lightId': string
-
-      /**
-       * 暗色主题id
-       */
-      'theme.darkId': string
+      'theme.darkMode': boolean
 
       /**
        * 隐藏黑色主题背景

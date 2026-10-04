@@ -12,7 +12,7 @@ import TextOpacity from './TextOpacity'
 import TextPositionX from './TextPositionX'
 import TextPositionY from './TextPositionY'
 import { useI18n } from '@/lang'
-import Theme from './Theme'
+import Appearance from './Appearance'
 // import { useTranslation } from '@/plugins/i18n'
 
 export default memo(() => {
@@ -24,7 +24,7 @@ export default memo(() => {
       <IsLockLyric />
       <IsShowToggleAnima />
       <IsSingleLine />
-      <Theme />
+      <Appearance />
       <TextSize />
       <MaxLineNum />
       <TextOpacity />

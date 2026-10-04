@@ -117,21 +117,14 @@ const defaultSetting: LX.AppSetting = {
   'sync.webdav.path': '/LX_Music/',
   'sync.webdav.lastSyncTimeLists': 0,
 
-  'theme.id': 'green',
-  'theme.lightId': 'green',
-  'theme.darkId': 'black',
+  'theme.id': 'tachiyomi',
+  'theme.darkMode': false,
   'theme.hideBgDark': false,
   'theme.dynamicBg': true,
   'theme.blur': 18,
   'theme.fontShadow': false,
   'theme.customBgPicPath': '',
   'theme.picOpacity': 76,
-}
-
-// 使用新年皮肤
-if (new Date().getMonth() < 2) {
-  defaultSetting['theme.id'] = 'happy_new_year'
-  defaultSetting['desktopLyric.style.lyricPlayedColor'] = 'rgba(255, 18, 34, 1)'
 }
 
 export default defaultSetting

@@ -1,6 +1,7 @@
 import { getUserTheme, saveUserTheme } from '@/utils/data'
 import themes from '@/theme/themes/themes'
 import settingState from '@/store/setting/state'
+import settingActions from '@/store/setting/action'
 import themeState from '@/store/theme/state'
 import { isUrl } from '@/utils'
 import { privateStorageDirectoryPath } from '@/utils/fs'
@@ -112,33 +113,67 @@ export const buildActiveThemeColors = (theme: LX.Theme): LX.ActiveTheme => {
 //     },
 //   }
 // }
+// 内置主题 = 13 套配色方案（配色来自 TachiyomiX，见 createThemes.js）。
+// 每套方案在 themes.ts 里有两个调色板变体：`<配色id>_light` / `<配色id>_dark`。
+// 外观设置按「配色方案」收敛成 13 项，实际用哪个变体由明暗模式决定：
+//   「跟随系统」开 → 系统亮暗；关 → 「暗色模式」开关（theme.darkMode）。
+export const DEFAULT_THEME = 'tachiyomi'
+
+/** 去掉明暗后缀取配色方案 id；用户自定义主题这类没有后缀的 id 原样返回 */
+export const getThemeSchemeId = (themeId: string) => themeId.replace(/_(light|dark)$/, '')
+
+/** 全部内置配色方案 id，顺序即外观设置里的列表顺序 */
+export const THEME_SCHEME_IDS: string[] = [
+  ...new Set(themes.map((theme) => getThemeSchemeId(theme.id))),
+]
+
+/** 由配色方案 id + 明暗解析出 themes.ts 里的实际主题 id；没有对应变体时原样返回（自定义主题） */
+export const resolveThemeId = (schemeId: string, isDark: boolean) => {
+  const targetId = `${getThemeSchemeId(schemeId)}_${isDark ? 'dark' : 'light'}`
+  return themes.some((theme) => theme.id == targetId) ? targetId : schemeId
+}
+
+/** 该 id 是否是内置配色方案（内置 id 只有 13 个，都不带明暗后缀） */
+export const isBuiltinSchemeId = (schemeId: string) =>
+  themes.some((theme) => theme.id == resolveThemeId(schemeId, false))
+
 // type IDS = LocalTheme['id']
 export const getTheme = async () => {
-  // fs.promises.readdir()
-  const shouldUseDarkColors = themeState.shouldUseDarkColors
-  // let themeId = settingState.setting['theme.id'] == 'auto'
-  //   ? shouldUseDarkColors
-  //     ? settingState.setting['theme.darkId']
-  //     : settingState.setting['theme.lightId']
-  //   // : 'china_ink'
-  //   : settingState.setting['theme.id']
-  let themeId =
-    settingState.setting['common.isAutoTheme'] && shouldUseDarkColors
-      ? 'black'
-      : settingState.setting['theme.id']
-  // themeId = 'naruto'
-  // themeId = 'pink'
-  // themeId = 'black'
-  let theme: LocalTheme | LX.Theme | undefined = themes.find((theme) => theme.id == themeId)
-  if (!theme) {
-    userThemes = await getUserTheme()
-    theme = userThemes.find((theme) => theme.id == themeId)
-    if (!theme) {
-      themeId =
-        settingState.setting['theme.id'] == 'auto' && shouldUseDarkColors ? 'black' : 'green'
-      theme = themes.find((theme) => theme.id == themeId) as LX.Theme
-    }
+  const isAutoTheme = settingState.setting['common.isAutoTheme']
+  const storedId = settingState.setting['theme.id']
+  let schemeId = getThemeSchemeId(storedId)
+
+  // 旧版本把明暗写进了 id（`xxx_light` / `xxx_dark`），先把设置规范化：
+  // 只留配色方案 id，并把明暗迁到「暗色模式」开关上，避免升级后外观反转。
+  // 用户自定义主题不受影响（它们的 id 不在内置方案里）。
+  if (storedId !== schemeId && isBuiltinSchemeId(schemeId)) {
+    settingActions.updateSetting({
+      'theme.id': schemeId,
+      ...(/_dark$/.test(storedId) && !isAutoTheme ? { 'theme.darkMode': true } : {}),
+    })
   }
 
-  return theme
+  // 实际生效的明暗：「跟随系统」开启时取系统值，否则由「暗色模式」开关决定
+  const isDark = isAutoTheme
+    ? themeState.shouldUseDarkColors
+    : settingState.setting['theme.darkMode']
+
+  let theme = themes.find((theme) => theme.id == resolveThemeId(schemeId, isDark)) as
+    | LX.Theme
+    | undefined
+
+  if (!theme) {
+    // 不是内置配色方案，可能是用户自定义主题（不参与明暗自动切换）
+    userThemes = await getUserTheme()
+    const userTheme = userThemes.find((theme) => theme.id == storedId)
+    if (userTheme) return userTheme
+
+    // 设置里存的可能是已被移除的旧主题 id，落回默认配色并持久化
+    schemeId = DEFAULT_THEME
+    theme = themes.find((theme) => theme.id == resolveThemeId(schemeId, isDark)) as LX.Theme
+    settingActions.updateSetting({ 'theme.id': schemeId })
+  }
+
+  // 对外统一暴露配色方案 id（不含明暗后缀），当前明暗看 isDark
+  return { ...theme, id: schemeId } as LX.Theme
 }

@@ -6,7 +6,7 @@ import { StyleSheet, View, TouchableOpacity } from 'react-native'
 
 import SubTitle from '../../components/SubTitle'
 
-const themes = [
+const appearancePresets = [
   ['#08e664', 'rgba(0,0,0,0.6)'],
   ['#fffa12', 'rgba(0,0,0,0.6)'],
   ['#019ce4', 'rgba(0,0,0,0.6)'],
@@ -17,9 +17,9 @@ const themes = [
   ['#000000', '#ffffff'],
   ['#ffffff', 'rgba(0,0,0,0.6)'],
 ] as const
-type Theme = (typeof themes)[number]
+type AppearancePreset = (typeof appearancePresets)[number]
 
-const ThemeItem = ({ color, change }: { color: Theme; change: (color: Theme) => void }) => {
+const AppearancePresetItem = ({ color, change }: { color: AppearancePreset; change: (color: AppearancePreset) => void }) => {
   return (
     <TouchableOpacity
       style={styles.item}
@@ -38,7 +38,7 @@ const ThemeItem = ({ color, change }: { color: Theme; change: (color: Theme) => 
 export default memo(() => {
   const t = useI18n()
 
-  const setThemeDesktopLyric = (color: Theme) => {
+  const setLyricAppearance = (color: AppearancePreset) => {
     // const shadowColor = 'rgba(0,0,0,0.6)'
     void setDesktopLyricColor(null, color[0], color[1]).then(() => {
       updateSetting({
@@ -49,10 +49,10 @@ export default memo(() => {
   }
 
   return (
-    <SubTitle title={t('setting_lyric_desktop_theme')}>
+    <SubTitle title={t('setting_lyric_desktop_appearance')}>
       <View style={styles.list}>
-        {themes.map((c, i) => (
-          <ThemeItem key={i.toString()} color={c} change={setThemeDesktopLyric} />
+        {appearancePresets.map((c, i) => (
+          <AppearancePresetItem key={i.toString()} color={c} change={setLyricAppearance} />
         ))}
       </View>
     </SubTitle>

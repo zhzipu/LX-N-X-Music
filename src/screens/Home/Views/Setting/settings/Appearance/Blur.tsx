@@ -1,4 +1,4 @@
-// screens/Home/Views/Setting/settings/Theme/Blur.tsx
+// screens/Home/Views/Setting/settings/Appearance/Blur.tsx
 
 import { memo, useCallback, useState } from 'react'
 import { View } from 'react-native'

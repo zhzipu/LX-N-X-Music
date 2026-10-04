@@ -14,21 +14,22 @@ const isSupportedAutoTheme = getIsSupportedAutoTheme()
 
 export default memo(() => {
   const t = useI18n()
-  const isAutoTheme = useSettingValue('common.isAutoTheme')
-  const setIsAutoTheme = (isAutoTheme: boolean) => {
-    updateSetting({ 'common.isAutoTheme': isAutoTheme })
-    void getTheme().then((theme) => {
-      if (theme.id == themeState.theme.id) return
-      applyTheme(theme)
+  const isAutoAppearance = useSettingValue('common.isAutoTheme')
+  const setIsAutoAppearance = (isAutoAppearance: boolean) => {
+    updateSetting({
+      // 关闭「跟随系统」时把手动明暗固定成当前实际生效的明暗，避免外观突然反转
+      ...(isAutoAppearance ? {} : { 'theme.darkMode': themeState.theme.isDark }),
+      'common.isAutoTheme': isAutoAppearance,
     })
+    void getTheme().then(applyTheme)
   }
 
   return isSupportedAutoTheme ? (
     <View style={styles.content}>
       <CheckBoxItem
-        check={isAutoTheme}
-        label={t('setting_basic_theme_auto_theme')}
-        onChange={setIsAutoTheme}
+        check={isAutoAppearance}
+        label={t('setting_basic_appearance_auto_theme')}
+        onChange={setIsAutoAppearance}
       />
     </View>
   ) : null

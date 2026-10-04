@@ -18,7 +18,7 @@ export default memo(() => {
     <View style={styles.content}>
       <CheckBoxItem
         check={isFontShadow}
-        label={t('setting_basic_theme_font_shadow')}
+        label={t('setting_basic_appearance_font_shadow')}
         onChange={setIsFontShadow}
       />
     </View>

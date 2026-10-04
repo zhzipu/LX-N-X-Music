@@ -1,6 +1,6 @@
 import { memo } from 'react'
 
-import Theme from '../Theme'
+import Appearance from '../Appearance'
 import Section from '../../components/Section'
 import Source from './Source'
 import SourceName from './SourceName'
@@ -36,7 +36,7 @@ export default memo(() => {
       <IsHomePageScroll />
       <IsUseSystemFileSelector />
       <IsAlwaysKeepStatusbarHeight />
-      <Theme />
+      <Appearance />
       <DrawerLayoutPosition />
       <NavMenu />
       <Language />
