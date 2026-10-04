@@ -8,7 +8,7 @@
   <a href="https://github.com/facebook/react-native"><img src="https://img.shields.io/github/package-json/dependency-version/zhzipu/LX-N-X-Music/react-native/master" alt="React native version"></a>
 </p>
 
-<p align="center">基于 React Native 的音乐客户端（网易云 + B 站音源）</p>
+<p align="center">基于 React Native 的音乐客户端</p>
 
 本项目在 [lx-music-mobile](https://github.com/lyswhut/lx-music-mobile) 与
 [ikun-music-mobile](https://github.com/ikunshare/ikun-music-mobile) 的基础上继续改造，
@@ -20,7 +20,7 @@
 
 完整更新记录见 [CHANGELOG.md](./CHANGELOG.md)。
 
-### 小哔音乐（B 站音源）
+### 小哔音乐
 
 把 B 站的视频音频接成一个独立音源，可以直接在 App 里搜索、播放，并作为歌手页的数据源之一：
 
