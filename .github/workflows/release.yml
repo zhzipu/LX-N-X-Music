@@ -1,9 +1,9 @@
 name: Build
 
+# 仅手动触发（Actions 页面点 "Run workflow"）。
+# 注意：不要再加回 `push: branches: [main]` —— 一 push 就会自动打 tag、
+# 建 Release 并把 5 个 APK 传上去；只想上传源码时会被误发版。
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
