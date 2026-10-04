@@ -16,6 +16,7 @@ const defaultSetting: LX.AppSetting = {
   'common.wy_cookie': '',
   'common.wy_serpapi_key': '',
   'common.yt_cookie': '',
+  'common.bili_cookie': '',
   'common.alwaysKeepStatusbarHeight': false,
 
   'common.navStatus': {
@@ -27,6 +28,7 @@ const defaultSetting: LX.AppSetting = {
     nav_followed_artists: true,
     nav_subscribed_albums: true,
     nav_onedrive: true,
+    nav_bilibili: true,
   },
 
   'player.startupAutoPlay': false,

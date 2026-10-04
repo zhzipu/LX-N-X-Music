@@ -318,7 +318,7 @@ export const getOnlineOtherSourceMusicUrl = async ({
 
   let reqPromise
   try {
-    reqPromise = musicSdk[musicInfo.source].getMusicUrl(
+    reqPromise = (musicSdk as any)[musicInfo.source].getMusicUrl(
       toOldMusicInfo(musicInfo),
       itemQuality
     ).promise
@@ -372,7 +372,7 @@ export const handleGetOnlineMusicUrl = async ({
 
   let reqPromise
   try {
-    reqPromise = musicSdk[musicInfo.source].getMusicUrl(
+    reqPromise = (musicSdk as any)[musicInfo.source].getMusicUrl(
       toOldMusicInfo(musicInfo),
       targetQuality
     ).promise
@@ -441,7 +441,7 @@ export const getOnlineOtherSourcePicUrl = async ({
 
   let reqPromise
   try {
-    reqPromise = musicSdk[musicInfo.source].getPic(toOldMusicInfo(musicInfo))
+    reqPromise = (musicSdk as any)[musicInfo.source].getPic(toOldMusicInfo(musicInfo))
   } catch (err: any) {
     reqPromise = Promise.reject(err)
   }
@@ -477,7 +477,7 @@ export const handleGetOnlinePicUrl = async ({
   // console.log(musicInfo.source)
   let reqPromise
   try {
-    reqPromise = musicSdk[musicInfo.source].getPic(toOldMusicInfo(musicInfo))
+    reqPromise = (musicSdk as any)[musicInfo.source].getPic(toOldMusicInfo(musicInfo))
   } catch (err) {
     reqPromise = Promise.reject(err)
   }
@@ -546,7 +546,7 @@ export const getOnlineOtherSourceLyricInfo = async ({
   let reqPromise
   try {
     // TODO: remove any type
-    reqPromise = (musicSdk[musicInfo.source].getLyric(toOldMusicInfo(musicInfo)) as any).promise
+    reqPromise = ((musicSdk as any)[musicInfo.source].getLyric(toOldMusicInfo(musicInfo)) as any).promise
   } catch (err: any) {
     reqPromise = Promise.reject(err)
   }
@@ -589,7 +589,7 @@ export const handleGetOnlineLyricInfo = async ({
   let reqPromise
   try {
     // TODO: remove any type
-    reqPromise = (musicSdk[musicInfo.source].getLyric(toOldMusicInfo(musicInfo)) as any).promise
+    reqPromise = ((musicSdk as any)[musicInfo.source].getLyric(toOldMusicInfo(musicInfo)) as any).promise
   } catch (err) {
     reqPromise = Promise.reject(err)
   }

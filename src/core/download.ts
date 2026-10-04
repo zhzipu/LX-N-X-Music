@@ -451,7 +451,7 @@ export const addTask = (
   const id = toMD5(`${musicInfo.id}-${quality}-${target}`);
   const downloadDir = target === 'onedrive'
     ? RNFetchBlob.fs.dirs.CacheDir
-    : settingState.setting['download.path'] || (RNFetchBlob.fs.dirs.MusicDir + '/LX-N Music');
+    : settingState.setting['download.path'] || (RNFetchBlob.fs.dirs.MusicDir + '/LX-N-X Music');
   const filePath = target === 'onedrive'
     ? `${downloadDir}/lx_onedrive_${id}.${extension}`
     : `${downloadDir}/${fileName}.${extension}`;

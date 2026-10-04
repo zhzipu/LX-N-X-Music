@@ -359,8 +359,9 @@ export const handlePlay = async () => {
 export const playList = async (listId: string, index: number) => {
   resetAutoNextNum()
   const prevListId = playerState.playInfo.playerListId
+  const targetMusic = getList(listId)[index]
   setPlayListId(listId)
-  setPlayMusicInfo(listId, getList(listId)[index])
+  setPlayMusicInfo(listId, targetMusic)
   if (settingState.setting['player.isAutoCleanPlayedList'] || prevListId != listId)
     clearPlayedList()
   clearTempPlayeList()

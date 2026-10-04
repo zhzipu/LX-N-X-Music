@@ -21,6 +21,14 @@ export const defaultHeaders = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
 }
 
+/** B 站图片服务器需要 Referer 头才能返回 200，否则 403 导致封面灰底 */
+const getImageHeaders = (url?: string | number | null): Record<string, string> => {
+  if (typeof url === 'string' && /(^|\/)(hdslb\.com|biliimg\.com|bilivideo\.com)/.test(url)) {
+    return { ...defaultHeaders, Referer: 'https://www.bilibili.com/' }
+  }
+  return defaultHeaders
+}
+
 const EmptyPic = memo(({ style, nativeID }: { style: ImageProps['style'], nativeID: ImageProps['nativeID'] }) => {
   const theme = useTheme()
   const { onLayout, width } = useLayout()
@@ -48,6 +56,10 @@ const Image = memo(({ url, cache, resizeMode = FastImage.resizeMode.cover, style
     : url?.startsWith('/')
       ? 'file://' + url
       : url
+  // B 站封面接口常返回 http:// 明文链接（Android 默认禁明文），统一转 https://
+  if (typeof uri == 'string' && /^http:\/\//.test(uri) && /(hdslb\.com|biliimg\.com|bilivideo\.com)/.test(uri)) {
+    uri = uri.replace(/^http:\/\//, 'https://')
+  }
   const showDefault = useMemo(() => !uri || isError, [isError, uri])
   return (
     showDefault ? <EmptyPic style={style} nativeID={nativeID} />
@@ -57,7 +69,7 @@ const Image = memo(({ url, cache, resizeMode = FastImage.resizeMode.cover, style
           transition="fade"
           source={{
             uri: uri!,
-            headers: defaultHeaders,
+            headers: getImageHeaders(url),
             priority: FastImage.priority.normal,
             cache: cache === false ? 'web' : 'immutable',
           }}

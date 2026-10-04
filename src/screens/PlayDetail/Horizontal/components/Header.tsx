@@ -22,7 +22,13 @@ const Title = () => {
   const musicInfo = playMusicInfo.musicInfo ? ('progress' in playMusicInfo.musicInfo ? playMusicInfo.musicInfo.metadata.musicInfo : playMusicInfo.musicInfo) : null
 
   const handleArtistPress = useCallback((artist: { id: string | number, name: string }) => {
-    if (!musicInfo || musicInfo.source !== 'wy' || !artist.id) return
+    if (!musicInfo || !artist.id) return
+    // B 站音源：进 UP 主主页
+    if (musicInfo.source === 'bili') {
+      navigations.pushArtistDetailScreen(commonState.componentIds[commonState.componentIds.length - 1]?.id!, { id: String(artist.id), name: artist.name, source: 'bili' })
+      return
+    }
+    if (musicInfo.source !== 'wy') return
     navigations.pushArtistDetailScreen(commonState.componentIds[commonState.componentIds.length - 1]?.id!, { id: String(artist.id), name: artist.name })
   }, [musicInfo])
 

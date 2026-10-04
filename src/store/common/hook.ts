@@ -66,11 +66,14 @@ export const usePageVisible = (
 }
 
 export const useAssertApiSupport = (source: LX.Source) => {
-  const [value, update] = useState(global.lx.qualityList[source] != null || source == 'local')
+  // bili 源走内置播放链路（core/music/bili.ts），不依赖用户 API 的音质配置，始终视为可用
+  const [value, update] = useState(
+    source == 'local' || source == 'bili' || global.lx.qualityList[source] != null
+  )
 
   useEffect(() => {
     const handleUpdate = () => {
-      update(global.lx.qualityList[source] != null || source == 'local')
+      update(source == 'local' || source == 'bili' || global.lx.qualityList[source] != null)
     }
 
     global.state_event.on('apiSourceUpdated', handleUpdate)

@@ -17,6 +17,7 @@ import {addWyLikedSong, removeWyLikedSong} from "@/store/user/action.ts";
 import {navigations} from "@/navigation";
 import commonState from '@/store/common/state'
 import wyApi from '@/utils/musicSdk/wy/user'
+import { getBiliVideoUrl } from '@/core/bilibili/api'
 
 export const handleShowAlbumDetail = (componentId: string, musicInfo: LX.Music.MusicInfoOnline) => {
   const albumId = musicInfo.meta.albumId
@@ -35,14 +36,29 @@ export const handleShowAlbumDetail = (componentId: string, musicInfo: LX.Music.M
 }
 
 export const handleShowArtistDetail = async (componentId: string, musicInfo: LX.Music.MusicInfoOnline) => {
-  if (musicInfo.source !== 'wy') {
-    toast('非网易云音源无法查看歌手详情')
-    return
-  }
-
   const artists = musicInfo.artists
   if (!artists?.length) {
     toast('未找到该歌曲的歌手信息')
+    return
+  }
+
+  // B 站音源：进 UP 主主页
+  if (musicInfo.source === 'bili') {
+    const artist = artists[0]
+    if (!artist.id) {
+      toast('未找到 UP 主信息')
+      return
+    }
+    navigations.pushArtistDetailScreen(componentId, {
+      id: String(artist.id),
+      name: artist.name,
+      source: 'bili',
+    })
+    return
+  }
+
+  if (musicInfo.source !== 'wy') {
+    toast('非网易云音源无法查看歌手详情')
     return
   }
 
@@ -120,9 +136,15 @@ export const handleShare = (musicInfo: LX.Music.MusicInfoOnline) => {
 }
 
 export const handleShowMusicSourceDetail = async (minfo: LX.Music.MusicInfoOnline) => {
-  const url = musicSdk[minfo.source as LX.OnlineSource]?.getMusicDetailPageUrl(
-    toOldMusicInfo(minfo)
-  )
+  let url: string | undefined
+  if (minfo.source === 'bili') {
+    const bvid = (minfo.meta as any).bvid as string | undefined
+    if (bvid) url = getBiliVideoUrl(bvid)
+  } else {
+    url = musicSdk[minfo.source as LX.OnlineSource]?.getMusicDetailPageUrl(
+      toOldMusicInfo(minfo)
+    )
+  }
   if (!url) return
   void openUrl(url)
 }

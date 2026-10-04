@@ -32,6 +32,8 @@ export interface ListProps {
   playingId?: string | null
   listId?: string
   onListUpdate?: (list: LX.Music.MusicInfoOnline[]) => void
+  /** 是否移除离屏子视图。默认 true；在 PagerView 翻页场景下可传 false 避免离屏裁切导致无法滚动。 */
+  removeClippedSubviews?: boolean
 }
 
 export interface ListType {
@@ -65,6 +67,7 @@ const List = forwardRef<ListType, ListProps>(
       forcePlayList,
       playingId,
       onListUpdate,
+      removeClippedSubviews = true,
     },
     ref,
   ) => {
@@ -292,7 +295,7 @@ const List = forwardRef<ListType, ListProps>(
         maxToRenderPerBatch={6}
         // updateCellsBatchingPeriod={80}
         windowSize={10}
-        removeClippedSubviews={true}
+        removeClippedSubviews={removeClippedSubviews}
         initialNumToRender={12}
         renderItem={renderItem}
         keyExtractor={getkey}

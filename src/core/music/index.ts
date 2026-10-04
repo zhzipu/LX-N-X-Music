@@ -18,6 +18,11 @@ import {
   getPicUrl as getOneDrivePicUrl,
   getLyricInfo as getOneDriveLyricInfo,
 } from '@/core/oneDrive/music'
+import {
+  getMusicUrl as getBiliMusicUrl,
+  getPicUrl as getBiliPicUrl,
+  getLyricInfo as getBiliLyricInfo,
+} from './bili'
 
 export const getMusicUrl = async ({
   musicInfo,
@@ -39,6 +44,8 @@ export const getMusicUrl = async ({
       return getOneDriveMusicUrl({ musicInfo: musicInfo as LX.OneDrive.MusicInfo, isRefresh })
     }
     return getLocalMusicUrl({ musicInfo, isRefresh, onToggleSource, allowToggleSource })
+  } else if (musicInfo.source == 'bili') {
+    return getBiliMusicUrl({ musicInfo: musicInfo as LX.Music.MusicInfo_bili, isRefresh, quality })
   } else {
     return getOnlineMusicUrl({ musicInfo, isRefresh, quality, onToggleSource, allowToggleSource })
   }
@@ -62,6 +69,8 @@ export const getPicPath = async ({
       return getOneDrivePicUrl({ musicInfo: musicInfo as LX.OneDrive.MusicInfo, isRefresh, listId })
     }
     return getLocalPicUrl({ musicInfo, isRefresh, listId, onToggleSource })
+  } else if (musicInfo.source == 'bili') {
+    return getBiliPicUrl({ musicInfo: musicInfo as LX.Music.MusicInfo_bili, isRefresh })
   } else {
     return getOnlinePicUrl({ musicInfo, isRefresh, listId, onToggleSource })
   }
@@ -83,6 +92,8 @@ export const getLyricInfo = async ({
       return getOneDriveLyricInfo({ musicInfo: musicInfo as LX.OneDrive.MusicInfo, isRefresh })
     }
     return getLocalLyricInfo({ musicInfo, isRefresh, onToggleSource })
+  } else if (musicInfo.source == 'bili') {
+    return getBiliLyricInfo()
   } else {
     return getOnlineLyricInfo({ musicInfo, isRefresh, onToggleSource })
   }

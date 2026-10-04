@@ -80,6 +80,7 @@ debug-widget-test.png
 desktop_screenshot*.png
 mumu_device.png
 mumu_window.png
+bili_err_tmp.png
 
 # 本地调试残留：临时脚本
 debug_tool.py

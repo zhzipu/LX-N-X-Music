@@ -4,6 +4,7 @@ import PageContent from '@/components/PageContent';
 import Header from './Header';
 import SongList from './SongList';
 import wyApi from '@/utils/musicSdk/wy/artist';
+import biliApi from '@/utils/musicSdk/bili/artist';
 import { toast } from '@/utils/tools';
 import {setComponentId, updateSetting} from '@/core/common';
 import PlayerBar from '@/components/player/PlayerBar';
@@ -20,7 +21,9 @@ import {usePlayerMusicInfo} from "@/store/player/hook.ts";
 const SONG_LIMIT = 100;
 const ALBUM_LIMIT = 100;
 
-export default memo(({ componentId, artistInfo }: { componentId: string, artistInfo: { id: string, name: string } }) => {
+export default memo(({ componentId, artistInfo }: { componentId: string, artistInfo: { id: string, name: string, source?: string } }) => {
+  const isBili = artistInfo.source === 'bili'
+  const api = isBili ? biliApi : wyApi
   const [artistDetail, setArtistDetail] = useState(null);
   const [songs, setSongs] = useState({ list: [], hasMore: true, page: 1, loading: false, sort: 'hot' });
   const [albums, setAlbums] = useState({ list: [], hasMore: true, page: 1, loading: false });
@@ -81,12 +84,12 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
     if (cachedDetail) {
       setArtistDetail(cachedDetail);
     } else {
-      wyApi.getDetail(artistInfo.id).then(data => {
+      api.getDetail(artistInfo.id).then(data => {
         setArtistDetailCache(artistInfo.id, data); // 存入缓存
         setArtistDetail(data);
-      }).catch(() => toast('获取歌手信息失败'));
+      }).catch((err) => toast(`获取歌手信息失败: ${err?.message || err || '未知错误'}`));
     }
-  }, [componentId, artistInfo.id]);
+  }, [componentId, artistInfo.id, api]);
 
   const loadSongs = useCallback((sort, page, isRefresh = false) => {
     const cacheKey = `${artistInfo.id}_songs_${sort}_${page}`;
@@ -108,7 +111,7 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
     setSongs(prev => {
       if (!isRefresh && (prev.loading || !prev.hasMore)) return prev;
       const offset = (page - 1) * SONG_LIMIT;
-      wyApi.getSongs(artistInfo.id, sort, SONG_LIMIT, offset).then(data => {
+      api.getSongs(artistInfo.id, sort, SONG_LIMIT, offset).then(data => {
         // 写入全局缓存
         setArtistCache(cacheKey, { list: data.list, hasMore: data.hasMore });
 
@@ -120,13 +123,13 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
           loading: false,
           sort,
         }));
-      }).catch(() => {
-        toast('获取歌曲失败');
+      }).catch((err) => {
+        toast(`获取歌曲失败: ${err?.message || err || '未知错误'}`);
         setSongs(p => ({ ...p, loading: false }));
       });
       return { ...prev, loading: true };
     });
-  }, [artistInfo.id]);
+  }, [artistInfo.id, api]);
 
   const loadAlbums = useCallback((page, isRefresh = false) => {
     const cacheKey = `${artistInfo.id}_albums_${page}`;
@@ -147,7 +150,7 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
     setAlbums(prev => {
       if (!isRefresh && (prev.loading || !prev.hasMore)) return prev;
       const offset = (page - 1) * ALBUM_LIMIT;
-      wyApi.getAlbums(artistInfo.id, ALBUM_LIMIT, offset).then(data => {
+      api.getAlbums(artistInfo.id, ALBUM_LIMIT, offset).then(data => {
         // 写入全局缓存
         setArtistCache(cacheKey, { hotAlbums: data.hotAlbums, hasMore: data.hasMore });
 
@@ -164,7 +167,7 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
       });
       return { ...prev, loading: true };
     });
-  }, [artistInfo.id]);
+  }, [artistInfo.id, api]);
 
 
   useEffect(() => {
@@ -207,7 +210,7 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
   const handleRefresh = useCallback(() => {
     clearArtistCache(artistInfo.id);
 
-    wyApi.getDetail(artistInfo.id).then(data => {
+    api.getDetail(artistInfo.id).then(data => {
       setArtistDetailCache(artistInfo.id, data);
       setArtistDetail(data);
     }).catch(() => toast('刷新歌手信息失败'));
@@ -219,7 +222,7 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
       setAlbums(prev => ({ ...prev, page: 1, list: [], hasMore: true }));
       loadAlbums(1, true);
     }
-  }, [artistInfo.id, songs.sort, loadSongs, activeTab, loadAlbums]);
+  }, [artistInfo.id, songs.sort, loadSongs, activeTab, loadAlbums, api]);
 
 
   const handleAlbumViewModeChange = useCallback((mode: 'grid' | 'list') => {
@@ -230,7 +233,7 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
   return (
     <PageContent>
       <View style={styles.container}>
-        <Header artist={displayArtist} componentId={componentIdRef.current} />
+        <Header artist={displayArtist} componentId={componentIdRef.current} source={artistInfo.source} />
         <SongList
           componentId={componentId}
           songs={songs}
@@ -239,6 +242,7 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
           ref={songListRef as any}
           artistId={artistInfo.id}
           albumViewMode={albumViewMode}
+          source={artistInfo.source}
           onTabChange={handleTabChange}
           onLoadMoreSongs={handleLoadMoreSongs}
           onLoadMoreAlbums={handleLoadMoreAlbums}

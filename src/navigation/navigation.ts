@@ -596,7 +596,7 @@ export function pushTabBasedApp() {
   })
 }
  */
-export function pushArtistDetailScreen(componentId: string, artistInfo: { id: string, name: string }) {
+export function pushArtistDetailScreen(componentId: string, artistInfo: { id: string, name: string, source?: string }) {
   const theme = themeState.theme
   return Navigation.push(componentId, {
     component: {

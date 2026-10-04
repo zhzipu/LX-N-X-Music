@@ -6,6 +6,28 @@ Project versioning adheres to [Semantic Versioning](http://semver.org/).
 Commit convention is based on [Conventional Commits](http://conventionalcommits.org).
 Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [1.1.0](https://github.com/zhzipu/LX-N-X-Music/compare/v1.0.0...v1.1.0) - 2026-10-04
+
+新增「小哔音乐」B 站音源，可以直接在 LX-N-X Music 里搜索、播放 B 站的视频音频。
+
+### 新增
+
+- 新增「小哔音乐」音源（B 站视频音频），支持搜索、排行榜、评论
+- 歌手页支持 B 站 UP 主：可查看 UP 主的作品与合集，合集详情为独立全屏页
+- B 站账号登录：扫码 / 手机号 / 手动填 Cookie 三种方式，登录后可浏览自己的收藏夹与合集
+- 播放页可直接跳转到对应的 B 站视频详情页
+- 侧栏新增「小哔音乐」入口，可在设置里开关
+
+### 修复、优化
+
+- 修复 B 站空间接口在未登录时频繁返回 412 / -352 风控（改用 App 端接口）
+- 修复 B 站合集列表为空（接口分页上限导致的参数错误）
+- 修复 B 站合集详情标题被挤压成省略号
+- 修复部分场景下在线列表无法滚动（「移除离屏子视图」改为可按需关闭）
+- B 站封面图统一转 https 并补上 Referer，避免 403 导致封面灰底
+- 应用显示名统一为「LX-N-X Music」
+- 修复 `npm run publish` 在 Windows 上无法解析 CHANGELOG 的问题
+
 ## [1.0.0](https://github.com/zhzipu/LX-N-X-Music/releases/tag/v1.0.0) - 2026-10-03
 
 首个开源版本。

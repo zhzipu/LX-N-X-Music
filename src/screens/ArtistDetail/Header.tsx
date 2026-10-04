@@ -18,15 +18,17 @@ interface Props {
   artist: any
   onFollow?: () => void
   componentId: string
+  source?: string
 }
 
-export default memo(({ artist, onFollow, componentId }: Props) => {
+export default memo(({ artist, onFollow, componentId, source }: Props) => {
   const theme = useTheme()
   const statusBarHeight = useStatusbarHeight()
   const similarArtistsModalRef = useRef<SimilarArtistsModalType>(null)
   const [isDescExpanded, setDescExpanded] = useState(false)
   const [isPreviewVisible, setPreviewVisible] = useState(false)
   const isFollowed = useIsWyArtistFollowed(artist.id)
+  const isBili = source === 'bili'
 
   const artistName = artist?.name || ''
   const artistAlias = artist?.alias?.length ? ` ${artist.alias[0]}` : ''
@@ -90,17 +92,21 @@ export default memo(({ artist, onFollow, componentId }: Props) => {
             </View>
 
           </View>
-          <TouchableOpacity style={styles.followButton} onPress={toggleFollow}>
-            <Icon name={isFollowed ? 'love-filled' : 'love'} color={isFollowed ? theme['c-liked'] : '#fff'} size={18} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.82}
-            style={styles.similarButton}
-            onPress={() => similarArtistsModalRef.current?.show({ id: artist.id, name: artistName })}
-          >
-            <Text size={12} color="#fff" numberOfLines={1}>相似歌手</Text>
-            <Icon name="chevron-right" color="#fff" size={12} />
-          </TouchableOpacity>
+          {isBili ? null : (
+            <TouchableOpacity style={styles.followButton} onPress={toggleFollow}>
+              <Icon name={isFollowed ? 'love-filled' : 'love'} color={isFollowed ? theme['c-liked'] : '#fff'} size={18} />
+            </TouchableOpacity>
+          )}
+          {isBili ? null : (
+            <TouchableOpacity
+              activeOpacity={0.82}
+              style={styles.similarButton}
+              onPress={() => similarArtistsModalRef.current?.show({ id: artist.id, name: artistName })}
+            >
+              <Text size={12} color="#fff" numberOfLines={1}>相似歌手</Text>
+              <Icon name="chevron-right" color="#fff" size={12} />
+            </TouchableOpacity>
+          )}
         </View>
       </ImageBackground>
       <ImagePreviewModal
@@ -109,7 +115,7 @@ export default memo(({ artist, onFollow, componentId }: Props) => {
         name={artistName || 'artist'}
         onClose={() => setPreviewVisible(false)}
       />
-      <SimilarArtistsModal ref={similarArtistsModalRef} componentId={componentId} />
+      {isBili ? null : <SimilarArtistsModal ref={similarArtistsModalRef} componentId={componentId} />}
     </View>
   )
 })

@@ -23,7 +23,7 @@ public class Lyric extends LyricPlayer {
   ReactApplicationContext reactAppContext;
 
   boolean isRunPlayer = false;
-  // String lastText = "LX-N Music ^-^";
+  // String lastText = "LX-N-X Music ^-^";
   int lastLine = 0;
   List lines = new ArrayList();
   boolean isShowTranslation;

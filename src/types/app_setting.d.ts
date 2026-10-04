@@ -77,6 +77,11 @@ declare global {
       'common.yt_cookie': string
 
       /**
+       * Bilibili Cookie（登录后自动写入）
+       */
+      'common.bili_cookie': string
+
+      /**
        * 总是保留状态栏高度
        */
       'common.alwaysKeepStatusbarHeight': boolean

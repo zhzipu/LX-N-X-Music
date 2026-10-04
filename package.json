@@ -1,7 +1,7 @@
 {
   "name": "LX-N-X-Music",
-  "version": "1.0.0",
-  "versionCode": 71,
+  "version": "1.1.0",
+  "versionCode": 72,
   "private": true,
   "scripts": {
     "dev": "react-native run-android --active-arch-only",
@@ -66,6 +66,7 @@
     "react-native-progress": "^5.0.1",
     "react-native-quick-base64": "^2.1.2",
     "react-native-quick-md5": "^3.0.6",
+    "react-native-qrcode-svg": "6.3.12",
     "react-native-svg": "^13.8.0",
     "react-native-track-player": "github:lyswhut/react-native-track-player#d4a062f76ba3d0c408e0f0827b721cc4bf46dffd",
     "react-native-udp": "^4.1.7",

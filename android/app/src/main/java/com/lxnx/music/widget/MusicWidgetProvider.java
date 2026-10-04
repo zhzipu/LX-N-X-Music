@@ -176,7 +176,7 @@ public class MusicWidgetProvider extends AppWidgetProvider {
 
         // Read saved state
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String title = prefs.getString(KEY_TITLE, "LX-N Music");
+        String title = prefs.getString(KEY_TITLE, "LX-N-X Music");
         String artist = prefs.getString(KEY_ARTIST, "未在播放");
         boolean isPlaying = prefs.getBoolean(KEY_IS_PLAYING, false);
         String artworkUrl = prefs.getString(KEY_ARTWORK_URL, null);

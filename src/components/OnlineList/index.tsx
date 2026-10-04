@@ -48,6 +48,7 @@ export interface OnlineListProps {
   onListUpdate?: ListProps['onListUpdate']
   isCreator?: boolean
   componentId?: string
+  removeClippedSubviews?: boolean
 }
 
 export interface OnlineListType {
@@ -74,6 +75,7 @@ export default forwardRef<OnlineListType, OnlineListProps>(
       onListUpdate,
       isCreator = false,
       componentId: componentId_raw,
+      removeClippedSubviews,
     },
     ref,
   ) => {
@@ -220,6 +222,7 @@ export default forwardRef<OnlineListType, OnlineListProps>(
             playingId={playingId}
             forcePlayList={forcePlayList}
             onListUpdate={onListUpdate}
+            removeClippedSubviews={removeClippedSubviews}
           />
           <MultipleModeBar
             ref={multipleModeBarRef}

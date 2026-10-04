@@ -80,6 +80,71 @@ const OneDriveIcon = ({ size, color }: { size: number; color: string }) => (
   </Svg>
 )
 
+/**
+ * Bilibili 图标 - 用于 B 站音频
+ * 电视机主体 + 天线 + 双眼
+ */
+const BilibiliIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    {/* 左天线 */}
+    <Path d="M7.2 7.2 L4.4 3.6" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+    {/* 右天线 */}
+    <Path d="M16.8 7.2 L19.6 3.6" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+    {/* 电视机主体 */}
+    <Rect x="2.4" y="7.2" width="19.2" height="12" rx="3" stroke={color} strokeWidth="1.6" fill="none" />
+    {/* 双眼 */}
+    <Line x1="9.2" y1="11.4" x2="9.2" y2="14.4" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    <Line x1="14.8" y1="11.4" x2="14.8" y2="14.4" stroke={color} strokeWidth="2" strokeLinecap="round" />
+  </Svg>
+)
+
+/**
+ * 二维码图标 - 用于扫码登录
+ * 三个定位角 + 右下角数据块
+ */
+const QrCodeIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    {/* 左上定位角 */}
+    <Rect x="2.6" y="2.6" width="7.4" height="7.4" rx="2" stroke={color} strokeWidth="1.6" />
+    <Rect x="5.6" y="5.6" width="1.4" height="1.4" rx="0.7" fill={color} />
+    {/* 右上定位角 */}
+    <Rect x="14" y="2.6" width="7.4" height="7.4" rx="2" stroke={color} strokeWidth="1.6" />
+    <Rect x="17" y="5.6" width="1.4" height="1.4" rx="0.7" fill={color} />
+    {/* 左下定位角 */}
+    <Rect x="2.6" y="14" width="7.4" height="7.4" rx="2" stroke={color} strokeWidth="1.6" />
+    <Rect x="5.6" y="17" width="1.4" height="1.4" rx="0.7" fill={color} />
+    {/* 右下数据块 */}
+    <Rect x="14" y="14" width="3" height="3" rx="0.8" fill={color} />
+    <Rect x="18.4" y="14" width="3" height="3" rx="0.8" fill={color} />
+    <Rect x="14" y="18.4" width="3" height="3" rx="0.8" fill={color} />
+    <Rect x="18.4" y="18.4" width="3" height="3" rx="0.8" fill={color} />
+  </Svg>
+)
+
+/**
+ * 手机图标 - 用于手机号登录
+ */
+const PhoneIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect x="6.2" y="2.4" width="11.6" height="19.2" rx="2.6" stroke={color} strokeWidth="1.6" />
+    <Line x1="10.4" y1="18.6" x2="13.6" y2="18.6" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+  </Svg>
+)
+
+/**
+ * Cookie 图标 - 用于手动填写 Cookie
+ */
+const CookieIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="12" r="9.2" stroke={color} strokeWidth="1.6" />
+    <Circle cx="9" cy="9.4" r="1.3" fill={color} />
+    <Circle cx="14.6" cy="8.6" r="1" fill={color} />
+    <Circle cx="9.6" cy="14.4" r="1" fill={color} />
+    <Circle cx="15" cy="14.8" r="1.4" fill={color} />
+    <Circle cx="12.4" cy="17.4" r="0.9" fill={color} />
+  </Svg>
+)
+
 const HeartbeatIcon = ({ size, color }: { size: number; color: string }) => (
   <Svg width={size} height={size} viewBox="0 0 1165 1024" fill="none">
     <Path
@@ -131,6 +196,14 @@ export const SvgIcon = memo(({ name, size = 15, rawSize, color = '#000' }: SvgIc
       return <AlbumDiscIcon size={finalSize} color={color} />
     case 'onedrive':
       return <OneDriveIcon size={finalSize} color={color} />
+    case 'bilibili':
+      return <BilibiliIcon size={finalSize} color={color} />
+    case 'qrcode':
+      return <QrCodeIcon size={finalSize} color={color} />
+    case 'phone':
+      return <PhoneIcon size={finalSize} color={color} />
+    case 'cookie':
+      return <CookieIcon size={finalSize} color={color} />
     case 'heartbeat':
       return <HeartbeatIcon size={finalSize} color={color} />
     case 'recognize':

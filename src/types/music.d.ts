@@ -95,6 +95,16 @@ declare namespace LX {
       meta: MusicInfoMeta_tx
     }
 
+    interface MusicInfoMeta_bili extends MusicInfoMeta_online {
+      /** bvid（视频 id） */
+      bvid: string
+      /** cid（分 P id，用于取音频流） */
+      cid: number
+    }
+    interface MusicInfo_bili extends MusicInfoBase<'bili'> {
+      meta: MusicInfoMeta_bili
+    }
+
     interface MusicInfoMeta_mg extends MusicInfoMeta_online {
       copyrightId: string // 歌曲copyrightId
       lrcUrl?: string // 歌曲lrcUrl
@@ -105,7 +115,7 @@ declare namespace LX {
       meta: MusicInfoMeta_mg
     }
 
-    type MusicInfoOnline = MusicInfo_online_common | MusicInfo_kg | MusicInfo_tx | MusicInfo_mg
+    type MusicInfoOnline = MusicInfo_online_common | MusicInfo_kg | MusicInfo_tx | MusicInfo_mg | MusicInfo_bili
     type MusicInfo = MusicInfoOnline | MusicInfoLocal
 
     interface LyricInfo {

@@ -9,9 +9,16 @@ import settingState from '@/store/setting/state'
 const list: LX.Player.Track[] = []
 
 const defaultUserAgent = 'Mozilla/5.0 (Linux; Android 10; Pixel 3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Mobile Safari/537.36'
+// B 站 App UA，与 api.ts 里 BILI_UA 保持一致，降低 CDN 风控概率
+const BILI_UA =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 BiliApp/6.66.0'
 const wyStreamHeaders = {
   Referer: 'https://music.163.com/',
   Origin: 'https://music.163.com',
+}
+// B 站 dash 音频直链必须带 Referer 才能下载，否则 CDN 返回 403
+const biliStreamHeaders = {
+  Referer: 'https://www.bilibili.com/',
 }
 const httpRxp = /^(https?:\/\/.+|\/.+)/
 const wyMediaUrlRxp = /^https?:\/\/(?:[^/]+\.)?music\.126\.net\//
@@ -44,12 +51,16 @@ const getTrackSource = (musicInfo: LX.Player.PlayMusic) => {
 const getTrackHeaders = (musicInfo: LX.Player.PlayMusic, url?: string) => {
   if (!url || !/^https?:\/\//.test(url) || wyMediaUrlRxp.test(url)) return undefined
   const source = getTrackSource(musicInfo)
-  return source === 'wy' ? wyStreamHeaders : undefined
+  if (source === 'wy') return wyStreamHeaders
+  if (source === 'bili') return biliStreamHeaders
+  return undefined
 }
 
 const getTrackUserAgent = (musicInfo: LX.Player.PlayMusic, url?: string) => {
   if (!url || !/^https?:\/\//.test(url)) return undefined
-  if (getTrackSource(musicInfo) === 'wy' && wyMediaUrlRxp.test(url)) return ''
+  const source = getTrackSource(musicInfo)
+  if (source === 'wy' && wyMediaUrlRxp.test(url)) return ''
+  if (source === 'bili') return BILI_UA
   return defaultUserAgent
 }
 
@@ -253,7 +264,7 @@ const updateMetaInfo = async (mInfo: LX.Player.MusicInfo, lyric?: string) => {
   )
 
   // Update home screen widget
-  const widgetTitle = mInfo.name ?? 'LX-N Music'
+  const widgetTitle = mInfo.name ?? 'LX-N-X Music'
   const widgetArtist = mInfo.singer ? `${mInfo.singer}${mInfo.album ? ` · ${mInfo.album}` : ''}` : '未在播放'
   void updateWidget(widgetTitle, widgetArtist, state.isPlaying, widgetArtwork).catch(() => { })
 }
