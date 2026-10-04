@@ -8,7 +8,7 @@
   <a href="https://github.com/facebook/react-native"><img src="https://img.shields.io/github/package-json/dependency-version/zhzipu/LX-N-X-Music/react-native/master" alt="React native version"></a>
 </p>
 
-<p align="center">基于 React Native 的网易云音乐客户端</p>
+<p align="center">基于 React Native 的音乐客户端（网易云 + B 站音源）</p>
 
 本项目在 [lx-music-mobile](https://github.com/lyswhut/lx-music-mobile) 与
 [ikun-music-mobile](https://github.com/ikunshare/ikun-music-mobile) 的基础上继续改造，
@@ -17,6 +17,34 @@
 > 同步、备份等功能未充分测试，请自行备份重要数据。
 
 ## 特性
+
+完整更新记录见 [CHANGELOG.md](./CHANGELOG.md)。
+
+### 小哔音乐（B 站音源）
+
+把 B 站的视频音频接成一个独立音源，可以直接在 App 里搜索、播放，并作为歌手页的数据源之一：
+
+| 能力 | 说明 |
+| --- | --- |
+| 搜索 | 关键词搜索 B 站视频，取音频流播放 |
+| 排行榜 | B 站分区排行榜 |
+| 评论 | 读取视频评论 |
+| 歌手页 | 以 UP 主为「歌手」，列出其**投稿作品**与**合集**；合集详情是独立的全屏页 |
+| 登录 | 扫码 / 手机号 / 手动填 Cookie 三种方式，登录后可浏览自己的收藏夹与合集 |
+| 跳转 | 播放页可直接跳到对应的 B 站视频详情页 |
+
+入口是侧栏的「Bilibili」（`nav_bilibili`），可在设置里关闭。
+
+接口实现上踩过的几个坑（都已写进代码注释）：
+
+- **空间 / 作品接口必须走 App 端**。B 站 web 的 `/x/space/wbi/arc/search`、`/x/space/wbi/acc/info`
+  对「未登录 + App 环境」风控极严，部分账号（尤其 16 位新创作号）直接返回 **HTTP 412 / -352**；
+  而 `app.bilibili.com` 的 `/x/v2/space`、`/x/v2/space/archive` 用 appkey 签名后，未登录也能稳定返回。
+  签名方式：参数按 key 升序拼成 query，取 `md5(query + appsec)` 作为 `sign`。
+- **分页上限**。App 的作品接口每页硬上限 20，合集列表接口的 `page_size` 也只能 ≤ 20，传大了直接
+  `-400`。代码里统一按 20 内部翻页，再对外返回真实的 `hasMore`。
+- **封面防盗链**。B 站图片统一转 `https` 并补上 `Referer`，否则 403 会导致封面灰底。
+- 所有请求都带 `credentials: 'omit'`，避免 RN 原生 CookieJar 覆盖显式传入的 Cookie 头（`/nav` 必需）。
 
 ### 听歌识曲
 
@@ -104,7 +132,8 @@ cd android && ./gradlew assembleDebug
 安装到设备：
 
 ```bash
-adb install -r -d android/app/build/outputs/apk/debug/LX-N-X-Music-v1.0.0-arm64-v8a.apk
+# debug 产物按 ABI 拆分，没有 app-debug.apk —— 按设备架构选对应文件
+adb install -r -d android/app/build/outputs/apk/debug/LX-N-X-Music-v1.1.0-arm64-v8a.apk
 ```
 
 ### 正式版（release）
@@ -128,9 +157,20 @@ cd android && ./gradlew assembleRelease
 
 包名：正式版 `com.lxnx.music`，debug 版 `com.lxnx.music.dev` —— 两者可以同时装在一台机器上。
 
+CI（`.github/workflows/release.yml`）**只支持手动触发**：去 Actions 页面点 `Run workflow`
+才会编译并发布 Release；平时 push 源码不会自动发版。
+
 ## 目录说明
 
 ```
+src/core/bilibili/              B 站音源：接口封装、WBI / App 签名、登录态
+  api.ts                        空间 / 作品 / 合集 / 收藏夹等接口
+  auth.ts                       扫码 / 手机号 / Cookie 登录
+  wbi.ts                        web 接口的 WBI 签名
+src/utils/musicSdk/bili/        小哔音乐音源适配（搜索 / 排行榜 / 评论 / 歌手）
+src/screens/Home/Views/Bilibili/  B 站页面（侧栏入口、库、登录、收藏夹详情）
+src/screens/ArtistDetail/        歌手页（含 B 站 UP 主的作品与合集）
+
 src/core/musicRecognition/      听歌识曲：采集、三引擎、结果合并
   engines/                      shazam / netease / kugou
   afp.ts                        AFP 指纹桥（与隐藏 WebView 通信）
