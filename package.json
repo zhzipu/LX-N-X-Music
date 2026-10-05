@@ -1,7 +1,7 @@
 {
   "name": "LX-N-X-Music",
-  "version": "1.1.0",
-  "versionCode": 72,
+  "version": "1.1.1",
+  "versionCode": 73,
   "private": true,
   "scripts": {
     "dev": "react-native run-android --active-arch-only",
