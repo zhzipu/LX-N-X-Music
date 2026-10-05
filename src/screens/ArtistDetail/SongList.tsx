@@ -42,12 +42,10 @@ const SongList = forwardRef<SongListRef, SongListProps>(({
                                                            playingId,
                                                            albumViewMode, onAlbumViewModeChange,
                                                            onSongListUpdate,
-                                                           source,
                                                          }, ref) => {
   const theme = useTheme()
   const songListRef = useRef<OnlineListType>(null)
   const pagerViewRef = useRef<PagerView>(null)
-  const isBili = source === 'bili'
 
   useImperativeHandle(ref, () => ({
     scrollToInfo: (info) => {
@@ -101,11 +99,11 @@ const SongList = forwardRef<SongListRef, SongListProps>(({
             style={[styles.tabText, { borderBottomColor: activeTab === 'albums' ? theme['c-primary-font-active'] : 'transparent' }]}
             color={activeTab === 'albums' ? theme['c-primary-font'] : theme['c-font']}
           >
-            {isBili ? '所有合集' : '所有专辑'}
+            所有专辑
           </Text>
         </TouchableOpacity>
       </View>
-      { activeTab === 'songs' && !isBili && (
+      { activeTab === 'songs' && (
         <View style={styles.sorts}>
           <TouchableOpacity onPress={() => onSortChange('hot')} style={styles.sortBtn}>
             <Text

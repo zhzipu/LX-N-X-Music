@@ -99,7 +99,8 @@ const requireOk = async <T>(response: Response, what: string): Promise<BiliEnvel
     throw new BiliApiError(`${what}失败：响应不是合法 JSON`)
   }
   if (body.code !== 0) {
-    throw new BiliApiError(body.message || `${what}失败（code ${body.code}）`, body.code)
+    // 带上接口名与 code：B 站很多错误只有一句笼统的「请求错误」，光靠 message 无法定位
+    throw new BiliApiError(`${what}失败（${body.code}）：${body.message || '未知错误'}`, body.code)
   }
   return body
 }
@@ -371,6 +372,119 @@ export const getCollectedFolders = async (
   }
 }
 
+// ---------------------------------------------------------------- 收藏 / 关注（写操作）
+
+/**
+ * 读取 Cookie 里某个键的值。
+ *
+ * 写接口统一要求的 CSRF token 就在 Cookie 的 `bili_jct` 里，缺了会返回 -111。
+ * 这里自己解析而不复用 auth.ts 的 parseBiliCookie：auth.ts 已经 import 本模块，
+ * 反向再 import 会形成循环依赖。
+ */
+const readCookieValue = (cookie: string, name: string): string => {
+  const matched = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
+  return matched ? matched[1] : ''
+}
+
+/** 当前 Cookie 是否具备写操作能力（扫码/网页登录都会带 bili_jct，手动只填 SESSDATA 则没有） */
+export const hasBiliCsrf = (cookie: string): boolean => !!readCookieValue(cookie, 'bili_jct')
+
+/** 收藏的视频/合集统一放进的收藏夹名 */
+export const BILI_MUSIC_FOLDER_NAME = '音乐'
+
+/** POST 表单请求（自动附加 csrf） */
+const postForm = async <T>(
+  path: string,
+  params: Record<string, string>,
+  cookie: string,
+  what: string
+): Promise<BiliEnvelope<T>> => {
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      ...baseHeaders,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Cookie: cookie,
+    },
+    body: formBody({ ...params, csrf: readCookieValue(cookie, 'bili_jct') }),
+    credentials: 'omit',
+  })
+  return requireOk<T>(response, what)
+}
+
+/**
+ * 找到「音乐」收藏夹，没有则创建，返回收藏夹 id（fid）。
+ *
+ * B 站规定每个账号必须保留一个默认收藏夹，所以正常情况下至少能拿到一个；
+ * 这里按标题精确匹配，避免把已有收藏混进别的夹子里。
+ */
+export const ensureMusicFavoriteFolder = async (mid: number, cookie: string): Promise<number> => {
+  const folders = await getFavoriteFolders(mid, cookie)
+  const existed = folders.find((f) => f.title.trim() === BILI_MUSIC_FOLDER_NAME)
+  if (existed) return existed.id
+  const body = await postForm<{ id: number }>(
+    '/x/v3/fav/folder/add',
+    { title: BILI_MUSIC_FOLDER_NAME, privacy: '0', intro: '' },
+    cookie,
+    '创建「音乐」收藏夹'
+  )
+  const id = body.data?.id
+  if (!id) throw new BiliApiError('创建「音乐」收藏夹失败：接口未返回收藏夹 id')
+  return id
+}
+
+/** 收藏资源类型：2=视频（稿件），21=合集（season） */
+export const BILI_FAV_TYPE_VIDEO = 2
+export const BILI_FAV_TYPE_SEASON = 21
+
+/**
+ * 收藏 / 取消收藏一个资源到指定收藏夹。
+ * @param rid 资源 id（视频传 avid 或 bvid，合集传 season_id）
+ * @param type 资源类型，见 BILI_FAV_TYPE_*
+ * @param folderId 目标收藏夹 id
+ * @param add true=收藏，false=取消收藏
+ */
+export const dealFavoriteResource = async (
+  rid: number | string,
+  type: number,
+  folderId: number,
+  add: boolean,
+  cookie: string
+): Promise<void> => {
+  await postForm<unknown>(
+    '/x/v3/fav/resource/deal',
+    {
+      rid: String(rid),
+      type: String(type),
+      add_media_ids: add ? String(folderId) : '',
+      del_media_ids: add ? '' : String(folderId),
+    },
+    cookie,
+    add ? '收藏' : '取消收藏'
+  )
+}
+
+/** 关注来源标识：web 端固定 11（空间页），缺了容易被风控 */
+const RELATION_SOURCE = '11'
+
+/**
+ * 关注 / 取关 UP 主。
+ * @param fid 目标用户 mid
+ * @param follow true=关注，false=取消关注
+ */
+export const modifyBiliRelation = async (
+  fid: number,
+  follow: boolean,
+  cookie: string
+): Promise<void> => {
+  await postForm<unknown>(
+    '/x/relation/modify',
+    { fid: String(fid), act: follow ? '1' : '2', re_src: RELATION_SOURCE },
+    cookie,
+    follow ? '关注 UP 主' : '取消关注'
+  )
+}
+
 // ---------------------------------------------------------------- 详情 / 音频流
 
 /** 根据 bvid 生成 B 站视频网页地址 */
@@ -509,6 +623,8 @@ export const getCollectionContents = async (
 
 /** 搜索结果里的单个视频 */
 export interface BiliSearchVideo {
+  /** avid（收藏接口按 avid 收藏，缺失会导致 -400） */
+  aid: number
   bvid: string
   title: string
   author: string
@@ -544,6 +660,7 @@ export const searchVideos = async (
   })
   const body = await requireOk<{
     result: {
+      aid: number
       bvid: string
       title: string
       author: string
@@ -556,6 +673,7 @@ export const searchVideos = async (
     numPages: number
   }>(response, '搜索视频')
   const list: BiliSearchVideo[] = (body.data?.result ?? []).map((r) => ({
+    aid: r.aid ?? 0,
     bvid: r.bvid,
     title: r.title,
     author: r.author,
@@ -771,18 +889,21 @@ const APP_ARCHIVE_PAGE_MAX = 20
 /**
  * 获取 UP 主投稿的视频列表（作品）。
  *
- * 走 App 接口 `/x/v2/space/archive`（appkey 签名），按最新排序。
+ * 走 App 接口 `/x/v2/space/archive`（appkey 签名）。
  * 不用 web 的 `/x/space/wbi/arc/search`：后者对未登录 + App 环境的账号
  * （尤其 16 位新创作号）会返回 HTTP 412 / -352 风控。
  *
  * 注意：App 接口每页最多返回 20 条，这里按请求的 `ps` 自动翻子页凑满，
  * 保证上层传 limit=100 时能拿到完整一页。
+ *
+ * @param order 排序：`pubdate`=最新（时间），`click`=播放量（热门），`stow`=收藏数
  */
 export const getMemberArchives = async (
   mid: number,
   page = 1,
   ps = 30,
-  cookie = ''
+  cookie = '',
+  order = 'pubdate'
 ): Promise<{ list: BiliMemberArchive[]; count: number }> => {
   const finalCookie = await ensureBuvid(cookie)
   const start = (page - 1) * ps // 需要跳过的作品总数
@@ -797,7 +918,7 @@ export const getMemberArchives = async (
       vmid: mid,
       pn: apiPage,
       ps: APP_ARCHIVE_PAGE_MAX,
-      order: 'pubdate',
+      order,
       tid: 0,
     })
     const response = await fetch(`${APP_BASE}/x/v2/space/archive?${query}`, {

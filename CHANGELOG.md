@@ -6,6 +6,23 @@ Project versioning adheres to [Semantic Versioning](http://semver.org/).
 Commit convention is based on [Conventional Commits](http://conventionalcommits.org).
 Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [1.1.1](https://github.com/zhzipu/LX-N-X-Music/compare/v1.1.0...v1.1.1) - 2026-10-05
+
+B 站音源支持收藏：歌曲、专辑、歌手都能一键收藏，并同步到 B 站账号。
+
+#### 新增
+
+- B 站音源支持收藏：歌曲（视频）、专辑（合集）、歌手（UP 主）右侧均有收藏心形按钮
+- 收藏同步进 B 站「音乐」收藏夹（不存在会自动创建），歌手以「关注」形式保存
+- 收藏先写入本地，离线 / 未登录也能用；已登录时再同步到 B 站账号，同步失败只提示、不影响本地状态
+- 歌手详情页「所有合集」改称「所有专辑」；歌曲支持按热门 / 时间排序
+- 「我的列表」中的 B 站歌曲右侧也显示收藏心
+
+#### 修复、优化
+
+- 修复 B 站歌曲收藏失败：收藏接口要求 avid，此前部分来源只带 bvid，会返回「请求错误」
+- B 站接口报错信息携带接口名与错误码，便于定位问题
+
 ## [1.1.0](https://github.com/zhzipu/LX-N-X-Music/compare/v1.0.0...v1.1.0) - 2026-10-04
 
 新增「小哔音乐」B 站音源，可以直接在 LX-N-X Music 里搜索、播放 B 站的视频音频。

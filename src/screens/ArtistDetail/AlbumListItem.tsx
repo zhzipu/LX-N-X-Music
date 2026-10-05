@@ -8,15 +8,20 @@ import { dateFormat } from '@/utils/common'
 import { navigations } from '@/navigation'
 import commonState from '@/store/common/state'
 import { Icon } from '@/components/common/Icon'
-import { useIsWyAlbumSubscribed } from '@/store/user/hook'
+import { useIsWyAlbumSubscribed, useIsBiliAlbumSubscribed } from '@/store/user/hook'
 import wyApi from '@/utils/musicSdk/wy/user'
 import { addWySubscribedAlbum, removeWySubscribedAlbum } from '@/store/user/action'
 import { type SubscribedAlbumInfo } from '@/store/user/state'
 import BiliFolderDetail from '@/screens/Home/Views/Bilibili/FolderDetail'
+import { toggleBiliAlbumSubscribe } from '@/core/bilibili/favorite'
 
 export default memo(({ componentId, item, width, viewMode }: { componentId: string, item: any, width: number, viewMode: 'grid' | 'list' }) => {
   const theme = useTheme()
-  const isSubscribed = useIsWyAlbumSubscribed(item.id)
+  const isBili = item.source === 'bili'
+  // 网易云收藏的专辑与 bili 收藏的合集是两套独立存储，按音源二选一
+  const isWySubscribed = useIsWyAlbumSubscribed(isBili ? undefined : item.id)
+  const isBiliSubscribed = useIsBiliAlbumSubscribed(isBili ? item.id : undefined)
+  const isSubscribed = isBili ? isBiliSubscribed : isWySubscribed
   const [biliDetail, setBiliDetail] = useState<{ folderId: number, title: string } | null>(null)
 
   const handlePress = () => {
@@ -44,6 +49,14 @@ export default memo(({ componentId, item, width, viewMode }: { componentId: stri
   const toggleSubscribe = (event: any) => {
     event.stopPropagation()
     if (!item.id) return
+    // B 站合集：先落地本地收藏，再尽力同步进 B 站「音乐」收藏夹
+    if (isBili) {
+      void toggleBiliAlbumSubscribe(
+        { id: item.id, name: item.name, picUrl: item.picUrl, size: item.size },
+        !isSubscribed,
+      )
+      return
+    }
     const newSubState = !isSubscribed
     wyApi.subAlbum(String(item.id), newSubState).then(() => {
       toast(newSubState ? '收藏成功' : '取消收藏成功')
@@ -86,8 +99,6 @@ export default memo(({ componentId, item, width, viewMode }: { componentId: stri
     </Modal>
   ) : null
 
-  const isBili = item.source === 'bili'
-
   // 列表视图模式
   if (viewMode === 'list') {
     return (
@@ -100,11 +111,9 @@ export default memo(({ componentId, item, width, viewMode }: { componentId: stri
             {isBili ? `${item.size} 个视频` : `${dateFormat(item.publishTime, 'Y.M.D')} • ${item.size} tracks`}
           </Text>
         </View>
-        {isBili ? null : (
-          <TouchableOpacity style={listStyles.likeButton} onPress={toggleSubscribe}>
-            <Icon name={isSubscribed ? 'love-filled' : 'love'} color={isSubscribed ? theme['c-liked'] : theme['c-font-label']} size={18} />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={listStyles.likeButton} onPress={toggleSubscribe}>
+          <Icon name={isSubscribed ? 'love-filled' : 'love'} color={isSubscribed ? theme['c-liked'] : theme['c-font-label']} size={18} />
+        </TouchableOpacity>
       </TouchableOpacity>
       {biliDetailModal}
       </>
@@ -126,11 +135,9 @@ export default memo(({ componentId, item, width, viewMode }: { componentId: stri
             {isBili ? `${item.size} 个视频` : `• ${item.size} tracks`}
           </Text>
         </View>
-        {isBili ? null : (
-          <TouchableOpacity style={gridStyles.likeButton} onPress={toggleSubscribe}>
-            <Icon name={isSubscribed ? 'love-filled' : 'love'} color={isSubscribed ? theme['c-liked'] : theme['c-font-label']} size={18} />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={gridStyles.likeButton} onPress={toggleSubscribe}>
+          <Icon name={isSubscribed ? 'love-filled' : 'love'} color={isSubscribed ? theme['c-liked'] : theme['c-font-label']} size={18} />
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
     {biliDetailModal}

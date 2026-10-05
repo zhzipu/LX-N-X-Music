@@ -20,6 +20,7 @@ export const toBiliMusicInfo = (item: BiliMediaItem): LX.Music.MusicInfo_bili =>
       albumName: 'Bilibili',
       picUrl: normalizeBiliImageUrl(item.cover),
       bvid: item.bvid,
+      aid: item.id, // avid：收藏时用
       cid: 0, // 播放时懒加载拿 cid
       qualitys: [],
       _qualitys: {},

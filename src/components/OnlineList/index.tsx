@@ -19,6 +19,8 @@ import {
   handleShowAlbumDetail,
   handleLikeMusic,
 } from './listAction'
+import { toggleBiliSongFavorite } from '@/core/bilibili/favorite'
+import userState from '@/store/user/state'
 import MusicDownloadModal, {
   type MusicDownloadModalType,
 } from '@/screens/Home/Views/Mylist/MusicList/MusicDownloadModal'
@@ -272,6 +274,12 @@ export default forwardRef<OnlineListType, OnlineListProps>(
           }}
           onDownload={(info) => musicDownloadModalRef.current?.show(info.musicInfo)}
           onLike={(info) => {
+            // bili 的歌曲（视频）走自己的收藏链路（本地 + 同步 B 站）
+            if (info.musicInfo.source === 'bili') {
+              const bvid = String(info.musicInfo.meta.songId)
+              void toggleBiliSongFavorite(info.musicInfo, !userState.bili_liked_song_ids.has(bvid))
+              return
+            }
             handleLikeMusic(info.musicInfo)
           }}
           onPlayMv={handlePlayMv}

@@ -23,8 +23,8 @@ const boardList = [
   { id: 'bili__3', name: '二创榜', bangid: '3' },
 ]
 
-/** 把榜单里的视频项转成 old music info（带 bvid/cid，供 toNewMusicInfo 转换） */
-const toOldMusicInfo = ({ bvid, cid, title, cover, nickname, mid, duration }) => ({
+/** 把榜单里的视频项转成 old music info（带 bvid/aid/cid，供 toNewMusicInfo 转换） */
+const toOldMusicInfo = ({ bvid, aid, cid, title, cover, nickname, mid, duration }) => ({
   songmid: bvid,
   name: title,
   singer: nickname || 'Bilibili',
@@ -36,6 +36,7 @@ const toOldMusicInfo = ({ bvid, cid, title, cover, nickname, mid, duration }) =>
   _types: {},
   // bili 扩展字段，toNewMusicInfo 的 bili 分支会转进 meta
   bvid,
+  aid: aid || 0, // avid：收藏时用（缺了收藏会 -400）
   cid: cid || 0,
 })
 
@@ -64,6 +65,7 @@ export default {
       list = videos.map((v) =>
         toOldMusicInfo({
           bvid: v.bvid,
+          aid: v.aid,
           cid: v.cid,
           title: v.title,
           cover: v.pic,
@@ -87,6 +89,7 @@ export default {
             list.push(
               toOldMusicInfo({
                 bvid: arc.bvid,
+                aid: arc.aid,
                 cid: arc.first_cid,
                 // 用二创视频标题（歌曲名作歌手名前缀，见下）
                 title: arc.title || it.music_title,

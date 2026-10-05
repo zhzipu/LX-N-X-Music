@@ -272,8 +272,9 @@ const List = forwardRef<ListType, ListProps>(
 
     const renderItem: FlatListType['renderItem'] = ({ item, index }) => {
       // 判断歌曲来源
-      if (item.source === 'wy') {
-        // 如果是在线音乐wy，使用 OnlineList 的 ListItem
+      // wy / bili 都能收藏（wy 收藏到网易云「喜欢」、bili 收藏到 B 站「音乐」收藏夹），
+      // 统一走 OnlineList 的 ListItem，它自带右侧收藏心形按钮。
+      if (item.source === 'wy' || item.source === 'bili') {
         return (
           <OnlineListItem
             item={item as LX.Music.MusicInfoOnline} // 类型断言为在线音乐
@@ -286,7 +287,7 @@ const List = forwardRef<ListType, ListProps>(
             rowInfo={rowInfo.current}
             isShowAlbumName={isShowAlbumName}
             isShowInterval={isShowInterval}
-            listId='dailyrec_wy' // 传入当前列表ID以显示爱心图标
+            listId={listState.activeListId} // 传入当前列表ID
             showSource={isShowSource}
             showCover={showCover}
           />

@@ -115,6 +115,8 @@ export const toNewMusicInfo = (oldMusicInfo: any): LX.Music.MusicInfo => {
       case 'bili':
         meta.bvid = oldMusicInfo.bvid ?? oldMusicInfo.songmid
         meta.cid = oldMusicInfo.cid ?? 0
+        // avid：bili 收藏接口（/x/v3/fav/resource/deal）按 avid 收藏，缺了会 -400
+        meta.aid = oldMusicInfo.aid ?? oldMusicInfo.meta?.aid ?? 0
         break
     }
   }
@@ -163,6 +165,7 @@ export const toOldMusicInfo = (minfo: LX.Music.MusicInfo): any => {
       case 'bili':
         oInfo.bvid = minfo.meta.bvid ?? minfo.meta.songId
         oInfo.cid = minfo.meta.cid ?? 0
+        oInfo.aid = minfo.meta.aid ?? 0
         break
     }
   }

@@ -100,6 +100,8 @@ declare namespace LX {
       bvid: string
       /** cid（分 P id，用于取音频流） */
       cid: number
+      /** avid，收藏（/x/v3/fav/resource/deal）时需要；来源没带则收藏时用 bvid 兜底 */
+      aid?: number
     }
     interface MusicInfo_bili extends MusicInfoBase<'bili'> {
       meta: MusicInfoMeta_bili

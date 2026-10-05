@@ -9,10 +9,11 @@ import { createStyle, toast } from '@/utils/tools'
 import { useStatusbarHeight } from '@/store/common/hook'
 import { Icon } from '@/components/common/Icon'
 import wyApi from '@/utils/musicSdk/wy/user'
-import { useIsWyArtistFollowed } from '@/store/user/hook'
+import { useIsBiliArtistFollowed, useIsWyArtistFollowed } from '@/store/user/hook'
 import { addWyFollowedArtist, removeWyFollowedArtist } from '@/store/user/action'
 import { type FollowedArtistInfo } from '@/store/user/state'
 import SimilarArtistsModal, { type SimilarArtistsModalType } from './SimilarArtistsModal'
+import { toggleBiliArtistFollow } from '@/core/bilibili/favorite'
 
 interface Props {
   artist: any
@@ -27,8 +28,11 @@ export default memo(({ artist, onFollow, componentId, source }: Props) => {
   const similarArtistsModalRef = useRef<SimilarArtistsModalType>(null)
   const [isDescExpanded, setDescExpanded] = useState(false)
   const [isPreviewVisible, setPreviewVisible] = useState(false)
-  const isFollowed = useIsWyArtistFollowed(artist.id)
   const isBili = source === 'bili'
+  // 网易云的「关注」与 bili 的「收藏」是两套独立存储，按音源二选一
+  const isWyFollowed = useIsWyArtistFollowed(isBili ? undefined : artist.id)
+  const isBiliFollowed = useIsBiliArtistFollowed(isBili ? artist.id : undefined)
+  const isFollowed = isBili ? isBiliFollowed : isWyFollowed
 
   const artistName = artist?.name || ''
   const artistAlias = artist?.alias?.length ? ` ${artist.alias[0]}` : ''
@@ -38,6 +42,14 @@ export default memo(({ artist, onFollow, componentId, source }: Props) => {
   const toggleFollow = () => {
     if (!artist.name) {
       toast('正在加载歌手信息，请稍后...')
+      return
+    }
+    // B 站 UP 主：先落地本地收藏，再尽力同步到 B 站账号（关注）
+    if (isBili) {
+      void toggleBiliArtistFollow(
+        { id: artist.id, name: artist.name, picUrl: artist.avatar },
+        !isFollowed,
+      )
       return
     }
     const newFollowState = !isFollowed
@@ -92,11 +104,9 @@ export default memo(({ artist, onFollow, componentId, source }: Props) => {
             </View>
 
           </View>
-          {isBili ? null : (
-            <TouchableOpacity style={styles.followButton} onPress={toggleFollow}>
-              <Icon name={isFollowed ? 'love-filled' : 'love'} color={isFollowed ? theme['c-liked'] : '#fff'} size={18} />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity style={styles.followButton} onPress={toggleFollow}>
+            <Icon name={isFollowed ? 'love-filled' : 'love'} color={isFollowed ? theme['c-liked'] : '#fff'} size={18} />
+          </TouchableOpacity>
           {isBili ? null : (
             <TouchableOpacity
               activeOpacity={0.82}

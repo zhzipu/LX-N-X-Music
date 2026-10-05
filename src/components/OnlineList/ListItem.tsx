@@ -10,8 +10,9 @@ import { LIST_ITEM_HEIGHT } from '@/config/constant'
 import { createStyle, type RowInfo } from '@/utils/tools'
 import Image from '@/components/common/Image'
 import PlayingIcon from '@/components/common/PlayingIcon'
-import { useIsWyLiked } from '@/store/user/hook'
+import { useIsBiliLiked, useIsWyLiked } from '@/store/user/hook'
 import { handleLikeMusic } from './listAction'
+import { toggleBiliSongFavorite } from '@/core/bilibili/favorite'
 
 export const ITEM_HEIGHT = scaleSizeH(LIST_ITEM_HEIGHT)
 
@@ -83,7 +84,10 @@ export default memo(
     const theme = useTheme()
     const isPlaying = playingId === item.id;
     const isSelected = selectedList.includes(item)
-    const isLiked = useIsWyLiked(item.meta.songId)
+    // 网易云「喜欢」与 bili 本地收藏是两套存储，按音源二选一
+    const isWyLiked = useIsWyLiked(item.meta.songId)
+    const isBiliLiked = useIsBiliLiked(item.source === 'bili' ? item.meta.songId : undefined)
+    const isLiked = item.source === 'bili' ? isBiliLiked : isWyLiked
     const selectedBackground = theme.isDark
       ? theme['c-primary-alpha-600']
       : theme['c-primary-background-active']
@@ -102,9 +106,14 @@ export default memo(
       }
     }
 
-    const showLikeButton = item.source === 'wy'
+    // bili 的歌曲（视频）同样可收藏：本地记录 + 同步进 B 站「音乐」收藏夹
+    const showLikeButton = item.source === 'wy' || item.source === 'bili'
 
     const handleLike = () => {
+      if (item.source === 'bili') {
+        void toggleBiliSongFavorite(item, !isBiliLiked)
+        return
+      }
       handleLikeMusic(item)
     }
 

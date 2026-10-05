@@ -15,7 +15,8 @@ import {
   setWyLikedSongs,
   setWySubscribedAlbums,
   setWySubscribedPlaylists,
-  setWyUid
+  setWyUid,
+  initBiliFavorites
 } from '@/store/user/action.ts'
 import {getDownloadTasks} from "@/utils/data/download.ts";
 import downloadActions from '@/store/download/action';
@@ -39,6 +40,7 @@ export default async (appSetting: LX.AppSetting) => {
   bootLog('User list init...')
   setUserList(await getUserLists()) // 获取用户列表
   setDislikeInfo(await getDislikeInfo()) // 获取不喜欢列表
+  await initBiliFavorites() // 恢复 bili 本地收藏（歌曲/合集/UP 主）
   bootLog('User list inited.')
 
 

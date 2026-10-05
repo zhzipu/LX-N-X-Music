@@ -151,3 +151,76 @@ export const useWySubscribedPlaylists = () => {
   }, []);
   return list;
 };
+
+// ---------------------------------------------------------------- bili 本地收藏
+
+export const useIsBiliLiked = (songId: string | number | undefined) => {
+  const strId = String(songId ?? '')
+  const [isLiked, setIsLiked] = useState(() => !!strId && state.bili_liked_song_ids.has(strId))
+
+  useEffect(() => {
+    if (!strId) {
+      setIsLiked(false)
+      return
+    }
+    const handleUpdate = () => {
+      const next = state.bili_liked_song_ids.has(strId)
+      setIsLiked(cur => (cur === next ? cur : next))
+    }
+    global.state_event.on('biliLikedListChanged', handleUpdate)
+    handleUpdate()
+    return () => {
+      global.state_event.off('biliLikedListChanged', handleUpdate)
+    }
+  }, [strId])
+
+  return isLiked
+}
+
+export const useIsBiliArtistFollowed = (artistId: string | number | undefined) => {
+  const strId = String(artistId ?? '')
+  const [isFollowed, setIsFollowed] = useState(
+    () => !!strId && state.bili_followed_artists.some(a => String(a.id) === strId)
+  )
+
+  useEffect(() => {
+    if (!strId) {
+      setIsFollowed(false)
+      return
+    }
+    const handleUpdate = () => {
+      setIsFollowed(state.bili_followed_artists.some(a => String(a.id) === strId))
+    }
+    global.state_event.on('biliFollowedListChanged', handleUpdate)
+    handleUpdate()
+    return () => {
+      global.state_event.off('biliFollowedListChanged', handleUpdate)
+    }
+  }, [strId])
+
+  return isFollowed
+}
+
+export const useIsBiliAlbumSubscribed = (albumId: string | number | undefined) => {
+  const strId = String(albumId ?? '')
+  const [isSubscribed, setIsSubscribed] = useState(
+    () => !!strId && state.bili_subscribed_albums.some(a => String(a.id) === strId)
+  )
+
+  useEffect(() => {
+    if (!strId) {
+      setIsSubscribed(false)
+      return
+    }
+    const handleUpdate = () => {
+      setIsSubscribed(state.bili_subscribed_albums.some(a => String(a.id) === strId))
+    }
+    global.state_event.on('biliSubscribedAlbumsChanged', handleUpdate)
+    handleUpdate()
+    return () => {
+      global.state_event.off('biliSubscribedAlbumsChanged', handleUpdate)
+    }
+  }, [strId])
+
+  return isSubscribed
+}

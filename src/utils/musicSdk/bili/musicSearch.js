@@ -58,6 +58,7 @@ export default {
         _types: {},
         // bili 扩展字段，toNewMusicInfo 的 bili 分支会转进 meta
         bvid: v.bvid,
+        aid: v.aid || 0, // avid：收藏时用（搜索接口有 aid）
         cid: 0, // 播放时懒加载拿 cid
       }))
 

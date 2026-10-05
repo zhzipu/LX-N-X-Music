@@ -26,6 +26,7 @@ const archiveToMusicInfo = (v, name, mid) => ({
     albumName: 'Bilibili',
     picUrl: normalizeBiliImageUrl(v.pic),
     bvid: v.bvid,
+    aid: v.aid, // avid：收藏（/x/v3/fav/resource/deal）时用
     cid: 0, // 播放时懒加载
     qualitys: [],
     _qualitys: {},
@@ -61,15 +62,17 @@ export default {
   /**
    * 获取 UP 主所有作品（歌曲）。
    * @param id UP 主 mid
-   * @param order 忽略（B 站作品按最新排序）
+   * @param order 排序：hot=播放量（热门），time=投稿时间（时间）
    * @param limit 每页数量
    * @param offset 偏移（换算成页码）
    */
   async getSongs(id, order = 'hot', limit = 100, offset = 0, retryNum = 0) {
     const cookie = getBiliCookie()
     const page = Math.floor(offset / limit) + 1
+    // 映射到 B 站 App 接口的 order 值：click=播放量，pubdate=投稿时间
+    const biliOrder = order === 'time' ? 'pubdate' : 'click'
     try {
-      const { list, count } = await getMemberArchives(Number(id), page, limit, cookie)
+      const { list, count } = await getMemberArchives(Number(id), page, limit, cookie, biliOrder)
       // 回填 UP 主名（archive 接口不返回 UP 主名，从详情拿，失败用空名兜底）
       let name = ''
       try {
