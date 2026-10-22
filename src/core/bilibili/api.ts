@@ -1187,6 +1187,41 @@ export const getVideoPages = async (bvid: string, cookie: string): Promise<BiliP
   return body.data ?? []
 }
 
+/**
+ * web 播放器信息（/x/player/wbi/v2）里我们关心的部分。
+ * `bgm_info` 仅在 B 站能给这个视频识别出 BGM（官方音乐库）时才有值，
+ * 它的 `music_title` 是比视频标题更精确的歌名，用于给 bili 音源匹配歌词。
+ */
+export interface BiliWebPlayerInfo {
+  /** 视频中识别到的 BGM 信息（没有则为 undefined） */
+  bgm_info?: {
+    music_id?: number
+    music_title: string
+    jump_url?: string
+  } | null
+}
+
+/**
+ * 获取 web 播放器信息（WBI 签名）。
+ *
+ * 用途：bili 音源匹配歌词时拿 `bgm_info.music_title`（精确歌名）。
+ * 未登录也能用（wbi 密钥从 /nav 取，登录态更稳）。
+ */
+export const getWebPlayerInfo = async (
+  bvid: string,
+  cid: number,
+  cookie: string
+): Promise<BiliWebPlayerInfo> => {
+  const query = await getWbiEncodedParams({ bvid, cid: String(cid) }, cookie)
+  const response = await fetch(`${API_BASE}/x/player/wbi/v2?${query}`, {
+    method: 'GET',
+    headers: { ...baseHeaders, Cookie: cookie },
+    credentials: 'omit',
+  })
+  const body = await requireOk<BiliWebPlayerInfo>(response, '获取播放器信息')
+  return body.data ?? {}
+}
+
 /** 音频流结果 */
 export interface BiliAudioStream {
   url: string

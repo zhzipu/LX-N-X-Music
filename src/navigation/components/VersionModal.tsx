@@ -16,7 +16,13 @@ import {
   useVersionInfoIgnoreVersionUpdated,
 } from '@/store/version/hook'
 import ModalContent from './ModalContent'
-import { checkUpdate, downloadUpdate, hideModal, setIgnoreVersion } from '@/core/version'
+import {
+  checkUpdate,
+  downloadUpdate,
+  hideModal,
+  openUpdateInBrowser,
+  setIgnoreVersion,
+} from '@/core/version'
 
 const VersionItem = ({ version, desc }: VersionInfo) => {
   return (
@@ -185,10 +191,19 @@ const VersionModal = ({ componentId }: { componentId: string }) => {
   const handleConfirm = () => {
     if (versionInfo.isLatest || versionInfo.isUnknown) {
       void checkUpdate()
-    } else if (versionInfo.status == 'downloaded') {
+      return
+    }
+    if (versionInfo.status == 'downloaded') {
+      // 已经拿到安装包（应用内下载路径），直接调起安装
       void updateApp()
-    } else if (versionInfo.status == 'idle' || versionInfo.status == 'error') {
-      downloadUpdate()
+      return
+    }
+    if (versionInfo.status == 'idle' || versionInfo.status == 'error') {
+      // 点「更新」走外部浏览器下载：不受应用内下载 / 安装权限限制
+      void openUpdateInBrowser().then((opened) => {
+        // 没有可用浏览器时才回退到应用内下载
+        if (!opened) downloadUpdate()
+      })
     }
   }
 

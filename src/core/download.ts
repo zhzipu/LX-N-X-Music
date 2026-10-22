@@ -22,6 +22,18 @@ const DOWNLOAD_HEADERS = {
 };
 const WY_MEDIA_HEADERS = {
   'User-Agent': '',
+  Referer: 'https://music.163.com/',
+  Origin: 'https://music.163.com',
+}
+/**
+ * B 站 CDN（upos-sz-mirrorcos / mirrorhw）会按 UA + Referer 的组合判盗链：
+ * 没 Referer → 403；移动端浏览器 UA + 网页 Referer → 也 403；
+ * BiliApp UA + 网页 Referer 才是能过的那一组。mcdn 节点不校验，所以只有一部分歌会挂。
+ */
+const BILI_MEDIA_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 BiliApp/6.66.0',
+  Referer: 'https://www.bilibili.com/',
 }
 const DOWNLOAD_OPTION_MAX_ATTEMPTS = 3;
 const DOWNLOAD_OPTION_RETRY_DELAY = 800;
@@ -65,7 +77,10 @@ const updateMetadataStatus = (
 };
 
 const getDownloadHeaders = (task: DownloadTask) => {
-  return task.musicInfo.source === 'wy' ? WY_MEDIA_HEADERS : DOWNLOAD_HEADERS
+  const source = task.musicInfo.source
+  if (source === 'wy') return WY_MEDIA_HEADERS
+  if (source === 'bili') return BILI_MEDIA_HEADERS
+  return DOWNLOAD_HEADERS
 }
 let currentDownloadTask: any | null = null;
 type DownloadTarget = 'local' | 'onedrive';
@@ -73,8 +88,47 @@ type DownloadTarget = 'local' | 'onedrive';
 const getTaskTarget = (task: DownloadTask): DownloadTarget => task.target ?? 'local'
 
 const getTaskAudioFileName = (task: DownloadTask) => {
-  return `${task.fileName}.${getFileExtension(task.quality)}`
+  // 优先用落盘后的真实扩展名：B 站直链是 fMP4，会从 .mp3 纠正成 .m4a
+  const actual = task.filePath.match(/\.([0-9a-z]+)$/i)
+  return `${task.fileName}.${actual ? actual[1] : getFileExtension(task.quality)}`
 }
+
+/**
+ * 按文件头判断真实容器。B 站 dash 音频是 fMP4（ftyp iso5 / mp41 / dash），
+ * 但文件名是按音质给的 .mp3，标签库按扩展名找 MP3 帧头就会报
+ * 「No audio header found within xxx.mp3」。下完就改名能一并解决播放器认格式的问题。
+ */
+const sniffAudioExt = async (filePath: string): Promise<string | null> => {
+  const probePath = `${RNFetchBlob.fs.dirs.CacheDir}/lx_ext_probe_${Date.now()}.bin`;
+  try {
+    await RNFetchBlob.fs.slice(filePath, probePath, 0, 16);
+    const head = await RNFetchBlob.fs.readFile(probePath, 'ascii');
+    if (typeof head === 'string') {
+      if (head.includes('ftyp')) return 'm4a';
+      if (head.includes('fLaC')) return 'flac';
+      if (head.includes('OggS')) return 'ogg';
+    }
+    return null;
+  } catch (error) {
+    console.warn('[Download Manager] 无法识别音频格式:', getErrorMessage(error));
+    return null;
+  } finally {
+    await unlink(probePath).catch(() => {});
+  }
+};
+
+/** 扩展名和真实容器对不上时改名，返回新的路径 */
+const fixAudioExtension = async (task: DownloadTask): Promise<void> => {
+  const detected = await sniffAudioExt(task.filePath);
+  if (!detected) return;
+  const current = (task.filePath.match(/\.([0-9a-z]+)$/i)?.[1] ?? '').toLowerCase();
+  if (current === detected) return;
+  const nextPath = task.filePath.replace(/\.[0-9a-z]+$/i, `.${detected}`);
+  await RNFetchBlob.fs.mv(task.filePath, nextPath);
+  task.filePath = nextPath;
+  downloadActions.updateTask(task.id, { filePath: nextPath });
+  console.log(`[Download Manager] 扩展名纠正: .${current} -> .${detected}`);
+};
 
 const processQueue = async () => {
   if (isProcessing || taskQueue.length === 0) return;
@@ -162,6 +216,7 @@ const startDownload = async (task: DownloadTask) => {
 
     await downloadTask;
     console.log('下载完成:', task.fileName);
+    await fixAudioExtension(task);
     await handleMetadata(task, task.filePath);
     if (target === 'onedrive') {
       const config = await getOneDriveConfig();
@@ -262,7 +317,12 @@ const handleMetadata = async (task: DownloadTask, filePath: string) => {
           if (!picUrl) throw new Error('未获取到封面地址');
           const extension = getFileExtensionFromUrl(picUrl);
           picPath = `${RNFetchBlob.fs.dirs.CacheDir}/lx_download_cover_${task.id}.${extension}`;
-          await RNFetchBlob.config({ path: picPath }).fetch('GET', picUrl);
+          // B 站图片服务器同样要 Referer，不带会 403
+          await RNFetchBlob.config({ path: picPath }).fetch(
+            'GET',
+            picUrl,
+            task.musicInfo.source === 'bili' ? BILI_MEDIA_HEADERS : undefined,
+          );
           await writePic(filePath, picPath);
         } finally {
           if (picPath) await unlink(picPath).catch(() => {});

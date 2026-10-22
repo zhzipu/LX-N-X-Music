@@ -10,6 +10,7 @@ import initCommonState from './common'
 import initUiMode from './uiMode'
 import { initDeeplink } from './deeplink'
 import { setApiSource } from '@/core/apiSource'
+import { autoStart as startLxxWearAutoSync } from '@/core/lxxwear/sync'
 import commonActions from '@/store/common/action'
 import settingState from '@/store/setting/state'
 import { checkUpdate } from '@/core/version'
@@ -75,6 +76,11 @@ export default async () => {
   bootLog('Common State inited.')
 
   isInited ||= true
+
+  // 开了「自动同步」的话，等界面稳定后把局域网服务拉起来（不阻塞启动）
+  setTimeout(() => {
+    void startLxxWearAutoSync()
+  }, 8000)
 
   return handlePushedHomeScreen
 }

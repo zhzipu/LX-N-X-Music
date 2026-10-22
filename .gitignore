@@ -93,3 +93,9 @@ test.js
 
 # 本地抓取的账号凭据（网易云 cookie），严禁入库
 wy_cookie_*.txt
+
+# 发版产物（APK 等只走 Release 附件）
+/dist/
+
+# 本地临时验证脚本
+scratch-*

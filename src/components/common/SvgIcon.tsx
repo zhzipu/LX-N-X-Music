@@ -184,10 +184,89 @@ const RecognizeIcon = ({ size, color }: { size: number; color: string }) => (
   </Svg>
 )
 
+/**
+ * 手表图标 - 用于 LXXWear 手表同步
+ * 表盘 + 上下表带 + 侧边表冠
+ */
+const WatchIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    {/* 表带 */}
+    <Rect x="9.4" y="1.8" width="5.2" height="3.4" rx="1.2" stroke={color} strokeWidth="1.4" fill="none" />
+    <Rect x="9.4" y="18.8" width="5.2" height="3.4" rx="1.2" stroke={color} strokeWidth="1.4" fill="none" />
+    {/* 表盘 */}
+    <Rect x="5.6" y="5.2" width="12.8" height="13.6" rx="3.4" stroke={color} strokeWidth="1.6" fill="none" />
+    {/* 表冠 */}
+    <Line x1="18.6" y1="10.6" x2="18.6" y2="13.4" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+  </Svg>
+)
+
+/**
+ * 对勾 - 用于「确定」
+ */
+const CheckIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill={color} />
+  </Svg>
+)
+
+/**
+ * 叉号 - 用于「取消」
+ */
+const CrossIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+      fill={color}
+    />
+  </Svg>
+)
+
+/**
+ * 圆圈箭头（刷新）- 用于「重置」
+ */
+const RefreshIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-7.99 3.58-8 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"
+      fill={color}
+    />
+  </Svg>
+)
+
+/**
+ * 加号 - 用于「歌词倍速 +」
+ */
+const PlusIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z" fill={color} />
+  </Svg>
+)
+
+/**
+ * 减号 - 用于「歌词倍速 -」
+ */
+const MinusIcon = ({ size, color }: { size: number; color: string }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M4 11h16v2H4z" fill={color} />
+  </Svg>
+)
+
 export const SvgIcon = memo(({ name, size = 15, rawSize, color = '#000' }: SvgIconProps) => {
   const finalSize = rawSize ?? scaleSizeW(size)
 
   switch (name) {
+    case 'check':
+      return <CheckIcon size={finalSize} color={color} />
+    case 'plus':
+      return <PlusIcon size={finalSize} color={color} />
+    case 'minus':
+      return <MinusIcon size={finalSize} color={color} />
+    case 'cross':
+      return <CrossIcon size={finalSize} color={color} />
+    case 'refresh':
+      return <RefreshIcon size={finalSize} color={color} />
+    case 'watch':
+      return <WatchIcon size={finalSize} color={color} />
     case 'calendar':
       return <CalendarIcon size={finalSize} color={color} />
     case 'artist':

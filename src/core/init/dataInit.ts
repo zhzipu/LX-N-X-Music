@@ -20,6 +20,7 @@ import {
 } from '@/store/user/action.ts'
 import {getDownloadTasks} from "@/utils/data/download.ts";
 import downloadActions from '@/store/download/action';
+import { initLyricAdjust } from '@/core/lyricAdjust'
 // const initPrevPlayInfo = async(appSetting: LX.AppSetting) => {
 //   const info = await getPlayInfo()
 //   global.lx.restorePlayInfo = null
@@ -41,6 +42,7 @@ export default async (appSetting: LX.AppSetting) => {
   setUserList(await getUserLists()) // 获取用户列表
   setDislikeInfo(await getDislikeInfo()) // 获取不喜欢列表
   await initBiliFavorites() // 恢复 bili 本地收藏（歌曲/合集/UP 主）
+  await initLyricAdjust() // 恢复手动匹配的歌词与歌词时间偏移
   bootLog('User list inited.')
 
 

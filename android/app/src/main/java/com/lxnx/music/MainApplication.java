@@ -11,7 +11,9 @@ import java.util.List;
 
 import com.lxnx.music.cache.CachePackage;
 import com.lxnx.music.crypto.CryptoPackage;
+import com.lxnx.music.lanserver.LanServerPackage;
 import com.lxnx.music.lyric.LyricPackage;
+import com.lxnx.music.qr.QrScanPackage;
 import com.lxnx.music.recorder.AudioRecorderPackage;
 import com.lxnx.music.userApi.UserApiPackage;
 import com.lxnx.music.utils.UtilsPackage;
@@ -39,6 +41,8 @@ public class MainApplication extends NavigationApplication {
           packages.add(new AudioRecorderPackage());
           packages.add(new UserApiPackage());
           packages.add(new WidgetPackage());
+          packages.add(new QrScanPackage());
+          packages.add(new LanServerPackage());
           return packages;
         }
 

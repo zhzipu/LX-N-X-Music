@@ -93,7 +93,7 @@ export const getLyricInfo = async ({
     }
     return getLocalLyricInfo({ musicInfo, isRefresh, onToggleSource })
   } else if (musicInfo.source == 'bili') {
-    return getBiliLyricInfo()
+    return getBiliLyricInfo({ musicInfo: musicInfo as LX.Music.MusicInfo_bili, isRefresh })
   } else {
     return getOnlineLyricInfo({ musicInfo, isRefresh, onToggleSource })
   }

@@ -1,5 +1,5 @@
 import { compareVer } from '@/utils'
-import { downloadNewVersion, getVersionInfo } from '@/utils/version'
+import { downloadNewVersion, getVersionInfo, openNewVersionInBrowser } from '@/utils/version'
 import versionActions from '@/store/version/action'
 import versionState, { type InitState } from '@/store/version/state'
 import {
@@ -70,6 +70,25 @@ export const checkUpdate = async (silent = false) => {
   }
   // console.log(compareVer(process.versions.app, versionInfo.version))
   // console.log(process.versions.app, versionInfo.version)
+}
+
+/**
+ * 用外部浏览器打开新版下载地址。
+ *
+ * 下载 / 安装交给系统浏览器，避免应用内下载受网络、存储与「安装未知应用」权限影响。
+ * 只有浏览器完全打不开时才返回 false，由调用方回退到应用内下载。
+ */
+export const openUpdateInBrowser = async (): Promise<boolean> => {
+  const version = versionState.versionInfo.newVersion?.version
+  if (!version) return false
+  try {
+    const url = await openNewVersionInBrowser(version)
+    console.log('新版下载已交给外部浏览器:', url)
+    return true
+  } catch (err) {
+    console.log('外部浏览器打开失败，回退到应用内下载:', err)
+    return false
+  }
 }
 
 export const downloadUpdate = () => {

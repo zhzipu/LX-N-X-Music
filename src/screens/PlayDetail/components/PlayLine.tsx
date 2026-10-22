@@ -25,11 +25,15 @@ export interface PlayLineType {
 
 export interface PlayLineProps {
   onPlayLine: (time: number) => void
+  /** 歌词时间偏移（毫秒），跳转时要补上 */
+  offsetMs?: number
+  /** 歌词倍速，折算回播放位置时要除一下 */
+  speed?: number
 }
 
 const ANIMATION_DURATION = 300
 
-export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => {
+export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine, offsetMs = 0, speed = 1 }, ref) => {
   const theme = useTheme()
   const [scrollInfo, setScrollInfo] = useState<
     NativeSyntheticEvent<NativeScrollEvent>['nativeEvent'] | null
@@ -74,7 +78,7 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   }))
 
   const handlePlayLine = () => {
-    onPlayLine(time / 1000)
+    onPlayLine(Math.max(0, time + offsetMs) / speed / 1000)
   }
 
   if (!scrollInfo || !visible) return null
@@ -89,7 +93,7 @@ export default forwardRef<PlayLineType, PlayLineProps>(({ onPlayLine }, ref) => 
   }
   if (targetLineNum == -1) targetLineNum = listLayoutInfo.lineHeights.length - 1
   const time = lyricLines[targetLineNum]?.time ?? 0
-  const timeLabel = formatPlayTime2(time / 1000)
+  const timeLabel = formatPlayTime2(Math.max(0, time + offsetMs) / speed / 1000)
   return (
     <Animated.View style={{ ...styles.playLine, opacity: opsAnim }}>
       <Text style={styles.label} color={theme['c-primary-font']} size={13}>

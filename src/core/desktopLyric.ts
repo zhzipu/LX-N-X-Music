@@ -29,7 +29,21 @@ import { tranditionalize } from '@/utils/simplify-chinese-main'
 import { getPosition } from '@/plugins/player'
 import { windowSizeTools } from "@/utils/windowSizeTools.ts";
 import { updateSetting } from "@/core/common.ts";
+import { bakeLyricTime, resolveLyric } from '@/core/lyricAdjust'
 export { onLyricLinePlay } from '@/utils/nativeModules/lyricDesktop'
+
+/**
+ * 桌面/蓝牙歌词由原生自己解析时间轴，所以偏移与倍速都要直接改写进 `[mm:ss]`，
+ * 不能只依赖 JS 侧 lrc 解析器的 offset / 速率。
+ */
+const getLyricTexts = () => {
+  const { lyric, tlrc, rlrc, offset, speed } = resolveLyric(playerState.musicInfo)
+  return {
+    lrc: bakeLyricTime(lyric, speed, offset),
+    tlrc: bakeLyricTime(tlrc, speed, offset),
+    rlrc: bakeLyricTime(rlrc, speed, offset),
+  }
+}
 
 export const showDesktopLyric = async () => {
   const setting = settingState.setting
@@ -69,9 +83,7 @@ export const showDesktopLyric = async () => {
     textPositionX: setting['desktopLyric.textPosition.x'],
     textPositionY: setting['desktopLyric.textPosition.y'],
   })
-  let lrc = playerState.musicInfo.lrc ?? ''
-  let tlrc = playerState.musicInfo.tlrc ?? ''
-  let rlrc = playerState.musicInfo.rlrc ?? ''
+  let { lrc, tlrc, rlrc } = getLyricTexts()
   if (setting['player.isS2t']) {
     lrc = tranditionalize(lrc)
     tlrc = tranditionalize(tlrc)
@@ -130,9 +142,7 @@ export const onDesktopLyricLockChange = onLockChange
 export const showRemoteLyric = async (isSend: boolean) => {
   await setSendLyricTextEvent(isSend)
   if (isSend) {
-    let lrc = playerState.musicInfo.lrc ?? ''
-    let tlrc = playerState.musicInfo.tlrc ?? ''
-    let rlrc = playerState.musicInfo.rlrc ?? ''
+    let { lrc, tlrc, rlrc } = getLyricTexts()
     if (settingState.setting['player.isS2t']) {
       lrc = tranditionalize(lrc)
       tlrc = tranditionalize(tlrc)

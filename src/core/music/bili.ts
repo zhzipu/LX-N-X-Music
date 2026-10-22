@@ -4,6 +4,10 @@
  */
 import { getAudioStream, getVideoPages } from '@/core/bilibili/api'
 import { getBiliCookie } from '@/core/bilibili/auth'
+import { getBiliLyric } from '@/core/lyricMatch/bili'
+import { getPlayerLyric, saveLyric } from '@/utils/data'
+import { parseDurationText } from '@/core/lyricMatch/match'
+import { buildLyricInfo } from './utils'
 
 export const getMusicUrl = async ({
   musicInfo,
@@ -35,13 +39,47 @@ export const getPicUrl = async ({
   return musicInfo.meta.picUrl ?? ''
 }
 
-export const getLyricInfo = async (): Promise<LX.Player.LyricInfo> => {
-  // B 站视频无歌词，返回空
-  const empty: LX.Music.LyricInfo = {
-    lyric: '',
-    tlyric: null,
-    rlyric: null,
-    lxlyric: null,
+export const getLyricInfo = async ({
+  musicInfo,
+  isRefresh = false,
+}: {
+  musicInfo: LX.Music.MusicInfo_bili
+  isRefresh?: boolean
+}): Promise<LX.Player.LyricInfo> => {
+  // 命中缓存（含用户手动编辑过的歌词）直接返回，避免每次播放都去搜一遍
+  if (!isRefresh) {
+    const cached = await getPlayerLyric(musicInfo)
+    if (cached.lyric) return cached
   }
-  return { ...empty, rawlrcInfo: empty }
+
+  let { bvid, cid } = musicInfo.meta
+  // cid 未预取时，懒加载第一个分 P 的 cid（与 getMusicUrl 一致）
+  if (!cid) {
+    try {
+      const pages = await getVideoPages(bvid, getBiliCookie())
+      if (pages.length) {
+        cid = pages[0].cid
+        musicInfo.meta.cid = cid
+      }
+    } catch (error) {
+      console.log('bili 歌词：获取分 P 信息失败:', error)
+    }
+  }
+
+  const lyricInfo = await getBiliLyric({
+    bvid,
+    cid,
+    title: musicInfo.name,
+    duration: parseDurationText(musicInfo.interval),
+  })
+
+  const result: LX.Music.LyricInfo = {
+    lyric: lyricInfo.lyric,
+    tlyric: lyricInfo.tlyric ?? null,
+    rlyric: lyricInfo.rlyric ?? null,
+    lxlyric: lyricInfo.lxlyric ?? null,
+  }
+  // 缓存到与其它音源相同的存储位（key 为 musicInfo.id，即 bili_<bvid>）
+  void saveLyric(musicInfo, result)
+  return buildLyricInfo(result)
 }

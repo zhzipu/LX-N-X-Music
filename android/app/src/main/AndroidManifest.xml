@@ -11,6 +11,9 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- 听歌识曲：采集麦克风音频 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- LXXWear 配对：扫手表上的二维码 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
       android:name=".MainApplication"
@@ -91,6 +94,13 @@
           <data android:pathSuffix=".lxmc" tools:targetApi="s" />
         </intent-filter>
       </activity>
+
+      <!-- LXXWear 配对扫码：把 ZXing 取景框固定成竖屏（库默认是 sensorLandscape） -->
+      <activity
+        android:name="com.journeyapps.barcodescanner.CaptureActivity"
+        android:screenOrientation="portrait"
+        android:exported="false"
+        tools:replace="android:screenOrientation" />
 
       <!-- Define a FileProvider for API24+ -->
       <!-- note this is the authority name used by other modules like rn-fetch-blob, easy to have conflicts -->

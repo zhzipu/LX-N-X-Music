@@ -50,6 +50,9 @@ react {
     /* Hermes Commands */
     //   The hermes compiler command to run. By default it is 'hermesc'
     // hermesCommand = "$rootDir/my-custom-hermesc/bin/hermesc"
+    //   本机 node_modules 目录带有特殊 ACL，该路径下的 hermesc 无法打开任何文件
+    //   （报 Failed to open file），改用项目外的同一份副本（字节完全一致）。
+    hermesCommand = "C:/Users/zhang/.hermesc/win64-bin/hermesc.exe"
     //
     //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
     // hermesFlags = ["-O", "-output-source-map"]
@@ -198,6 +201,10 @@ dependencies {
     // implementation "androidx.javascriptengine:javascriptengine:1.0.0-alpha07"
     // implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation 'wang.harlon.quickjs:wrapper-android:2.4.0'
+    // 二维码识别（bundled 模型，不依赖 Google Play 服务）
+    implementation 'com.google.mlkit:barcode-scanning:17.2.0'
+    // 实时扫码取景框（ZXing），与 跨屏输入 项目同一套做法
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 
   if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

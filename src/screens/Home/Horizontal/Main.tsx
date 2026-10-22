@@ -12,6 +12,7 @@ import FollowedArtists from "@/screens/Home/Views/FollowedArtists";
 import PlayHistory from '../Views/PlayHistory'
 import OneDrive from '../Views/OneDrive'
 import Bilibili from '../Views/Bilibili'
+import LxxWear from '../Views/LxxWear'
 
 const Main = () => {
   const [id, setId] = useState(commonState.navActiveId)
@@ -48,6 +49,8 @@ const Main = () => {
         return <OneDrive />
       case 'nav_bilibili':
         return <Bilibili />
+      case 'nav_lxxwear':
+        return <LxxWear />
       case 'nav_love':
         return <Mylist />
       case 'nav_setting':
