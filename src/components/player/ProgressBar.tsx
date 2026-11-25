@@ -71,7 +71,7 @@ const PreassBar = memo(
     setDragProgress: (progress: number) => void
     onSetProgress: (progress: number) => void
   }) => {
-    const { onLayout, onDragStart, onDragEnd, onDrag } = useDrag(
+    const { onLayout, onDragStart, onDragEnd, onDragCancel, onDrag } = useDrag(
       onSetProgress,
       onDragState,
       setDragProgress
@@ -96,9 +96,9 @@ const PreassBar = memo(
         onPanResponderRelease: () => {
           onDragEnd()
         },
-        // onPanResponderTerminate: (evt, gestureState) => {
-        //   onDragEnd()
-        // },
+        // Keep seeking gestures from being taken over by the wide player's page swipe.
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderTerminate: onDragCancel,
       })
     ).current
 

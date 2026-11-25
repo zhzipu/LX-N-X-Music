@@ -30,10 +30,15 @@ export const useDrag = (
     [onDragState, setDragProgress]
   )
   const onDragEnd = useCallback(() => {
-    if (info.current.isDraging) onSetProgress(info.current.dragProgress)
+    const wasDragging = info.current.isDraging
     info.current.isDraging = false
     onDragState(false)
+    if (wasDragging) onSetProgress(info.current.dragProgress)
   }, [onDragState, onSetProgress])
+  const onDragCancel = useCallback(() => {
+    info.current.isDraging = false
+    onDragState(false)
+  }, [onDragState])
   const onDrag = useCallback(
     (offsetX: number) => {
       if (!info.current.isDraging) return
@@ -61,6 +66,7 @@ export const useDrag = (
     onLayout,
     onDragStart,
     onDragEnd,
+    onDragCancel,
     onDrag,
   }
 }
