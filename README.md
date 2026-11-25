@@ -1,3 +1,8 @@
+> [!WARNING]
+> **LX-N-X-Music 已废弃并停止维护，项目已迁移至 [奶音 Milky Music（milky-music）](https://github.com/zhzipu/milky-music)。**
+> 后续开发、版本发布、使用文档与问题反馈统一在新仓库进行。本仓库保留历史源码与发布记录，不再提供功能更新或问题修复。
+> 请前往 [新项目 README](https://github.com/zhzipu/milky-music#readme) 查看使用说明，并从 [新项目 Releases](https://github.com/zhzipu/milky-music/releases) 获取后续版本。
+
 <p align="center"><a href="https://github.com/zhzipu/LX-N-X-Music"><img width="200" src="./doc/images/icon.png" alt="LX-N-X Music logo"></a></p>
 
 <h1 align="center">LX-N-X Music</h1>
