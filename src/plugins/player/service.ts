@@ -1,10 +1,12 @@
 import TrackPlayer, { State as TPState, Event as TPEvent } from 'react-native-track-player'
+import { AppState } from 'react-native'
+import playerState from '@/store/player/state'
 // import { store } from '@/store'
 // import { action as playerAction, STATUS } from '@/store/modules/player'
 import { isTempId, isEmpty } from './utils'
 // import { play as lrcPlay, pause as lrcPause } from '@/core/lyric'
 import { exitApp } from '@/core/common'
-import { getCurrentTrackId } from './playList'
+import { getCurrentTrack, getCurrentTrackId } from './playList'
 import { pause, play, playNext, playPrev } from '@/core/player/player'
 import { showDesktopLyric, hideDesktopLyric } from '@/core/desktopLyric'
 import { updateSetting } from '@/core/common'
@@ -112,11 +114,13 @@ const registerPlaybackService = async () => {
     global.app_event.setProgress(position as number)
   })
 
-  TrackPlayer.addEventListener(TPEvent.PlaybackState, async (info) => {
-    if (global.lx.gettingUrlId || isTempId()) return
-    // let currentIsPlaying = false
-
-    switch (info.state) {
+  let revision = 0
+  const syncPlayback = async () => {
+    const read = ++revision
+    const [track, state] = await Promise.all([getCurrentTrack(), TrackPlayer.getState()])
+    if (read !== revision || !track || isTempId(track.id) || track.musicId !== playerState.musicInfo.id) return
+    global.lx.playerTrackId = track.id
+    switch (state) {
       case TPState.None:
         // console.log('state', 'State.NONE')
         break
@@ -145,10 +149,14 @@ const registerPlaybackService = async () => {
 
     // console.log('currentIsPlaying', currentIsPlaying, global.lx.playInfo.isPlaying)
     // void updateMetaData(global.lx.store_playMusicInfo.musicInfo, currentIsPlaying)
-  })
+  }
+  const refresh = () => { void syncPlayback().catch(error => console.warn('Playback state read failed:', error)) }
+  TrackPlayer.addEventListener(TPEvent.PlaybackState, refresh)
+  AppState.addEventListener('change', state => { if (state === 'active') refresh() })
   TrackPlayer.addEventListener(TPEvent.PlaybackTrackChanged, async (info) => {
     // console.log('PlaybackTrackChanged====>', info)
     global.lx.playerTrackId = await getCurrentTrackId()
+    refresh()
     if (info.track == null) return
     if (global.lx.isPlayedStop) return handleExitApp('Timeout Exit')
 
@@ -251,5 +259,7 @@ export default () => {
   if (global.lx.playerStatus.isRegisteredService) return
   console.log('handle registerPlaybackService...')
   TrackPlayer.registerPlaybackService(() => registerPlaybackService)
+  // A running foreground player must not depend on a new headless task starting.
+  void registerPlaybackService()
   global.lx.playerStatus.isRegisteredService = true
 }

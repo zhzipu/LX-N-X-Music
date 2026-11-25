@@ -4,7 +4,7 @@
 //!   app/src/main/java/eu/kanade/presentation/theme/colorscheme/*ColorScheme.kt
 //! 每套方案取 M3 colorScheme 的 primary / onBackground / background / secondary / tertiary / error，
 //! 各生成一个浅色调色板与一个深色调色板（id 后缀 _light / _dark）。
-//! 对外只暴露 13 个「配色方案」（id 不带后缀）：外观设置里每套方案只占一项，
+//! 对外只暴露 14 个「配色方案」（id 不带后缀）：外观设置里每套方案只占一项，
 //! 实际用哪个调色板由明暗模式决定（「跟随系统」或「暗色模式」开关）——
 //! 见 src/theme/themes/index.ts 的 resolveThemeId()。id 后缀是内部实现，不要写进设置。
 //! 注：TachiyomiX 的 Monet（动态取色）依赖 Android 12+ Material You，RN 侧无法实现，故未收录。
@@ -80,6 +80,39 @@ const schemes = [
     { light: { primary: '#000000', font: '#000000', background: '#FFFFFF', secondary: '#000000', tertiary: '#888888', error: '#000000' },
       dark:  { primary: '#FFFFFF', font: '#FFFFFF', background: '#000000', secondary: '#FFFFFF', tertiary: '#777777', error: '#FFFFFF' } },
   ],
+  // Myspotify
+  // 类 Apple Music 视觉皮肤：纯黑底 + 封面模糊色雾，层级靠字重与透明度。
+  // ext 里的键会被原样写进 themes.ts 的 config.extInfo，
+  // 由 src/theme/themes/index.ts 的 buildActiveThemeColors() 覆盖派生色（见该函数注释）。
+  ['myspotify', 'Myspotify', 'Myspotify', 'Myspotify',
+    { light: { primary: '#D70015', font: '#111111', background: '#FFFFFF', secondary: '#6B4EFF', tertiary: '#00C2A8', error: '#D70015' },
+      dark:  { primary: '#FA2D48', font: '#FFFFFF', background: '#000000', secondary: '#6B4EFF', tertiary: '#00C2A8', error: '#FA2D48' },
+      ext: {
+        light: {
+          'c-content-background': '#F5F5F7',
+          'c-border-background': 'rgba(0, 0, 0, 0.08)',
+          'c-button-background': 'rgba(0, 0, 0, 0.06)',
+          'c-button-font': 'rgb(17, 17, 17)',
+          // 注意：亮色不要覆盖 'c-primary-font-active'。
+          // 它语义是「普通底色上的激活文字」（SortTab 选中文字、Menu 当前项），
+          // 必须回落派生值 c-primary-dark-100-alpha-200（深红 80%），否则白底白字不可见。
+          // 「主色按钮上的白字」对应 c-button-font，已在上方单独声明。
+          'c-font': '#111111',
+          'c-font-label': 'rgba(17, 17, 17, 0.60)',
+          'c-list-header-border-bottom': 'rgba(0, 0, 0, 0.08)',
+        },
+        dark: {
+          'c-content-background': '#0A0A0A',
+          'c-border-background': 'rgba(255, 255, 255, 0.08)',
+          'c-button-background': 'rgba(255, 255, 255, 0.10)',
+          'c-button-font': 'rgb(255, 255, 255)',
+          'c-primary-font-active': 'rgb(255, 255, 255)',
+          'c-font': '#FFFFFF',
+          'c-font-label': 'rgba(255, 255, 255, 0.62)',
+          'c-list-header-border-bottom': 'rgba(255, 255, 255, 0.08)',
+        },
+      } },
+  ],
 ]
 
 const hex2rgb = (hex) => {
@@ -92,6 +125,9 @@ const defaultThemes = schemes.flatMap(([id, zh, tw, en, colors]) =>
   ['light', 'dark'].map((mode) => {
     const c = colors[mode]
     const isDark = mode === 'dark'
+    // ext 是「按明暗分别声明的精确覆盖色」，会原样进入 config.extInfo。
+    // 键集合是固定的可选集合（见 src/types/theme.d.ts 的 Theme['config']['extInfo']）。
+    const ext = (colors.ext && colors.ext[mode]) || {}
     return {
       id: `${id}_${mode}`,
       name: `${zh} · ${isDark ? '深色' : '浅色'}`,
@@ -109,6 +145,7 @@ const defaultThemes = schemes.flatMap(([id, zh, tw, en, colors]) =>
         'c-badge-secondary': c.tertiary,
         'c-badge-tertiary': 'var(c-primary)',
         'c-liked': c.error || '#ef4444',
+        ...ext,
       },
     }
   }),

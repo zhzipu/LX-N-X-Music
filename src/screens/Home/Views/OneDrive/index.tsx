@@ -14,6 +14,7 @@ import Button from '@/components/common/Button'
 import Image from '@/components/common/Image'
 import { Icon } from '@/components/common/Icon'
 import { useTheme } from '@/store/theme/hook'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
 import { confirmDialog, createStyle, openUrl, toast } from '@/utils/tools'
 import { LIST_IDS, LIST_ITEM_HEIGHT } from '@/config/constant'
 import { scaleSizeH } from '@/utils/pixelRatio'
@@ -702,6 +703,8 @@ const styles = createStyle({
   },
   content: {
     padding: 12,
+    // Home 底部浮层（迷你播放条 + Tab 栏）不占布局，这里给列表留出滚动空间
+    paddingBottom: 12 + HOME_BOTTOM_OVERLAY_HEIGHT,
   },
   panel: {
     borderWidth: StyleSheet.hairlineWidth,

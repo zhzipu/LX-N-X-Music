@@ -5,8 +5,10 @@ import Popup, { type PopupType } from '@/components/common/Popup'
 import Text from '@/components/common/Text'
 import { Icon } from '@/components/common/Icon'
 import LyricMatchModal, { type LyricMatchModalType } from '@/components/LyricMatchModal'
+import LyricAutoAlign, { type LyricAutoAlignType } from '@/components/LyricAutoAlign'
 import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
+import { usePlayerMusicInfo } from '@/store/player/hook'
 
 export interface LyricMenuType {
   show: () => void
@@ -18,12 +20,14 @@ export interface LyricMenuProps {
 }
 
 /**
- * 长按歌词呼出的操作面板：匹配歌词 / 调节歌词。
+ * 长按歌词呼出的操作面板：匹配歌词 / 自动识别 / 调节歌词。
  */
 export default forwardRef<LyricMenuType, LyricMenuProps>(({ onAdjust }, ref) => {
   const theme = useTheme()
+  const musicInfo = usePlayerMusicInfo()
   const popupRef = useRef<PopupType>(null)
   const matchModalRef = useRef<LyricMatchModalType>(null)
+  const autoAlignRef = useRef<LyricAutoAlignType>(null)
   const [visible, setVisible] = useState(false)
 
   useImperativeHandle(ref, () => ({
@@ -56,6 +60,12 @@ export default forwardRef<LyricMenuType, LyricMenuProps>(({ onAdjust }, ref) => 
     })
   }, [closeMenuThen])
 
+  const handleAutoAlign = useCallback(() => {
+    closeMenuThen(() => {
+      autoAlignRef.current?.show()
+    })
+  }, [closeMenuThen])
+
   const handleAdjust = useCallback(() => {
     closeMenuThen(onAdjust)
   }, [closeMenuThen, onAdjust])
@@ -63,7 +73,11 @@ export default forwardRef<LyricMenuType, LyricMenuProps>(({ onAdjust }, ref) => 
   return (
     <>
       {visible ? (
-        <Popup ref={popupRef} title="歌词" onHide={handleHide}>
+        <Popup
+          ref={popupRef}
+          title="歌词"
+          onHide={handleHide}
+        >
           <View style={styles.content}>
             <TouchableOpacity
               style={styles.item}
@@ -75,6 +89,20 @@ export default forwardRef<LyricMenuType, LyricMenuProps>(({ onAdjust }, ref) => 
                 <Text size={15}>匹配歌词</Text>
                 <Text size={11} color={theme['c-font-label']} numberOfLines={1}>
                   从其他音源搜索替换当前歌词
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <View style={{ ...styles.divider, backgroundColor: theme['c-primary-alpha-100'] }} />
+            <TouchableOpacity
+              style={styles.item}
+              activeOpacity={0.7}
+              onPress={handleAutoAlign}
+            >
+              <Icon name="music_time" size={18} color={theme['c-font']} />
+              <View style={styles.itemInfo}>
+                <Text size={15}>自动识别</Text>
+                <Text size={11} color={theme['c-font-label']} numberOfLines={1}>
+                  听一遍当前歌曲，自动生成歌词时间轴
                 </Text>
               </View>
             </TouchableOpacity>
@@ -96,6 +124,7 @@ export default forwardRef<LyricMenuType, LyricMenuProps>(({ onAdjust }, ref) => 
         </Popup>
       ) : null}
       <LyricMatchModal ref={matchModalRef} />
+      <LyricAutoAlign ref={autoAlignRef} />
     </>
   )
 })

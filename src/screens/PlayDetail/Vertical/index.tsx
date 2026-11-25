@@ -1,5 +1,5 @@
 import {memo, useState, useRef, useMemo, useEffect, useCallback} from 'react'
-import { View, AppState } from 'react-native'
+import { View, StyleSheet, AppState, Animated, Easing, Image as RNImage } from 'react-native'
 
 import Header from './components/Header'
 // import Aside from './components/Aside'
@@ -12,7 +12,14 @@ import Lyric from './Lyric'
 import { screenkeepAwake, screenUnkeepAwake } from '@/utils/nativeModules/utils'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
 import { createStyle } from '@/utils/tools'
-// import { useTheme } from '@/store/theme/hook'
+import { useTheme } from '@/store/theme/hook'
+import { MS_MOTION } from '@/theme/myspotify/tokens'
+import PageScrim from '@/components/spotify/PageScrim'
+import { usePlayMusicInfo, usePlayerMusicInfo } from '@/store/player/hook'
+import { foldPage } from '@/navigation/foldPage'
+import { getImageHeaders, normalizeImageUri } from '@/components/common/Image'
+
+const idlePlayerCover = require('@/resources/images/milky-music-icon.png')
 
 const LyricPage = ({ activeIndex }: { activeIndex: number }) => {
   const initedRef = useRef(false)
@@ -29,15 +36,21 @@ const LyricPage = ({ activeIndex }: { activeIndex: number }) => {
 }
 
 // global.iskeep = false
-export default memo(({ componentId }: { componentId: string }) => {
-  // const theme = useTheme()
-  const [pageIndex, setPageIndex] = useState(0)
+export default memo(({ componentId, initialPage }: { componentId: string, initialPage: 0 | 1 }) => {
+  const [pageIndex, setPageIndex] = useState<number>(initialPage)
   const pagerViewRef = useRef<PagerView>(null);
-  const showLyricRef = useRef(false)
+  const showLyricRef = useRef(initialPage === 1)
+  const pageOpacity = useRef(new Animated.Value(0)).current
+  const theme = useTheme()
+  const playMusicInfo = usePlayMusicInfo()
+  const playerMusicInfo = usePlayerMusicInfo()
+  const [failedBackdropUrl, setFailedBackdropUrl] = useState<string | null>(null)
+  const backdropUrl = playerMusicInfo.pic || (playMusicInfo.musicInfo as LX.Music.MusicInfo | undefined)?.meta?.picUrl
 
   const onPageSelected = ({ nativeEvent }: PagerViewOnPageSelectedEvent) => {
     setPageIndex(nativeEvent.position)
     showLyricRef.current = nativeEvent.position == 1
+    foldPage.current = showLyricRef.current ? 'lyrics' : 'player'
     if (showLyricRef.current) {
       screenkeepAwake()
     } else {
@@ -48,6 +61,18 @@ export default memo(({ componentId }: { componentId: string }) => {
   const handleSwitchToLyricPage = useCallback(() => {
     pagerViewRef.current?.setPage(1);
   }, []);
+
+  // 整页 200ms 淡入
+  useEffect(() => {
+    const animation = Animated.timing(pageOpacity, {
+      toValue: 1,
+      duration: MS_MOTION.pageFadeDuration,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    })
+    animation.start()
+    return () => animation.stop()
+  }, [pageOpacity])
 
   useEffect(() => {
     let appstateListener = AppState.addEventListener('change', (state) => {
@@ -75,11 +100,29 @@ export default memo(({ componentId }: { componentId: string }) => {
     }
   }, [])
 
+  // 页面底改为透明：统一由全局「模糊封面动态底 + PageScrim」承担，不再铺整页纯黑。
+  // 遮罩必须是页面容器的第一个子节点（压在内容下面、背景上面）。
   return (
-    <>
+    <Animated.View style={[styles.page, { opacity: pageOpacity }]}>
+      {/* 整屏虚化封面：spoti.pw 的 now-playing 背景就是封面本身，模糊后压暗 */}
+      <View style={styles.backdrop} pointerEvents="none">
+        <RNImage
+          source={backdropUrl && backdropUrl !== failedBackdropUrl
+            ? { uri: normalizeImageUri(backdropUrl), headers: getImageHeaders(backdropUrl) }
+            : idlePlayerCover}
+          defaultSource={idlePlayerCover}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          blurRadius={36}
+          onError={() => { if (backdropUrl) setFailedBackdropUrl(backdropUrl) }}
+        />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.55)' }]} />
+      </View>
+      <PageScrim />
       <Header />
       <View style={styles.container}>
         <PagerView
+          initialPage={initialPage}
           onPageSelected={onPageSelected}
           // onPageScrollStateChanged={onPageScrollStateChanged}
           style={styles.pagerView}
@@ -102,13 +145,24 @@ export default memo(({ componentId }: { componentId: string }) => {
           <View style={{ ...styles.pageIndicatorItem, backgroundColor: pageIndex == 0 ? theme['c-primary-light-100-alpha-700'] : theme['c-primary-alpha-900'] }}></View>
           <View style={{ ...styles.pageIndicatorItem, backgroundColor: pageIndex == 1 ? theme['c-primary-light-100-alpha-700'] : theme['c-primary-alpha-900'] }}></View>
         </View> */}
-        <Player componentId={componentId} />
+        <Player />
       </View>
-    </>
+    </Animated.View>
   )
 })
 
 const styles = createStyle({
+  page: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
   container: {
     flex: 1,
     flexDirection: 'column',
@@ -123,7 +177,7 @@ const styles = createStyle({
   },
   miniLyricContainer: {
     position: 'absolute',
-    bottom: '6%',
+    bottom: '3%',
     left: '10%',
     right: '10%',
     alignItems: 'flex-start',

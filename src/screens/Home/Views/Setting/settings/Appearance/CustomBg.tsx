@@ -82,5 +82,6 @@ const styles = createStyle({
   },
   btns: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
 });

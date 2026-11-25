@@ -12,9 +12,11 @@ import {
   // Setting,
 } from '@/screens'
 import { Provider } from '@/store/Provider'
+import GlassTabsSettings from '@/screens/GlassTabsSettings'
 
 import {
   HOME_SCREEN,
+  GLASS_TABS_SETTINGS_SCREEN,
   PLAY_DETAIL_SCREEN,
   SONGLIST_DETAIL_SCREEN,
   COMMENT_SCREEN,
@@ -30,11 +32,12 @@ import VersionModal from './components/VersionModal'
 import PactModal from './components/PactModal'
 import SyncModeModal from './components/SyncModeModal'
 import DownloadManager from "@/screens/DownloadManager";
+import { TrackSelectionProvider } from '@/components/TrackSelection'
 function WrappedComponent(Component: any) {
   return function inject(props: Record<string, any>) {
     const EnhancedComponent = () => (
       <Provider>
-        <Component {...props} />
+        <TrackSelectionProvider><Component {...props} /></TrackSelectionProvider>
       </Provider>
     )
 
@@ -44,6 +47,7 @@ function WrappedComponent(Component: any) {
 
 export default () => {
   Navigation.registerComponent(HOME_SCREEN, () => WrappedComponent(Home))
+  Navigation.registerComponent(GLASS_TABS_SETTINGS_SCREEN, () => WrappedComponent(GlassTabsSettings))
   Navigation.registerComponent(PLAY_DETAIL_SCREEN, () => WrappedComponent(PlayDetail))
   Navigation.registerComponent(SONGLIST_DETAIL_SCREEN, () => WrappedComponent(SonglistDetail))
   Navigation.registerComponent(COMMENT_SCREEN, () => WrappedComponent(Comment))

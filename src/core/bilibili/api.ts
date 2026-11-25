@@ -1225,8 +1225,30 @@ export const getWebPlayerInfo = async (
 /** 音频流结果 */
 export interface BiliAudioStream {
   url: string
+  /**
+   * 主链接之外的所有备用 CDN 地址（`backupUrl`）。
+   * B 站直链有时效、且单个 CDN 节点偶发 403，下载失败时按顺序换一个再试。
+   */
+  backups: string[]
   /** 音频质量 id */
   quality: number
+}
+
+interface BiliDashAudio {
+  id: number
+  baseUrl?: string
+  base_url?: string
+  backupUrl?: string[]
+  backup_url?: string[]
+}
+
+/** 把 dash 音频流的「主地址 + 备用 CDN」统一成去重后的地址列表 */
+const streamUrls = (stream: BiliDashAudio | undefined | null): string[] => {
+  if (!stream) return []
+  const main = stream.baseUrl ?? stream.base_url
+  const backups = stream.backupUrl ?? stream.backup_url ?? []
+  const all = [main, ...backups].filter((item): item is string => !!item)
+  return [...new Set(all)]
 }
 
 /**
@@ -1255,23 +1277,36 @@ export const getAudioStream = async (
     credentials: 'omit',
   })
   const body = await requireOk<{
-    dash?: { audio?: { id: number; baseUrl: string }[]; flac?: { audio?: { id: number; baseUrl: string } } }
-    durl?: { url: string }[]
+    dash?: {
+      audio?: BiliDashAudio[]
+      flac?: { audio?: BiliDashAudio | null } | null
+    } | null
+    durl?: { url: string; backup_url?: string[] }[]
   }>(response, '获取音频流')
 
-  // 优先 Hi-Res flac
-  if (body.data?.dash?.flac?.audio) {
-    return { url: body.data.dash.flac.audio.baseUrl, quality: body.data.dash.flac.audio.id }
+  // Hi-Res flac（无损）优先，id 30251
+  const flac = body.data?.dash?.flac?.audio
+  const flacUrls = streamUrls(flac)
+  if (flac && flacUrls.length) {
+    return { url: flacUrls[0], backups: flacUrls.slice(1), quality: flac.id }
   }
-  // 其次 dash 音频（取第一个，通常是最高质量）
-  const audio = body.data?.dash?.audio
-  if (audio && audio.length > 0) {
-    return { url: audio[0].baseUrl, quality: audio[0].id }
+
+  // dash 音频：按码率 id 从高到低，取第一个真有地址的
+  const audio = body.data?.dash?.audio ?? []
+  const sorted = [...audio]
+    .filter((item) => streamUrls(item).length > 0)
+    .sort((a, b) => b.id - a.id)
+  if (sorted.length) {
+    const urls = streamUrls(sorted[0])
+    return { url: urls[0], backups: urls.slice(1), quality: sorted[0].id }
   }
-  // 老视频回退 durl
+
+  // 老视频回退 durl（FLV/MP4，完整文件）
   const durl = body.data?.durl
-  if (durl && durl.length > 0) {
-    return { url: durl[0].url, quality: 0 }
+  if (durl?.length) {
+    const urls = [durl[0].url, ...(durl[0].backup_url ?? [])].filter(Boolean)
+    return { url: urls[0], backups: [...new Set(urls)].slice(1), quality: 0 }
   }
+
   throw new BiliApiError('未找到可用的音频流')
 }

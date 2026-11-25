@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import SubTitle from '../../components/SubTitle'
-import CheckBox from '@/components/common/CheckBox'
+import CheckBox from '../../components/ChoiceItem'
 import { useSettingValue } from '@/store/setting/hook'
 import { updateSetting } from '@/core/common'
 import { useI18n } from '@/lang'
@@ -49,7 +49,7 @@ export default memo(() => {
 
 const styles = StyleSheet.create({
   list: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     flexWrap: 'wrap',
   },
 })

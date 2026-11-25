@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Milky Music</string>
+    <string name="widget_description">Milky Music widget</string>
+    <string name="widget_label">Milky Music</string>
+    <string name="widget_description_transparent">Transparent background · white text</string>
+    <string name="widget_label_transparent">Milky Music Transparent</string>
+    <string name="widget_description_theme">Colors follow the theme</string>
+    <string name="widget_label_theme">Milky Music Theme</string>
+    <string name="widget_description_dark">Fixed dark style; does not follow the theme</string>
+    <string name="widget_label_dark">Milky Music Dark</string>
+    <string name="widget_description_light">Fixed light style; does not follow the theme</string>
+    <string name="widget_label_light">Milky Music Light</string>
+</resources>

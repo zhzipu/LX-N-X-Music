@@ -12,7 +12,7 @@ export default memo(() => {
   const t = useI18n()
 
   return (
-    <Section title={t('setting_other')}>
+    <Section title={t('setting_other')} description={t('setting_desc_other')}>
       <ResourceCache />
       <MetaCache />
       <DislikeList />

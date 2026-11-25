@@ -122,11 +122,11 @@ export default memo(({ onBack }: { onBack: () => void }) => {
   const showOverlay = status === 'expired' || status === 'error'
   const dotColor =
     status === 'success'
-      ? '#4CAF50'
+      ? '#FFFFFF'
       : status === 'scanned'
-        ? '#4CAF50'
+        ? '#FFFFFF'
         : status === 'expired' || status === 'error'
-          ? '#E53935'
+          ? 'rgba(255,255,255,0.55)'
           : status === 'polling'
             ? '#FFB300'
             : theme['c-primary-font']

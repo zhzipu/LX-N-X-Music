@@ -200,11 +200,9 @@ const styles = createStyle({
     marginTop: 5,
   },
   textAddr: {
-    marginLeft: 25,
     marginTop: 5,
   },
   text: {
-    marginLeft: 25,
   },
   inputContent: {
     marginTop: 8,

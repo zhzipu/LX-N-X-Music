@@ -21,7 +21,7 @@ const styles = createStyle({
     minWidth: '60%',
     maxHeight: '78%',
     // backgroundColor: 'white',
-    borderRadius: 4,
+    borderRadius: 16,
     // shadowColor: '#000',
     // shadowOffset: {
     //   width: 0,
@@ -37,17 +37,17 @@ const styles = createStyle({
     flexDirection: 'row',
     borderTopLeftRadius: 4,
     borderTopRightRadius: 4,
-    height: HEADER_HEIGHT,
+    height: 48,
   },
   title: {
     paddingLeft: 5,
     paddingRight: 25,
-    lineHeight: HEADER_HEIGHT,
+    lineHeight: 48,
   },
   closeBtn: {
     position: 'absolute',
     right: 0,
-    borderTopRightRadius: 4,
+    borderTopRightRadius: 16,
     flexGrow: 0,
     flexShrink: 0,
     height: HEADER_HEIGHT,
@@ -115,16 +115,16 @@ export default forwardRef<DialogType, DialogProps>(
       >
         <View style={{ ...styles.centeredView, paddingBottom: keyboardShown ? keyboardHeight : 0 }}>
           <View
-            style={{ ...styles.modalView, height, backgroundColor: theme['c-content-background'] }}
+            style={{ ...styles.modalView, height, backgroundColor: theme.isDark ? '#202020' : '#FAFAFA' }}
             onStartShouldSetResponder={() => true}
           >
             <View
-              style={{ ...styles.header, backgroundColor: theme['c-primary-light-100-alpha-100'] }}
+              style={{ ...styles.header, backgroundColor: theme.isDark ? '#202020' : '#FAFAFA' }}
             >
               <Text
                 style={styles.title}
                 size={13}
-                color={theme['c-primary-light-1000']}
+                color={theme['c-font']}
                 numberOfLines={1}
               >
                 {title}

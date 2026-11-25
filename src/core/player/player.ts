@@ -209,6 +209,7 @@ export const setMusicUrl = (
     .then((url) => {
       if (!url) return
       resetAutoNextNum()
+      setStatusText(global.i18n.t('player__loading'))
       setResource(musicInfo, url, playerState.progress.nowPlayTime)
     })
     .catch((err: any) => {

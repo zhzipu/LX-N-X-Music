@@ -11,10 +11,13 @@ import { usePlayerMusicInfo } from '@/store/player/hook';
 import playerState from '@/store/player/state';
 import listState from '@/store/list/state';
 import {LIST_IDS} from "@/config/constant.ts";
+import { useBottomBarMotion, useWideLayout } from '@/utils/hooks'
 
 export default memo(({ componentId, similarSongs: initialSimilarSongs }: { componentId: string, similarSongs: LX.Music.MusicInfoOnline[] }) => {
   const listRef = useRef<OnlineListType>(null);
   const playerMusicInfo = usePlayerMusicInfo();
+  const isWide = useWideLayout()
+  const bottomMotion = useBottomBarMotion({ initialHidden: !isWide, broadcast: !isWide })
   const [similarSongs, setSimilarSongs] = useState(initialSimilarSongs)
 
   useEffect(() => {
@@ -58,7 +61,13 @@ export default memo(({ componentId, similarSongs: initialSimilarSongs }: { compo
 
   return (
     <PageContent>
-      <View style={styles.container}>
+      <View
+        style={styles.container}
+        onTouchStart={isWide ? undefined : bottomMotion.onTouchStart}
+        onTouchMove={isWide ? undefined : bottomMotion.onTouchMove}
+        onTouchEnd={isWide ? undefined : bottomMotion.onTouchEnd}
+        onTouchCancel={isWide ? undefined : bottomMotion.onTouchEnd}
+      >
         <Header componentId={componentId} title="相似歌曲推荐" />
         <OnlineList componentId={componentId}
           ref={listRef}
@@ -70,7 +79,7 @@ export default memo(({ componentId, similarSongs: initialSimilarSongs }: { compo
           onRefresh={() => {}}
           onListUpdate={handleListUpdate}
         />
-        <PlayerBar componentId={componentId} />
+        <PlayerBar componentId={componentId} autoHideOnScroll={!isWide} />
       </View>
     </PageContent>
   );

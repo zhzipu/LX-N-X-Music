@@ -8,43 +8,50 @@ import { useTheme } from '@/store/theme/hook'
 import { createStyle } from '@/utils/tools'
 import Text from '@/components/common/Text'
 import { useBufferProgress } from '@/plugins/player'
+import { getMS, MS_FONT, MS_SIZE, MS_SPACING } from '@/theme/myspotify/tokens'
 
-// const FONT_SIZE = 13
-
-const PlayTimeCurrent = ({ timeStr }: { timeStr: string }) => {
-  const theme = useTheme()
-  // console.log(timeStr)
-  const activeColor = theme.isDark ? theme['c-font'] : theme['c-primary'];
-  return <Text color={activeColor}>{timeStr}</Text>
-}
-
-const PlayTimeMax = memo(({ timeStr }: { timeStr: string }) => {
-  const theme = useTheme()
-  const activeColor = theme.isDark ? theme['c-font'] : theme['c-primary'];
-  return <Text color={activeColor}>{timeStr}</Text>
+/** 时间文字：11 / 0.38 透明度 */
+const PlayTime = memo(({ timeStr, color }: { timeStr: string, color: string }) => {
+  return (
+    <Text style={styles.playTime} color={color} size={MS_FONT.caption} numberOfLines={1}>
+      {timeStr}
+    </Text>
+  )
 })
 
-export default () => {
+/**
+ * 播放详情页的进度区：3dp 轨道 / 纯白填充 / 10dp 白色圆点，
+ * 时间文字 11 号 0.38 透明度，进度条与时间之间留 8 的间距。
+ */
+export default memo(() => {
+  const theme = useTheme()
+  const ms = getMS(theme.isDark)
   const { maxPlayTimeStr, nowPlayTimeStr, progress, maxPlayTime } = useProgress()
   const buffered = useBufferProgress()
-
-  // console.log('render playInfo')
 
   return (
     <>
       <View style={styles.progress}>
-        <Progress progress={progress} duration={maxPlayTime} buffered={buffered} />
+        <Progress
+          progress={progress}
+          duration={maxPlayTime}
+          buffered={buffered}
+          trackColor={ms.colors.track}
+          bufferedColor={ms.colors.trackBuffered}
+          barColor={ms.colors.trackFill}
+          thumbSize={MS_SIZE.progressThumb}
+        />
       </View>
       <View style={styles.info}>
-        <PlayTimeCurrent timeStr={nowPlayTimeStr} />
+        <PlayTime timeStr={nowPlayTimeStr} color={ms.colors.textTertiary} />
         <View style={styles.status}>
           <Status />
         </View>
-        <PlayTimeMax timeStr={maxPlayTimeStr} />
+        <PlayTime timeStr={maxPlayTimeStr} color={ms.colors.textTertiary} />
       </View>
     </>
   )
-}
+})
 
 const styles = createStyle({
   progress: {
@@ -56,13 +63,16 @@ const styles = createStyle({
   info: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    // alignItems: 'center',
-    // backgroundColor: '#ccc',
+    alignItems: 'center',
+    // Progress 容器自带 10 的上下内边距，进度条与时间文字的实际间距约 8
+  },
+  playTime: {
+    fontWeight: MS_FONT.captionWeight,
   },
   status: {
     flexGrow: 1,
     flexShrink: 1,
-    paddingLeft: 10,
-    paddingRight: 10,
+    paddingLeft: MS_SPACING.md,
+    paddingRight: MS_SPACING.md,
   },
 })

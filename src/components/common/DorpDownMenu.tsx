@@ -8,6 +8,9 @@ import Button, { type BtnType, type BtnProps } from './Button'
 export interface DorpDownMenuProps<T extends Menus> extends Omit<MenuProps<T>, 'width'> {
   children: React.ReactNode
   btnStyle?: BtnProps['style']
+  /** 显式指定菜单宽度（图标触发时按钮很窄，用按钮宽会把菜单挤成一条） */
+  menuWidth?: number
+  menuHeight?: number
 }
 
 export default <T extends Menus>({
@@ -19,6 +22,8 @@ export default <T extends Menus>({
   children,
   activeId,
   btnStyle,
+  menuWidth,
+  menuHeight,
 }: DorpDownMenuProps<T>) => {
   const buttonRef = useRef<BtnType>(null)
   const menuRef = useRef<MenuType>(null)
@@ -29,8 +34,8 @@ export default <T extends Menus>({
       menuRef.current?.show(
         { x: Math.ceil(px), y: Math.ceil(py), w: Math.ceil(width), h: Math.ceil(height) },
         {
-          width,
-          height,
+          width: menuWidth ?? width,
+          height: menuHeight ?? height,
         }
       )
     })

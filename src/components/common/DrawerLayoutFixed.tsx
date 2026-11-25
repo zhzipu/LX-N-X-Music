@@ -2,6 +2,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import {
   DrawerLayoutAndroid,
   type DrawerLayoutAndroidProps,
+  type GestureResponderEvent,
   View,
   type LayoutChangeEvent,
 } from 'react-native'
@@ -14,6 +15,10 @@ interface Props extends DrawerLayoutAndroidProps {
   visibleNavNames: COMPONENT_IDS[]
   widthPercentage: number
   widthPercentageMax?: number
+  onTouchStartCapture?: (event: GestureResponderEvent) => void
+  onTouchMoveCapture?: (event: GestureResponderEvent) => void
+  onTouchEndCapture?: (event: GestureResponderEvent) => void
+  onTouchCancelCapture?: (event: GestureResponderEvent) => void
 }
 
 export interface DrawerLayoutFixedType {
@@ -23,7 +28,17 @@ export interface DrawerLayoutFixedType {
 }
 
 const DrawerLayoutFixed = forwardRef<DrawerLayoutFixedType, Props>(
-  ({ visibleNavNames, widthPercentage, widthPercentageMax, children, ...props }, ref) => {
+  ({
+    visibleNavNames,
+    widthPercentage,
+    widthPercentageMax,
+    children,
+    onTouchStartCapture,
+    onTouchMoveCapture,
+    onTouchEndCapture,
+    onTouchCancelCapture,
+    ...props
+  }, ref) => {
     const drawerLayoutRef = useRef<DrawerLayoutAndroid>(null)
     const [w, setW] = useState<number | `${number}%`>('100%')
     const [drawerWidth, setDrawerWidth] = useState(0)
@@ -105,7 +120,17 @@ const DrawerLayoutFixed = forwardRef<DrawerLayoutFixedType, Props>(
           drawerWidth={drawerWidth}
           {...props}
         >
-          <View style={{ marginRight: w == '100%' ? 0 : -1, flex: 1 }}>{children}</View>
+          <View
+            style={{ marginRight: w == '100%' ? 0 : -1, flex: 1 }}
+            {...({
+              onTouchStartCapture,
+              onTouchMoveCapture,
+              onTouchEndCapture,
+              onTouchCancelCapture,
+            } as any)}
+          >
+            {children}
+          </View>
         </DrawerLayoutAndroid>
       </View>
     )

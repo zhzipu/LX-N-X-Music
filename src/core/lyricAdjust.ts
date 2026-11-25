@@ -6,9 +6,12 @@
  * 只有桌面歌词（原生自行解析时间轴）才把偏移直接改写进 `[mm:ss]`。
  */
 import { getData, saveData } from '@/plugins/storage'
+import { repairCrammedLyric } from '@/core/lyricRepair'
 import { log } from '@/utils/log'
 
 const STORAGE_KEY = 'lyric_adjust_v1'
+/** 与 `core/asr/autoAlign` 的 AUTO_PROVIDER 一致：只修「自动识别」产出的歌词 */
+const AUTO_PROVIDER = '自动识别'
 /** 落盘防抖，拖动滑块时不会每一下都写一次 */
 const SAVE_DELAY = 300
 /** 偏移上限（毫秒），再大就不是「对齐」而是「换歌」了 */
@@ -103,6 +106,29 @@ const scheduleSave = () => {
   }, SAVE_DELAY)
 }
 
+/**
+ * 修一次旧识别结果里「被压扁」的时间轴。
+ *
+ * 早期版本对齐时，一个有问题的词级时间戳会让后面二十行歌词被 +0.05s 一路顶过去，
+ * 播放时表现为「滚到某句就不动了」。生成端已经修好，但已经落盘的结果不会自己变好，
+ * 这里按字数比例把它们摊回前后两个可信锚点之间（近似，重新识别才是精确的）。
+ */
+const repairRecognizedLyrics = () => {
+  let changed = 0
+  for (const item of Object.values(store)) {
+    if (item.provider !== AUTO_PROVIDER || !item.lrc) continue
+    const fixed = repairCrammedLyric(item.lrc, item.tlrc ?? '')
+    if (!fixed) continue
+    if (fixed.lrc !== item.lrc) item.lrc = fixed.lrc
+    if (fixed.tlrc !== (item.tlrc ?? '')) item.tlrc = fixed.tlrc || undefined
+    changed += 1
+  }
+  if (changed) {
+    saveNow()
+    log.info(`修复了 ${changed} 首识别歌词的时间轴（旧版本的挤压 bug）`)
+  }
+}
+
 /** 从存储恢复，App 启动时调用一次 */
 export const initLyricAdjust = async () => {
   if (isLoaded) return
@@ -110,6 +136,7 @@ export const initLyricAdjust = async () => {
     loadingPromise = getData<Record<string, LyricAdjustItem>>(STORAGE_KEY)
       .then((data) => {
         store = data && typeof data === 'object' ? data : {}
+        repairRecognizedLyrics()
       })
       .catch((err: any) => {
         log.error('lyric adjust load error:', err?.message ?? err)

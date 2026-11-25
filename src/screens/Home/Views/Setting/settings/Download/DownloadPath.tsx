@@ -16,7 +16,7 @@ export default memo(() => {
   const downloadPath = useSettingValue('download.path')
   const fileSelectRef = useRef<FileSelectType>(null)
 
-  const defaultDownloadPath = RNFetchBlob.fs.dirs.MusicDir + '/LX-N-X Music'
+  const defaultDownloadPath = RNFetchBlob.fs.dirs.MusicDir + '/Milky Music'
 
   const handleSelectPath = () => {
     fileSelectRef.current?.show(
@@ -60,5 +60,6 @@ const styles = createStyle({
   },
   btns: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
 })

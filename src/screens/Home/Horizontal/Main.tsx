@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import Search from '../Views/Search'
 import SongList from '../Views/SongList'
-import Mylist from '../Views/Mylist'
 import Leaderboard from '../Views/Leaderboard'
 import Setting from '../Views/Setting'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
 import DailyRec from '../Views/DailyRec'
-import MyPlaylist from '../Views/MyPlaylist'
+import MyMusic from '../Views/MyMusic'
 import SubscribedAlbums from "@/screens/Home/Views/SubscribedAlbums";
 import FollowedArtists from "@/screens/Home/Views/FollowedArtists";
 import PlayHistory from '../Views/PlayHistory'
 import OneDrive from '../Views/OneDrive'
 import Bilibili from '../Views/Bilibili'
 import LxxWear from '../Views/LxxWear'
+import Hot from '../Views/Hot'
 
 const Main = () => {
   const [id, setId] = useState(commonState.navActiveId)
@@ -31,12 +31,14 @@ const Main = () => {
 
   const component = useMemo(() => {
     switch (id) {
+      case 'nav_hot':
+        return <Hot showSettings />;
       case 'nav_play_history':
         return <PlayHistory />
       case 'nav_daily_rec':
         return <DailyRec />
       case 'nav_my_playlist':
-        return <MyPlaylist />
+        return <MyMusic />
       case 'nav_songlist':
         return <SongList />
       case 'nav_top':
@@ -51,8 +53,6 @@ const Main = () => {
         return <Bilibili />
       case 'nav_lxxwear':
         return <LxxWear />
-      case 'nav_love':
-        return <Mylist />
       case 'nav_setting':
         return <Setting />
       case 'nav_search':

@@ -34,6 +34,7 @@ import commonState from '@/store/common/state'
 import {useWySubscribedPlaylists} from "@/store/user/hook.ts";
 import SimilarSongsModal, { type SimilarSongsModalType } from '@/components/SimilarSongsModal'
 import BatchDownloadModal, { type BatchDownloadModalType } from './BatchDownloadModal'
+import { removeOwnedPlaylistSongs } from '@/components/TrackSelection/cloud'
 
 export interface OnlineListProps {
   onRefresh: ListProps['onRefresh']
@@ -210,6 +211,7 @@ export default forwardRef<OnlineListType, OnlineListProps>(
           <List
             ref={listRef}
             listId={listId}
+            onRemoveSelected={isCreator && listId?.startsWith('wy__') ? songs => removeOwnedPlaylistSongs(listId.slice(4), songs) : undefined}
             onShowMenu={showMenu}
             onMuiltSelectMode={hancelMultiSelect}
             onSelectAll={(isAll) => multipleModeBarRef.current?.setIsSelectAll(isAll)}

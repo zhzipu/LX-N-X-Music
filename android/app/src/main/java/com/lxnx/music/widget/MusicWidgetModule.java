@@ -75,6 +75,20 @@ public class MusicWidgetModule extends ReactContextBaseJavaModule {
     }
 
     /**
+     * 推送主题配色给「主题」样式小组件。
+     * 颜色串形如 #AARRGGBB（JS 侧已转换），App 启动 / 切换配色 / 系统亮暗变化时调用。
+     */
+    @ReactMethod
+    public void updateWidgetTheme(boolean isDark, Promise promise) {
+        try {
+            MusicWidgetProvider.updateWidgetThemeAllWidgets(reactContext, isDark);
+            promise.resolve(null);
+        } catch (Exception e) {
+            promise.reject("ERR", e.getMessage());
+        }
+    }
+
+    /**
      * Listen for widget button click broadcasts and forward to JS as events
      */
     private void registerWidgetActionReceiver() {

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 主题配色样式：卡片底色、文字、进度条、图标颜色跟随 App 主题设置。 -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/widget_music_4x1_theme"
+    android:minWidth="250dp"
+    android:minHeight="70dp"
+    android:resizeMode="horizontal"
+    android:minResizeWidth="180dp"
+    android:updatePeriodMillis="0"
+    android:previewImage="@mipmap/ic_launcher"
+    android:widgetCategory="home_screen"
+    android:label="@string/widget_label_theme"
+    android:description="@string/widget_description_theme" />

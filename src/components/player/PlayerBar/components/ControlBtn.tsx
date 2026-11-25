@@ -1,12 +1,17 @@
-import { TouchableOpacity } from 'react-native'
+import { memo, useCallback } from 'react'
 import { Icon } from '@/components/common/Icon'
 import { useIsPlay } from '@/store/player/hook'
 import { useTheme } from '@/store/theme/hook'
 import { playNext, playPrev, togglePlay } from '@/core/player/player'
 import { createStyle } from '@/utils/tools'
 import { useHorizontalMode } from '@/utils/hooks'
+import PressScale from '@/components/myspotify/PressScale'
+import { getSP, SP_SIZE } from '@/theme/spotify/tokens'
 
-const BTN_SIZE = 24
+/** 图标 26，命中区域 = 26 + 20 = 46（间隙即设计稿要求的 20） */
+const BTN_SIZE = SP_SIZE.playerBarPlayIcon
+const TAP_AREA = 46
+
 const handlePlayPrev = () => {
   void playPrev()
 }
@@ -16,62 +21,53 @@ const handlePlayNext = () => {
 
 const PlayPrevBtn = () => {
   const theme = useTheme()
-
   return (
-    <TouchableOpacity style={styles.cotrolBtn} activeOpacity={0.5} onPress={handlePlayPrev}>
-      <Icon name="prevMusic" color={theme['c-button-font']} size={BTN_SIZE} />
-    </TouchableOpacity>
+    <PressScale style={styles.cotrolBtn} onPress={handlePlayPrev} accessibilityLabel="prev">
+      <Icon name="prevMusic" color={getSP(theme.isDark).colors.text} size={BTN_SIZE} />
+    </PressScale>
   )
 }
 
 const PlayNextBtn = () => {
   const theme = useTheme()
-
   return (
-    <TouchableOpacity style={styles.cotrolBtn} activeOpacity={0.5} onPress={handlePlayNext}>
-      <Icon name="nextMusic" color={theme['c-button-font']} size={BTN_SIZE} />
-    </TouchableOpacity>
+    <PressScale style={styles.cotrolBtn} onPress={handlePlayNext} accessibilityLabel="next">
+      <Icon name="nextMusic" color={getSP(theme.isDark).colors.text} size={BTN_SIZE} />
+    </PressScale>
   )
 }
 
 const TogglePlayBtn = () => {
   const isPlay = useIsPlay()
   const theme = useTheme()
+  const handleTogglePlay = useCallback(() => {
+    togglePlay()
+  }, [])
 
   return (
-    <TouchableOpacity style={styles.cotrolBtn} activeOpacity={0.5} onPress={togglePlay}>
-      <Icon name={isPlay ? 'pause' : 'play'} color={theme['c-button-font']} size={BTN_SIZE} />
-    </TouchableOpacity>
+    <PressScale style={styles.cotrolBtn} onPress={handleTogglePlay} accessibilityLabel="play/pause">
+      <Icon name={isPlay ? 'pause' : 'play'} color={getSP(theme.isDark).colors.text} size={BTN_SIZE} />
+    </PressScale>
   )
 }
 
-export default () => {
+export default memo(() => {
   const isHorizontalMode = useHorizontalMode()
   return (
     <>
-      {/* <TouchableOpacity activeOpacity={0.5} onPress={toggleNextPlayMode}>
-        <Text style={{ ...styles.cotrolBtn }}>
-          <Icon name={playModeIcon} style={{ color: theme.secondary10 }} size={18} />
-        </Text>
-      </TouchableOpacity>
-    */}
-      {/* {btnPrev} */}
+      {/* 横屏下多显示一个「上一首」，保持既有行为 */}
       {isHorizontalMode ? <PlayPrevBtn /> : null}
       <TogglePlayBtn />
       <PlayNextBtn />
     </>
   )
-}
+})
 
 const styles = createStyle({
   cotrolBtn: {
-    width: 46,
-    height: 46,
+    width: TAP_AREA,
+    height: TAP_AREA,
     justifyContent: 'center',
     alignItems: 'center',
-
-    // backgroundColor: '#ccc',
-    shadowOpacity: 1,
-    textShadowRadius: 1,
   },
 })

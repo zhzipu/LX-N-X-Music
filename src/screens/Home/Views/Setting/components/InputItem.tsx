@@ -1,9 +1,10 @@
-import { memo, useState, useEffect, useRef } from 'react'
+import { memo, useState, useEffect, useRef, useCallback } from 'react'
 
 import { StyleSheet, View, Keyboard } from 'react-native'
 import type { InputType, InputProps } from '@/components/common/Input'
 import Input from '@/components/common/Input'
 import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
 import Text from '@/components/common/Text'
 
 export interface InputItemProps extends InputProps {
@@ -16,81 +17,92 @@ export default memo(({ value, label, onChanged, ...props }: InputItemProps) => {
   const [text, setText] = useState(value)
   const textRef = useRef(value)
   const isMountRef = useRef(false)
+  const dirtyRef = useRef(false)
+  const onChangedRef = useRef(onChanged)
+  onChangedRef.current = onChanged
   const inputRef = useRef<InputType>(null)
   const theme = useTheme()
-  const saveValue = () => {
-    onChanged?.(text, (value: string) => {
-      if (!isMountRef.current) return
+  const sp = getSP(theme.isDark)
+  const saveValue = useCallback(() => {
+    if (!dirtyRef.current) return
+    const draft = textRef.current
+    dirtyRef.current = false
+    onChangedRef.current(draft, (value: string) => {
+      if (!isMountRef.current || textRef.current !== draft) return
       const newValue = String(value)
       setText(newValue)
       textRef.current = newValue
     })
-  }
+  }, [])
   useEffect(() => {
     isMountRef.current = true
     return () => {
       isMountRef.current = false
+      // Category navigation can unmount the field before Android sends onBlur.
+      saveValue()
     }
-  }, [])
+  }, [saveValue])
   useEffect(() => {
     const handleKeyboardDidHide = () => {
       if (!inputRef.current?.isFocused()) return
-      onChanged?.(textRef.current, (value) => {
-        if (!isMountRef.current) return
-        const newValue = String(value)
-        setText(newValue)
-        textRef.current = newValue
-      })
+      saveValue()
     }
     const keyboardDidHide = Keyboard.addListener('keyboardDidHide', handleKeyboardDidHide)
 
     return () => {
       keyboardDidHide.remove()
     }
-  }, [onChanged])
+  }, [saveValue])
   useEffect(() => {
-    if (value != text) {
-      const newValue = String(value)
-      setText(newValue)
-      textRef.current = newValue
-    }
+    const newValue = String(value)
+    setText(newValue)
+    textRef.current = newValue
+    dirtyRef.current = false
   }, [value])
   const handleSetSelectMode = (text: string) => {
+    dirtyRef.current = true
     setText(text)
     textRef.current = text
   }
   return (
     <View style={styles.container}>
-      <Text style={styles.label} size={14}>
+      <Text size={15} style={{ ...styles.label, color: sp.colors.text, fontWeight: '500' }} allowFontScaling={false}>
         {label}
       </Text>
-      <Input
-        value={text}
-        ref={inputRef}
-        onChangeText={handleSetSelectMode}
-        style={{ ...styles.input, backgroundColor: theme['c-primary-input-background'] }}
-        {...props}
-        onBlur={saveValue}
-      />
+      <View style={[styles.pill, { backgroundColor: sp.colors.surfaceElevated }]}>
+        <Input
+          value={text}
+          accessibilityLabel={label}
+          ref={inputRef}
+          onChangeText={handleSetSelectMode}
+          style={{ ...styles.input, color: sp.colors.text }}
+          placeholderTextColor={sp.colors.textTertiary}
+          selectionColor={sp.colors.accent}
+          {...props}
+          onBlur={saveValue}
+        />
+      </View>
     </View>
   )
 })
 
 const styles = StyleSheet.create({
   container: {
-    paddingLeft: 25,
-    marginBottom: 15,
+    marginBottom: 16,
   },
   label: {
-    marginBottom: 2,
+    marginBottom: 8,
+  },
+  pill: {
+    minHeight: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
   },
   input: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    flexGrow: 1,
-    flexShrink: 1,
-    borderRadius: 4,
-    // paddingTop: 3,
-    // paddingBottom: 3,
-    maxWidth: 300,
+    backgroundColor: 'transparent',
+    minHeight: 48,
+    paddingLeft: 16,
+    paddingRight: 16,
+    fontSize: 15,
   },
 })

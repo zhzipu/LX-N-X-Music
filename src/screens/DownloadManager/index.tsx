@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect } from 'react';
 import { View, FlatList } from 'react-native';
 import PageContent from '@/components/PageContent';
+import PageScrim from '@/components/spotify/PageScrim';
 import Header from './Header';
 import ListItem from './ListItem';
 import { useDownloadTasks } from '@/store/download/hook';
@@ -21,6 +22,8 @@ export default memo(({ componentId }: { componentId: string }) => {
 
   return (
     <PageContent>
+      {/* 页面级渐黑遮罩：第一个子节点，压在内容下面、全局模糊封面底上面 */}
+      <PageScrim />
       <View style={styles.container}>
         <Header componentId={componentId} />
         <FlatList

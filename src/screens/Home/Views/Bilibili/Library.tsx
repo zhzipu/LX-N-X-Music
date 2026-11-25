@@ -5,6 +5,7 @@ import Image from '@/components/common/Image'
 import { SvgIcon } from '@/components/common/SvgIcon'
 import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
 import { createStyle } from '@/utils/tools'
 import { getBiliCookie } from '@/core/bilibili/auth'
 import {
@@ -248,7 +249,11 @@ export default memo(() => {
           data={data}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
-          contentContainerStyle={data.length === 0 ? styles.emptyContainer : undefined}
+          contentContainerStyle={[
+            data.length === 0 ? styles.emptyContainer : undefined,
+            // Home 底部浮层（迷你播放条 + Tab 栏）不占布局，留出滚动空间
+            { paddingBottom: HOME_BOTTOM_OVERLAY_HEIGHT },
+          ]}
           ListEmptyComponent={
             <View style={styles.center}>
               <Text size={13} color={theme['c-font-label']}>

@@ -23,13 +23,14 @@ public class Lyric extends LyricPlayer {
   ReactApplicationContext reactAppContext;
 
   boolean isRunPlayer = false;
-  // String lastText = "LX-N-X Music ^-^";
+  // String lastText = "奶音 ^-^";
   int lastLine = 0;
   List lines = new ArrayList();
   boolean isShowTranslation;
   boolean isShowRoma;
   boolean isShowLyricView = false;
   boolean isSendLyricTextEvent = false;
+  boolean isWidgetLyricEventsEnabled = false;
   boolean isScreenOff = false;
   String lyricText = "";
   String translationText = "";
@@ -104,7 +105,7 @@ public class Lyric extends LyricPlayer {
   // }
 
   private boolean isDisableAutoPause() {
-    return !isRunPlayer || isSendLyricTextEvent;
+    return !isRunPlayer || isSendLyricTextEvent || isWidgetLyricEventsEnabled;
   }
   private void handleScreenOff() {
     isScreenOff = true;
@@ -123,7 +124,7 @@ public class Lyric extends LyricPlayer {
   }
 
   private void pausePlayer() {
-    if (!isRunPlayer || isShowLyricView || isSendLyricTextEvent) return;
+    if (!isRunPlayer || isShowLyricView || isSendLyricTextEvent || isWidgetLyricEventsEnabled) return;
     isRunPlayer = false;
     this.pause();
   }
@@ -132,7 +133,7 @@ public class Lyric extends LyricPlayer {
     if (isShowLyricView && !isScreenOff && lyricView != null) {
       lyricView.setLyric(lyric, extendedLyrics);
     }
-    if (isSendLyricTextEvent) {
+    if (isSendLyricTextEvent || isWidgetLyricEventsEnabled) {
       WritableMap params = Arguments.createMap();
       params.putString("text", lyric);
       params.putArray("extendedLyrics", Arguments.makeNativeArray(extendedLyrics));
@@ -157,6 +158,17 @@ public class Lyric extends LyricPlayer {
     if (isSend) {
       if (lyricEvent == null) lyricEvent = new LyricEvent(reactAppContext);
       isRunPlayer = true;
+    } else {
+      pausePlayer();
+    }
+  }
+
+  public void setWidgetLyricEventsEnabled(boolean enabled) {
+    isWidgetLyricEventsEnabled = enabled;
+    if (enabled) {
+      if (lyricEvent == null) lyricEvent = new LyricEvent(reactAppContext);
+      isRunPlayer = true;
+      refreshLyric();
     } else {
       pausePlayer();
     }

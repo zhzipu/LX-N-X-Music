@@ -1,9 +1,9 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react'
-import { TouchableOpacity } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 
 import { Icon } from '@/components/common/Icon'
-import { BorderWidths } from '@/theme'
 import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
 import { useActiveListId, useListFetching } from '@/store/list/hook'
 import listState from '@/store/list/state'
 import { createStyle } from '@/utils/tools'
@@ -13,6 +13,9 @@ import Text from '@/components/common/Text'
 import { LIST_IDS } from '@/config/constant'
 import Loading from '@/components/common/Loading'
 import { useSettingValue } from '@/store/setting/hook'
+
+/** 当前列表名：17/700，令牌里没有 17 这个字号 */
+const LIST_NAME_SIZE = 17
 
 export interface ActiveListProps {
   onShowSearchBar: () => void
@@ -27,6 +30,7 @@ export interface ActiveListType {
 export default forwardRef<ActiveListType, ActiveListProps>(
   ({ onShowSearchBar, onScrollToTop, showCover, onToggleView }, ref) => {
     const theme = useTheme()
+    const sp = getSP(theme.isDark)
     const currentListId = useActiveListId()
     const fetching = useListFetching(currentListId)
     const langId = useSettingValue('common.langId')
@@ -64,27 +68,36 @@ export default forwardRef<ActiveListType, ActiveListProps>(
       <TouchableOpacity
         onPress={showList}
         onLongPress={onScrollToTop}
-        style={{
-          ...styles.currentList,
-          opacity: visibleBar ? 1 : 0,
-          borderBottomColor: theme['c-border-background'],
-        }}
+        style={[styles.currentList, { opacity: visibleBar ? 1 : 0 }]}
       >
         <Icon
           style={styles.currentListIcon}
-          color={theme['c-button-font']}
+          color={sp.colors.textSecondary}
           name="chevron-right"
-          size={12}
+          size={14}
         />
-        {fetching ? <Loading color={theme['c-button-font']} style={styles.loading} /> : null}
-        <Text style={styles.currentListText} numberOfLines={1} color={theme['c-button-font']}>
+        {fetching ? <Loading color={sp.colors.accent} style={styles.loading} /> : null}
+        <Text
+          style={styles.currentListText}
+          numberOfLines={1}
+          size={LIST_NAME_SIZE}
+          color={sp.colors.text}
+        >
           {currentListName}
         </Text>
-        <TouchableOpacity style={styles.currentListBtns} onPress={onToggleView}>
-          <Icon color={theme['c-button-font']} name={showCover ? 'menu' : 'album'} />
+        <TouchableOpacity
+          style={styles.currentListBtns}
+          onPress={onToggleView}
+          accessibilityRole="button"
+        >
+          <Icon color={sp.colors.textSecondary} name={showCover ? 'menu' : 'album'} size={20} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.currentListBtns} onPress={onShowSearchBar}>
-          <Icon color={theme['c-button-font']} name="search-2" />
+        <TouchableOpacity
+          style={styles.currentListBtns}
+          onPress={onShowSearchBar}
+          accessibilityRole="button"
+        >
+          <Icon color={sp.colors.textSecondary} name="search-2" size={20} />
         </TouchableOpacity>
       </TouchableOpacity>
     )
@@ -94,34 +107,26 @@ export default forwardRef<ActiveListType, ActiveListProps>(
 const styles = createStyle({
   currentList: {
     flexDirection: 'row',
-    paddingRight: 2,
-    height: 36,
+    paddingLeft: 16,
+    paddingRight: 4,
+    height: 48,
     alignItems: 'center',
-    borderBottomWidth: BorderWidths.normal,
-    // backgroundColor: 'rgba(0,0,0,0.2)',
   },
   currentListIcon: {
-    paddingLeft: 15,
-    paddingRight: 10,
-    // paddingTop: 10,
-    // paddingBottom: 0,
+    paddingRight: 8,
   },
   currentListText: {
     flex: 1,
-    // minWidth: 70,
-    // paddingLeft: 10,
+    fontWeight: '700',
     paddingRight: 10,
-    // paddingTop: 10,
-    // paddingBottom: 10,
   },
   loading: {
     marginRight: 5,
   },
   currentListBtns: {
-    width: 46,
+    width: 40,
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
-    // backgroundColor: 'rgba(0,0,0,0.2)',
   },
 })

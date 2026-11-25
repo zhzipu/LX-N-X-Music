@@ -46,3 +46,8 @@ export const onWidgetPrev = (callback: () => void) => {
 export const onWidgetNext = (callback: () => void) => {
     return widgetEmitter.addListener('widget-next', callback)
 }
+
+/** Push the theme mode to the monochrome theme widget. */
+export const updateWidgetTheme = async (isDark: boolean): Promise<void> => {
+    return MusicWidgetModule.updateWidgetTheme(isDark)
+}

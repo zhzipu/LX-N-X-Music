@@ -86,15 +86,15 @@ export default memo(() => {
         onChanged={handleChanged}
         placeholder={t('setting_basic_wy_cookie_placeholder')}
       />
+      <View style={styles.btnContainer}>
+        <Button onPress={handleShowLoginModal}>网页登录</Button>
+      </View>
       <InputItem
         value={serpApiKey}
         label="SerpApi API Key"
         onChanged={handleSerpApiKeyChanged}
         placeholder="用于网易云搜索补充 Google 搜索结果"
       />
-      <View style={styles.btnContainer}>
-        <Button onPress={handleShowLoginModal}>网页登录</Button>
-      </View>
     </View>
   );
 });
@@ -105,7 +105,6 @@ const styles = createStyle({
   },
   btnContainer: {
     marginBottom: 5,
-    paddingLeft: 20,
     flexDirection: 'row',
   },
 });

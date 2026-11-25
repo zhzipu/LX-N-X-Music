@@ -3,10 +3,10 @@ import { Modal, View, TouchableOpacity } from 'react-native'
 import Image from '@/components/common/Image'
 import Text from '@/components/common/Text'
 import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
 import { createStyle, toast } from '@/utils/tools'
 import { dateFormat } from '@/utils/common'
 import { navigations } from '@/navigation'
-import commonState from '@/store/common/state'
 import { Icon } from '@/components/common/Icon'
 import { useIsWyAlbumSubscribed, useIsBiliAlbumSubscribed } from '@/store/user/hook'
 import wyApi from '@/utils/musicSdk/wy/user'
@@ -17,6 +17,7 @@ import { toggleBiliAlbumSubscribe } from '@/core/bilibili/favorite'
 
 export default memo(({ componentId, item, width, viewMode }: { componentId: string, item: any, width: number, viewMode: 'grid' | 'list' }) => {
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
   const isBili = item.source === 'bili'
   // 网易云收藏的专辑与 bili 收藏的合集是两套独立存储，按音源二选一
   const isWySubscribed = useIsWyAlbumSubscribed(isBili ? undefined : item.id)
@@ -88,7 +89,7 @@ export default memo(({ componentId, item, width, viewMode }: { componentId: stri
       transparent={false}
       onRequestClose={() => setBiliDetail(null)}
     >
-      <View style={{ flex: 1, backgroundColor: theme['c-content-background'] }}>
+      <View style={[styles.modal, { backgroundColor: sp.colors.bg }]}>
         <BiliFolderDetail
           type="collection"
           folderId={biliDetail.folderId}
@@ -99,23 +100,41 @@ export default memo(({ componentId, item, width, viewMode }: { componentId: stri
     </Modal>
   ) : null
 
+  const likeButton = (
+    <TouchableOpacity style={styles.likeButton} onPress={toggleSubscribe} hitSlop={6}>
+      <Icon
+        name={isSubscribed ? 'love-filled' : 'love'}
+        size={16}
+        color={isSubscribed ? sp.colors.accent : sp.colors.textSecondary}
+      />
+    </TouchableOpacity>
+  )
+
   // 列表视图模式
   if (viewMode === 'list') {
     return (
       <>
-      <TouchableOpacity style={[listStyles.container, { width }]} onPress={handlePress}>
-        <Image url={item.picUrl} style={listStyles.artwork} />
-        <View style={listStyles.info}>
-          <Text style={listStyles.name} numberOfLines={1}>{item.name}</Text>
-          <Text style={listStyles.time} size={12} color={theme['c-font-label']}>
-            {isBili ? `${item.size} 个视频` : `${dateFormat(item.publishTime, 'Y.M.D')} • ${item.size} tracks`}
-          </Text>
-        </View>
-        <TouchableOpacity style={listStyles.likeButton} onPress={toggleSubscribe}>
-          <Icon name={isSubscribed ? 'love-filled' : 'love'} color={isSubscribed ? theme['c-liked'] : theme['c-font-label']} size={18} />
+        <TouchableOpacity style={[styles.listItem, { width }]} onPress={handlePress}>
+          <Image url={item.picUrl} style={styles.listArtwork} />
+          <View style={styles.listInfo}>
+            <Text
+              size={sp.font.rowTitle}
+              numberOfLines={1}
+              style={{ color: sp.colors.text, fontWeight: sp.font.rowTitleWeight }}
+            >
+              {item.name}
+            </Text>
+            <Text
+              size={sp.font.rowSubtitle}
+              numberOfLines={1}
+              style={[styles.listMeta, { color: sp.colors.textSecondary }]}
+            >
+              {isBili ? `${item.size} 个视频` : `${dateFormat(item.publishTime, 'Y.M.D')} • ${item.size} tracks`}
+            </Text>
+          </View>
+          {likeButton}
         </TouchableOpacity>
-      </TouchableOpacity>
-      {biliDetailModal}
+        {biliDetailModal}
       </>
     )
   }
@@ -123,80 +142,87 @@ export default memo(({ componentId, item, width, viewMode }: { componentId: stri
   // 默认（网格）视图模式
   return (
     <>
-    <TouchableOpacity style={{ ...gridStyles.container, width }} onPress={handlePress}>
-      <Image url={item.picUrl} style={{ ...gridStyles.artwork, width, height: width }} />
-      <Text style={gridStyles.name} numberOfLines={1}>{item.name}</Text>
-      <View style={gridStyles.metaContainer}>
-        <View style={gridStyles.metaTextContainer}>
-          <Text style={gridStyles.time} size={10} color={theme['c-font-label']}>
-            {isBili ? '' : dateFormat(item.publishTime, 'Y.M.D')}
-          </Text>
-          <Text style={gridStyles.trackCount} size={10} color={theme['c-font-label']}>
-            {isBili ? `${item.size} 个视频` : `• ${item.size} tracks`}
-          </Text>
+      <TouchableOpacity style={[styles.gridItem, { width }]} onPress={handlePress}>
+        <Image url={item.picUrl} style={[styles.gridArtwork, { width, height: width }]} />
+        <Text
+          size={sp.font.tileTitle}
+          numberOfLines={1}
+          style={{ color: sp.colors.text, fontWeight: sp.font.tileTitleWeight }}
+        >
+          {item.name}
+        </Text>
+        <View style={styles.metaContainer}>
+          <View style={styles.metaTextContainer}>
+            <Text size={sp.font.tileSubtitle} numberOfLines={1} style={{ color: sp.colors.textSecondary }}>
+              {isBili ? `${item.size} 个视频` : dateFormat(item.publishTime, 'Y.M.D')}
+            </Text>
+            {isBili ? null : (
+              <Text
+                size={sp.font.tileSubtitle}
+                numberOfLines={1}
+                style={[styles.trackCount, { color: sp.colors.textSecondary }]}
+              >
+                {`${item.size} tracks`}
+              </Text>
+            )}
+          </View>
+          {likeButton}
         </View>
-        <TouchableOpacity style={gridStyles.likeButton} onPress={toggleSubscribe}>
-          <Icon name={isSubscribed ? 'love-filled' : 'love'} color={isSubscribed ? theme['c-liked'] : theme['c-font-label']} size={18} />
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-    {biliDetailModal}
+      </TouchableOpacity>
+      {biliDetailModal}
     </>
   )
 })
 
-const gridStyles = createStyle({
-  container: {
+const styles = createStyle({
+  modal: {
+    flex: 1,
+  },
+  gridItem: {
     marginBottom: 16,
   },
-  artwork: {
+  gridArtwork: {
     borderRadius: 6,
     marginBottom: 8,
-  },
-  name: {
-    fontSize: 12,
   },
   metaContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 4,
+    paddingTop: 4,
   },
   metaTextContainer: {
     flexDirection: 'column',
+    flexShrink: 1,
   },
-  time: {},
   trackCount: {
-    marginTop: 2,
+    paddingTop: 2,
   },
   likeButton: {
-    padding: 5,
-  },
-})
-
-const listStyles = createStyle({
-  container: {
-    flexDirection: 'row',
+    width: 32,
+    height: 32,
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 0,
-  },
-  artwork: {
-    width: 60,
-    height: 60,
-    borderRadius: 6,
-  },
-  info: {
-    flex: 1,
-    marginLeft: 15,
     justifyContent: 'center',
   },
-  name: {
-    fontSize: 15,
-    marginBottom: 5,
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 16,
+    paddingRight: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
-  time: {},
-  likeButton: {
-    paddingHorizontal: 25,
+  listArtwork: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+  },
+  listInfo: {
+    flex: 1,
+    paddingLeft: 12,
+    justifyContent: 'center',
+  },
+  listMeta: {
+    paddingTop: 2,
   },
 })

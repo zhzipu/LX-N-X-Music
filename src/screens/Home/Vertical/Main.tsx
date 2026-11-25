@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef, t
 import {Keyboard, View} from 'react-native'
 import Search from '../Views/Search'
 import SongList from '../Views/SongList'
-import Mylist from '../Views/Mylist'
 import Leaderboard from '../Views/Leaderboard'
 import Setting from '../Views/Setting'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
@@ -14,16 +13,20 @@ import PagerView, {
 import { setNavActiveId } from '@/core/common'
 import settingState from '@/store/setting/state'
 import DailyRec from '../Views/DailyRec'
-import MyPlaylist from '../Views/MyPlaylist'
+import MyMusic from '../Views/MyMusic'
 import FollowedArtists from '../Views/FollowedArtists'
 import SubscribedAlbums from '../Views/SubscribedAlbums';
 import {NAV_MENUS, type NAV_ID_Type} from "@/config/constant.ts";
 import {useSettingValue} from "@/store/setting/hook.ts";
 import PlayHistory from '../Views/PlayHistory'
 import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
 import OneDrive from '../Views/OneDrive'
 import Bilibili from '../Views/Bilibili'
 import LxxWear from '../Views/LxxWear'
+import MenuPage from '../Views/MenuPage'
+import Music from '../Views/Music'
+import Hot from '../Views/Hot'
 
 const hideKeys = ['list.isShowAlbumName', 'list.isShowInterval', 'theme.fontShadow'] as Readonly<
   Array<keyof LX.AppSetting>
@@ -117,15 +120,21 @@ const PlayHistoryOverlay = () => {
   }, [])
 
   return visible ? (
-    <View style={{ ...styles.historyOverlay, backgroundColor: theme['c-content-background'] }}>
+    <View style={styles.historyOverlay}>
       {component}
     </View>
   ) : null
 }
 
-const isMenuVisible = (id: NAV_ID_Type, navStatus: Partial<Record<NAV_ID_Type, boolean>>) => (
-  id !== 'nav_play_history' && (id === 'nav_search' || id === 'nav_setting' || (navStatus[id] ?? true))
-)
+/**
+ * 分页器里只放底部 Tab 的三个固定页：每日推荐 / 搜索 / 我的歌单。
+ * 其余页面（歌单、排行榜、关注歌手、OneDrive、B 站、手表、设置、菜单…）
+ * 一律通过底部第四个 tab 的「菜单」进入，作为覆盖层盖在分页器上，
+ * 这样左右滑动永远只在三页之间走。
+ */
+export const PAGER_NAV_IDS: NAV_ID_Type[] = ['nav_music', 'nav_search', 'nav_hot', 'nav_menu']
+
+const isMenuVisible = (id: NAV_ID_Type) => PAGER_NAV_IDS.includes(id)
 const LeaderboardPage = () => {
   const [visible, setVisible] = useState(commonState.navActiveId == 'nav_top')
   const component = useMemo(() => <Leaderboard />, [])
@@ -198,45 +207,9 @@ const DailyRecPage = () => {
   return visible ? component : null
 }
 
-const MylistPage = () => {
-  const [visible, setVisible] = useState(commonState.navActiveId == 'nav_love')
-  const component = useMemo(() => <Mylist />, [])
-  useEffect(() => {
-    let currentId: CommonState['navActiveId'] = commonState.navActiveId
-    const handleNavIdUpdate = (id: CommonState['navActiveId']) => {
-      currentId = id
-      if (id == 'nav_love') {
-        requestAnimationFrame(() => {
-          setVisible(true)
-        })
-      }
-    }
-    const handleHide = () => {
-      if (currentId != 'nav_setting') return
-      setVisible(false)
-    }
-    const handleConfigUpdated = (keys: Array<keyof LX.AppSetting>) => {
-      if (keys.some((k) => hideKeys.includes(k))) handleHide()
-    }
-    global.state_event.on('navActiveIdUpdated', handleNavIdUpdate)
-    global.state_event.on('themeUpdated', handleHide)
-    global.state_event.on('languageChanged', handleHide)
-    global.state_event.on('configUpdated', handleConfigUpdated)
-
-    return () => {
-      global.state_event.off('navActiveIdUpdated', handleNavIdUpdate)
-      global.state_event.off('themeUpdated', handleHide)
-      global.state_event.off('languageChanged', handleHide)
-      global.state_event.on('configUpdated', handleConfigUpdated)
-    }
-  }, [])
-
-  return visible ? component : null
-}
-
-const MyPlaylistPage = () => {
+const MyMusicPage = () => {
     const [visible, setVisible] = useState(commonState.navActiveId == 'nav_my_playlist')
-    const component = useMemo(() => <MyPlaylist />, [])
+    const component = useMemo(() => <MyMusic />, [])
     useEffect(() => {
         let currentId: CommonState['navActiveId'] = commonState.navActiveId
           const handleNavIdUpdate = (id: CommonState['navActiveId']) => {
@@ -263,7 +236,7 @@ const MyPlaylistPage = () => {
             global.state_event.off('navActiveIdUpdated', handleNavIdUpdate)
             global.state_event.off('themeUpdated', handleHide)
             global.state_event.off('languageChanged', handleHide)
-            global.state_event.on('configUpdated', handleConfigUpdated)
+            global.state_event.off('configUpdated', handleConfigUpdated)
           }
       }, [])
 
@@ -471,13 +444,19 @@ const SettingPage = () => {
 
 const Main = () => {
   const pagerViewRef = useRef<ComponentRef<typeof PagerView>>(null);
+  const theme = useTheme()
+  const sp = getSP(theme.isDark)
   const [activeNavId, setActiveNavIdState] = useState(commonState.navActiveId)
   const navStatus = useSettingValue('common.navStatus'); // 获取菜单显示状态
 
-  // 根据 navStatus 动态生成可见的菜单项、viewMap 和 indexMap
-  const visibleNavs = useMemo(() => {
-    return NAV_MENUS.filter(menu => isMenuVisible(menu.id, navStatus));
-  }, [navStatus]);
+  // 分页顺序必须和底部 Tab 顺序一致（每日推荐 → 搜索 → 我的歌单），
+  // 不能直接沿用 NAV_MENUS 的顺序（那里搜索排在最前，会导致首页落在中间页、滑动顺序错乱）。
+  const visibleNavs = useMemo(
+    () => PAGER_NAV_IDS
+      .map(id => NAV_MENUS.find(menu => menu.id === id))
+      .filter((menu): menu is (typeof NAV_MENUS)[number] => !!menu),
+    [],
+  );
 
   const { viewMap, indexMap } = useMemo(() => {
     const viewMap: Partial<Record<NAV_ID_Type, number>> = {};
@@ -491,15 +470,20 @@ const Main = () => {
 
   const activeIndexRef = useRef(viewMap[commonState.navActiveId] ?? 0);
 
+  /** 是否允许分页器左右滑动（只在播放历史页禁用） */
+  const canSwipePager = (id: string) =>
+    !!settingState.setting['common.homePageScroll'] &&
+    id !== 'nav_play_history'
+
   const onPageSelected = useCallback(({ nativeEvent }: PagerViewOnPageSelectedEvent) => {
     activeIndexRef.current = nativeEvent.position;
     const selectedId = indexMap[activeIndexRef.current]
     if (!selectedId) return
-    if (selectedId) setActiveNavIdState(selectedId)
-    if (activeIndexRef.current !== viewMap[commonState.navActiveId]) {
-      setNavActiveId(selectedId);
-    }
-  }, [indexMap, viewMap]);
+    setActiveNavIdState(selectedId)
+    // 始终同步全局 navActiveId：顶部 chips、大标题、底部 tab 都是从这里派生的，
+    // 只要漏一次同步，就会出现「底部 tab 切了、顶部 chips 没切」的错位。
+    setNavActiveId(selectedId);
+  }, [indexMap]);
 
   const onPageScrollStateChanged = useCallback(
     ({ nativeEvent }: PageScrollStateChangedNativeEvent) => {
@@ -513,7 +497,7 @@ const Main = () => {
   useEffect(() => {
     const handleUpdate = (id: CommonState['navActiveId']) => {
       setActiveNavIdState(id)
-      pagerViewRef.current?.setScrollEnabled(!!settingState.setting['common.homePageScroll'] && id !== 'nav_play_history');
+      pagerViewRef.current?.setScrollEnabled(canSwipePager(id));
       const index = viewMap[id];
       if (index == null || activeIndexRef.current === index) return;
       activeIndexRef.current = index;
@@ -524,7 +508,7 @@ const Main = () => {
       setting: Partial<LX.AppSetting>
     ) => {
       if (!keys.includes('common.homePageScroll')) return;
-      pagerViewRef.current?.setScrollEnabled(!!setting['common.homePageScroll'] && commonState.navActiveId !== 'nav_play_history');
+      pagerViewRef.current?.setScrollEnabled(canSwipePager(commonState.navActiveId));
     };
 
     global.state_event.on('navActiveIdUpdated', handleUpdate);
@@ -535,29 +519,32 @@ const Main = () => {
     };
   }, [viewMap]);
 
-  // 根据 visibleNavs 动态渲染 PagerView 的子组件
-  const pages = useMemo(() => {
-    const pageComponents: Partial<Record<NAV_ID_Type, ReactNode>> = {
-      nav_search: <SearchPage />,
-      nav_songlist: <SongListPage />,
-      nav_top: <LeaderboardPage />,
-      nav_love: <MylistPage />,
-      nav_daily_rec: <DailyRecPage />,
-      nav_followed_artists: <FollowedArtistsPage />,
-      nav_subscribed_albums: <SubscribedAlbumsPage />,
-      nav_my_playlist: <MyPlaylistPage />,
-      nav_onedrive: <OneDrivePage />,
-      nav_bilibili: <BilibiliPage />,
-      nav_lxxwear: <LxxWearPage />,
-      nav_setting: <SettingPage />,
-    };
+  // 全部页面组件（分页器只用前三个，其余通过覆盖层显示）
+  const pageComponents = useMemo((): Partial<Record<NAV_ID_Type, ReactNode>> => ({
+    nav_search: <SearchPage />,
+    nav_songlist: <SongListPage />,
+    nav_top: <LeaderboardPage />,
+    nav_daily_rec: <DailyRecPage />,
+    nav_followed_artists: <FollowedArtistsPage />,
+    nav_subscribed_albums: <SubscribedAlbumsPage />,
+    nav_my_playlist: <MyMusicPage />,
+    nav_hot: <Hot />,
+    nav_onedrive: <OneDrivePage />,
+    nav_bilibili: <BilibiliPage />,
+    nav_lxxwear: <LxxWearPage />,
+    nav_setting: <SettingPage />,
+    nav_menu: <MenuPage />,
+    nav_music: <Music />,
+  }), [])
 
+  // 根据 visibleNavs 动态渲染 PagerView 的子组件（只用前三个 tab 页）
+  const pages = useMemo(() => {
     return visibleNavs.map(nav => (
       <View collapsable={false} key={nav.id} style={styles.pageStyle}>
         {pageComponents[nav.id] ?? null}
       </View>
     ));
-  }, [visibleNavs]);
+  }, [visibleNavs, pageComponents]);
 
   return (
     <View style={styles.container}>
@@ -567,12 +554,20 @@ const Main = () => {
         offscreenPageLimit={1}
         onPageSelected={onPageSelected}
         onPageScrollStateChanged={onPageScrollStateChanged}
-        scrollEnabled={settingState.setting['common.homePageScroll'] && activeNavId !== 'nav_play_history'}
-        style={styles.pagerView}
+        scrollEnabled={canSwipePager(activeNavId)}
+        style={[styles.pagerView, !PAGER_NAV_IDS.includes(activeNavId) ? styles.pagerHidden : null]}
       >
         {pages}
       </PagerView>
       <PlayHistoryOverlay />
+      {/* 三个固定 tab 之外的页面：作为覆盖层盖在分页器上，左右滑动只在三页之间走 */}
+      {!PAGER_NAV_IDS.includes(activeNavId)
+        ? (
+            <View style={styles.menuOverlay}>
+              {pageComponents[activeNavId] ?? null}
+            </View>
+          )
+        : null}
     </View>
   );
 };
@@ -584,6 +579,17 @@ const styles = createStyle({
   pagerView: {
     flex: 1,
     overflow: 'hidden',
+  },
+  pagerHidden: {
+    opacity: 0,
+  },
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 2,
   },
   historyOverlay: {
     position: 'absolute',

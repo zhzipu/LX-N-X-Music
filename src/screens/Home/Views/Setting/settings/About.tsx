@@ -12,7 +12,7 @@ export default memo(() => {
   const theme = useTheme()
   const t = useI18n()
   const openHomePage = () => {
-    void openUrl('https://github.com/zhzipu/LX-N-X-Music#readme')
+    void openUrl('https://github.com/zhzipu/milky-music')
   }
 
   const textLinkStyle = {
@@ -22,11 +22,11 @@ export default memo(() => {
   } as const
 
   return (
-    <Section title={t('setting_about')}>
+    <Section title={t('setting_about')} description={t('setting_desc_about')}>
       <View style={styles.part}>
-        <Text style={styles.text}>本软件（LX-N-X Music）完全免费，代码已开源。开源地址：</Text>
+        <Text style={styles.text}>奶音（Milky Music）完全免费，代码已开源。开源地址：</Text>
         <TouchableOpacity onPress={openHomePage}>
-          <Text style={textLinkStyle}>https://github.com/zhzipu/LX-N-X-Music</Text>
+          <Text style={textLinkStyle}>https://github.com/zhzipu/milky-music</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.part}>
@@ -69,14 +69,13 @@ export default memo(() => {
 
 const styles = createStyle({
   part: {
-    marginLeft: 15,
-    marginRight: 15,
-    marginBottom: 10,
+    marginBottom: 16,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   text: {
     fontSize: 14,
+    lineHeight: 23,
     textAlignVertical: 'bottom',
   },
   boldText: {

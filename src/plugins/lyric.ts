@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import Lyric, { type Lines } from 'lrc-file-parser'
 // import { getStore, subscribe } from '@/store'
-import { updateLyric as updateWidgetLyric } from '@/utils/nativeModules/musicWidget'
 export type Line = Lines[number]
 type PlayHook = (line: number, text: string) => void
 type SetLyricHook = (lines: Lines) => void
@@ -65,8 +64,6 @@ const lrcTools = {
     // console.log(line)
     this.currentLineData.text = text
     for (const hook of this.playHooks) hook(line, text)
-    // 推送当前歌词行到桌面小组件，触发向上滚动动画
-    void updateWidgetLyric(text).catch(() => {})
   },
   onSetLyric(lines: Lines) {
     this.currentLines = lines
@@ -74,8 +71,6 @@ const lrcTools = {
     this.currentLineData.text = ''
     for (const hook of this.playHooks) hook(-1, '')
     for (const hook of this.setLyricHooks) hook(lines)
-    // 歌词重置（切歌或清空）时，同步清空桌面小组件歌词区
-    void updateWidgetLyric('').catch(() => {})
   },
   addPlayHook(hook: PlayHook) {
     this.playHooks.push(hook)
@@ -110,6 +105,13 @@ export const setLyric = (lyric: string, translation?: string, romalrc?: string) 
   lrcTools.romaText = romalrc
   lrcTools.setLyric()
 }
+/**
+ * 导出当前歌词行（hook 版本）。
+ *
+ * 自动识别写完歌词后，播放器会重新解析、新歌词的进度会重新广播过来；
+ * 只靠 `setLyric` 回调是拿不到最新行的，所以这里把解析器的 currentLines 暴露出去。
+ */
+export const getCurrentLines = (): Lines => lrcTools.currentLines
 export const setPlaybackRate = (playbackRate: number) => {
   lrcTools.audioRate = playbackRate
   lrcTools.applyRate()

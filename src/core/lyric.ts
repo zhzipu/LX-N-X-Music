@@ -23,6 +23,7 @@ import {
   bakeLyricTime,
   getLyricOffset,
   getLyricOffsetLimit,
+  initLyricAdjust,
   resolveLyric,
   setLyricOffset,
 } from '@/core/lyricAdjust'
@@ -54,6 +55,18 @@ export const init = async () => {
 }
 
 /**
+ * 上一次真正塞进解析器的那份歌词（内容 + 偏移 + 倍速）。
+ *
+ * 同一份歌词会被反复触发设置：识别完成既会广播 lyricUpdated、又会显式重建一次；
+ * 切歌时本地已有的歌词会先装一遍、音源歌词请求回来还会再触发一遍。每次都重建列表
+ * 会让歌词闪一下、滚动位置回到开头，所以内容没变就直接跳过。
+ */
+let lastAppliedLyric = ''
+
+const buildLyricKey = (lyric: string, tlrc: string, rlrc: string, offsetMs: number, speed: number) =>
+  `${speed}|${offsetMs}|${lyric}\u0001${tlrc}\u0001${rlrc}`
+
+/**
  * set lyric
  * @param lyric lyric str
  * @param translation lyric translation
@@ -68,6 +81,8 @@ const handleSetLyric = async (
   offsetMs = 0,
   speed = 1
 ) => {
+  const key = buildLyricKey(lyric, translation, romalrc, offsetMs, speed)
+  if (key === lastAppliedLyric) return
   // 解析器自己按「位置 × 倍速 + 提前量 - 偏移」找行，歌词文本保持原始时间轴；
   // 桌面歌词由原生自行解析，得把偏移与倍速改写进时间轴，否则两边会对不上
   lrcSetLyricSpeed(speed)
@@ -78,6 +93,8 @@ const handleSetLyric = async (
     bakeLyricTime(translation, speed, offsetMs),
     bakeLyricTime(romalrc, speed, offsetMs)
   )
+  // 成功之后才记账：中途抛错时下次还得重来（否则「没换上」会被误判成「已换上」）
+  lastAppliedLyric = key
 }
 
 /**
@@ -149,6 +166,9 @@ export const play = () => {
 export const setLyric = async () => {
   const musicInfo = playerState.musicInfo
   if (!musicInfo.id) return
+  // 覆盖表（手动匹配 / 自动识别生成的歌词）优先级最高，必须确保它已经读出来：
+  // 冷启动时它是异步读盘的，若此时还是空的，识别过的歌词就会被音源歌词盖掉。
+  await initLyricAdjust()
   // 手动匹配的歌词优先于音源自带的歌词，偏移与倍速在这里一并交给解析器
   const { lyric, tlrc, rlrc, offset, speed } = resolveLyric(musicInfo)
   if (lyric) await handleSetLyric(lyric, tlrc, rlrc, offset, speed)

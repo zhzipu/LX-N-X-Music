@@ -17,9 +17,10 @@ export default memo(() => {
   const t = useI18n()
 
   return (
-    <Section title={t('setting_download')}>
+    <Section title={t('setting_download')} description={t('setting_desc_download')}>
       {/*<IsEnable />*/}
       <DownloadPath />
+      <FileNameFormat />
       <SubTitle title={t('setting_download_options_title')}>
         <IsWriteTags />
         <IsWriteAlias />
@@ -28,7 +29,6 @@ export default memo(() => {
         <IsWriteEmbedLyrics />
         <IsWriteCover />
       </SubTitle>
-      <FileNameFormat />
     </Section>
   )
 })

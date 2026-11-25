@@ -1,8 +1,8 @@
-import { useWindowSize } from '@/utils/hooks'
+import { useWindowDimensions } from 'react-native'
 import { isHorizontalMode } from '../tools'
 
 export default () => {
-  const windowSize = useWindowSize()
+  const windowSize = useWindowDimensions()
 
   return isHorizontalMode(windowSize.width, windowSize.height)
 }

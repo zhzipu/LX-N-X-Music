@@ -1,21 +1,33 @@
 import { memo, useRef, useState, useCallback, useEffect, useMemo } from 'react'
-import { TouchableOpacity, View, BackHandler, StyleSheet, PanResponder } from 'react-native'
-import Text from '@/components/common/Text'
+import { View, BackHandler, StyleSheet, PanResponder } from 'react-native'
 import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import PagerView, { type PagerViewOnPageSelectedEvent } from 'react-native-pager-view'
 import RecPlaylists from './RecPlaylists'
 import RecSongs from './RecSongs'
 import StylizedModal, { type StylizedSelection, loadStylizedSelection } from './StylizedModal'
-import { BorderWidths } from '@/theme'
 import SonglistDetail from '../../../SonglistDetail'
 import { type ListInfoItem } from '@/store/songlist/state'
 import commonState from '@/store/common/state'
-import { COMPONENT_IDS, NAV_MENUS } from '@/config/constant'
+import { NAV_MENUS } from '@/config/constant'
 import { useSettingValue } from '@/store/setting/hook'
 import { useNavActiveId } from '@/store/common/hook'
 import { setNavActiveId } from '@/core/common'
+import Chip from '@/components/spotify/Chip'
+import { getSP } from '@/theme/spotify/tokens'
 
+/**
+ * 按钮命中区 ≥ 44。Chip 不支持 hitSlop，所以视觉高度也取 44，
+ * 圆角跟随高度的一半，保持胶囊形。
+ */
+const CHIP_HIT = { height: 44, borderRadius: 22 }
+
+/**
+ * 页签行（spoti.pw 的筛选 chip 行）。
+ *
+ * 只换表现：每个 chip 的 onPress 与改动前的 TouchableOpacity 一一对应，
+ * 选中态靠 Chip 的填充差表达，不再自绘下划线/描边。
+ */
 const Tabs = ({
   activeTab,
   onTabChange,
@@ -30,53 +42,44 @@ const Tabs = ({
   onOpenModal: () => void
 }) => {
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
   return (
-    <View style={[styles.tabsContainer, { justifyContent: 'space-between', alignItems: 'center' }]}>
-      {activeTab === 'songs' ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity
-            onPress={() => setIsStylized(false)}
-            style={[
-              { marginRight: 5, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 0, borderWidth: BorderWidths.normal },
-              !isStylized ? { borderColor: theme['c-primary-font'] } : { borderColor: 'transparent' }
-            ]}
-          >
-            <Text color={!isStylized ? theme['c-primary-font'] : theme['c-font']} size={13}>默认推荐</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              if (!isStylized) setIsStylized(true)
-              else onOpenModal()
-            }}
-            style={[
-              { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 0, borderWidth: BorderWidths.normal },
-              isStylized ? { borderColor: theme['c-primary-font'] } : { borderColor: 'transparent' }
-            ]}
-          >
-            <Text color={isStylized ? theme['c-primary-font'] : theme['c-font']} size={13}>
-              {isStylized ? '风格化推荐 ▾' : '风格化推荐'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ) : <View style={{ flex: 1 }} />}
-      <View style={{ flexDirection: 'row' }}>
-        <TouchableOpacity style={styles.tab} onPress={() => onTabChange('songs')}>
-          <Text
-            style={[styles.tabText, { borderBottomColor: activeTab === 'songs' ? theme['c-primary-font-active'] : 'transparent' }]}
-            color={activeTab === 'songs' ? theme['c-primary-font'] : theme['c-font']}
-          >
-            推荐歌曲
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tab} onPress={() => onTabChange('playlists')}>
-          <Text
-            style={[styles.tabText, { borderBottomColor: activeTab === 'playlists' ? theme['c-primary-font-active'] : 'transparent' }]}
-            color={activeTab === 'playlists' ? theme['c-primary-font'] : theme['c-font']}
-          >
-            推荐歌单
-          </Text>
-        </TouchableOpacity>
+    <View style={[styles.tabs, { paddingHorizontal: sp.size.pagePaddingH }]}>
+      <View style={styles.tabRow}>
+        <Chip
+          label="推荐歌曲"
+          active={activeTab === 'songs'}
+          onPress={() => onTabChange('songs')}
+          style={[CHIP_HIT, styles.chipGap]}
+        />
+        <Chip
+          label="推荐歌单"
+          active={activeTab === 'playlists'}
+          onPress={() => onTabChange('playlists')}
+          style={CHIP_HIT}
+        />
       </View>
+      {activeTab === 'songs'
+        ? (
+            <View style={[styles.tabRow, styles.tabRowSecond]}>
+              <Chip
+                label="默认推荐"
+                active={!isStylized}
+                onPress={() => setIsStylized(false)}
+                style={[CHIP_HIT, styles.chipGap]}
+              />
+              <Chip
+                label={isStylized ? '风格化推荐 ▾' : '风格化推荐'}
+                active={isStylized}
+                onPress={() => {
+                  if (!isStylized) setIsStylized(true)
+                  else onOpenModal()
+                }}
+                style={CHIP_HIT}
+              />
+            </View>
+          )
+        : null}
     </View>
   )
 }
@@ -98,6 +101,7 @@ export default memo(() => {
   const selectedPlaylistRef = useRef(selectedPlaylist)
   selectedPlaylistRef.current = selectedPlaylist
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
   const isHomePageScrollEnabled = useSettingValue('common.homePageScroll')
   const navStatus = useSettingValue('common.navStatus')
   const visibleNavs = useMemo(() => {
@@ -164,8 +168,8 @@ export default memo(() => {
   }, [])
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={[{ flex: 1 }, selectedPlaylist ? { opacity: 0 } : null]} pointerEvents={selectedPlaylist ? 'none' : 'auto'} {...(isHomePageScrollEnabled ? panResponder.panHandlers : {})}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+      <View style={[styles.container, selectedPlaylist ? styles.hidden : null]} pointerEvents={selectedPlaylist ? 'none' : 'auto'} {...(isHomePageScrollEnabled ? panResponder.panHandlers : {})}>
         <Tabs
           activeTab={activeTab}
           onTabChange={handleTabChange}
@@ -198,7 +202,7 @@ export default memo(() => {
         />
       </View>
       {selectedPlaylist && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme['c-content-background'] }]}>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'transparent' }]}>
           <SonglistDetail info={selectedPlaylist} onBack={handleCloseDetail} initialScrollToInfo={null} />
         </View>
       )}
@@ -207,19 +211,24 @@ export default memo(() => {
 })
 
 const styles = createStyle({
-  tabsContainer: {
+  container: {
+    flex: 1,
+  },
+  hidden: {
+    opacity: 0,
+  },
+  tabs: {
+    paddingTop: 4,
+    paddingBottom: 4,
+  },
+  tabRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 15,
-    borderBottomWidth: BorderWidths.normal,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'center',
   },
-  tab: {
-    paddingVertical: 5,
-    paddingLeft: 15,
+  tabRowSecond: {
+    paddingTop: 8,
   },
-  tabText: {
-    paddingBottom: 5,
-    borderBottomWidth: BorderWidths.normal3,
+  chipGap: {
+    marginRight: 8,
   },
 })

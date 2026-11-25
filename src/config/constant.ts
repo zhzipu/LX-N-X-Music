@@ -21,6 +21,7 @@ export const LIST_IDS = {
 // } as const
 // export type COMPONENT_IDS_TYPE = keyof typeof COMPONENT_IDS
 export enum COMPONENT_IDS {
+  glassTabsSettings = 'glassTabsSettings',
   home = 'home',
   playDetail = 'playDetail',
   songlistDetail = 'songlistDetail',
@@ -105,14 +106,16 @@ export const storageDataPrefixOld = {
   notificationTipEnable: '@notification_tip_enable',
 } as const
 
-export const APP_PROVIDER_NAME = 'com.lxnx.music.provider'
+export const APP_PROVIDER_NAME = 'OMG.Milky.Music.provider'
 
 export const NAV_MENUS = [
+  { id: 'nav_music', icon: 'music_time' },
+  { id: 'nav_menu', icon: 'menu' },
   { id: 'nav_search', icon: 'search-2' },
+  { id: 'nav_hot', icon: 'leaderboard' },
   { id: 'nav_play_history', icon: 'music_time' },
   { id: 'nav_songlist', icon: 'album' },
   { id: 'nav_top', icon: 'leaderboard' },
-  { id: 'nav_love', icon: 'love' },
   { id: 'nav_daily_rec', icon: 'svg:calendar' },
   { id: 'nav_followed_artists', icon: 'svg:artist' },
   { id: 'nav_subscribed_albums', icon: 'svg:album-disc' },
@@ -125,6 +128,8 @@ export const NAV_MENUS = [
 ] as const
 
 export type NAV_ID_Type = (typeof NAV_MENUS)[number]['id']
+
+export const MORE_MENU_OPTION_IDS: readonly NAV_ID_Type[] = ['nav_onedrive', 'nav_bilibili', 'nav_lxxwear']
 
 export const LXM_FILE_EXT_RXP = ['json', 'lxmc', 'bin']
 export const USER_API_SOURCE_FILE_EXT_RXP = ['js']

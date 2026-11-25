@@ -16,6 +16,7 @@ import {
   showDesktopLyric,
   onLyricLinePlay,
   showRemoteLyric,
+  setWidgetLyricEventsEnabled,
 } from '@/core/desktopLyric'
 import { updateLyric as updateWidgetLyric, updateProgress as updateWidgetProgress } from '@/utils/nativeModules/musicWidget'
 import playerState from '@/store/player/state'
@@ -72,7 +73,7 @@ export default async (setting: LX.AppSetting) => {
     }
   })
   onLyricLinePlay(({ text, extendedLyrics }) => {
-    // 推送当前歌词行到桌面小组件（原生桌面歌词事件，原生层推进，比 JS lrc 更可靠）
+    // Native lyric playback also emits this event for widget updates while backgrounded.
     void updateWidgetLyric(text ?? '').catch(() => {})
     if (!settingState.setting['player.isShowBluetoothLyric']) return
     if (!text && !state.isPlaying) {
@@ -81,6 +82,8 @@ export default async (setting: LX.AppSetting) => {
       void updateRemoteLyric(text)
     }
   })
+
+  await setWidgetLyricEventsEnabled(true)
 
   global.app_event.on('play', play)
   global.app_event.on('pause', pause)

@@ -75,6 +75,18 @@ declare global {
       'common.wy_cookie': string
       'common.wy_serpapi_key': string
       'common.yt_cookie': string
+      /**
+       * 歌词识别用的阿里云百炼（DashScope）API Key
+       */
+      'common.asrApiKey': string
+      /**
+       * 歌词翻译（百度翻译开放平台）的 APPID：老控制台用它算签名，留空则按新版 API KEY 鉴权
+       */
+      'common.translateAppId': string
+      /**
+       * 歌词翻译（百度翻译开放平台）的密钥 / API KEY
+       */
+      'common.translateApiKey': string
 
       /**
        * Bilibili Cookie（登录后自动写入）
@@ -88,6 +100,8 @@ declare global {
 
 
       'common.navStatus': Partial<Record<NAV_ID_Type, boolean>>;
+      /** JSON-encoded selected charts; empty string uses the default charts. */
+      'common.hotBoards': string
 
       /**
        * 配色方案 id（13 套之一）。只决定配色，明暗由「跟随系统」或「暗色模式」决定

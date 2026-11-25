@@ -5,6 +5,7 @@ import {
   useMemo,
   forwardRef,
   useImperativeHandle,
+  type ReactNode,
   type Ref,
 } from 'react'
 import { StyleSheet, View, Animated } from 'react-native'
@@ -16,6 +17,8 @@ import List, { type ItemT, type ListProps, type ListType } from './List'
 
 export interface SearchTipListProps<T> extends ListProps<T> {
   onPressBg?: () => void
+  /** 列表上方的插槽（如搜索历史标题栏），不传则不占位 */
+  header?: ReactNode
 }
 export interface SearchTipListType<T> {
   setList: (list: T[]) => void
@@ -25,7 +28,7 @@ export interface SearchTipListType<T> {
 const noop = () => {}
 
 const Component = <T extends ItemT<T>>(
-  { onPressBg = noop, ...props }: SearchTipListProps<T>,
+  { onPressBg = noop, header, ...props }: SearchTipListProps<T>,
   ref: Ref<SearchTipListType<T>>
 ) => {
   const theme = useTheme()
@@ -118,12 +121,13 @@ const Component = <T extends ItemT<T>>(
         }}
       >
         <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}>
+          {header}
           <List ref={listRef} {...props} />
         </View>
         <View style={styles.blank} onTouchStart={onPressBg}></View>
       </Animated.View>
     ),
-    [onPressBg, props, scaleY, theme, translateY]
+    [header, onPressBg, props, scaleY, theme, translateY]
   )
 
   return !visible && animatePlayed ? null : component

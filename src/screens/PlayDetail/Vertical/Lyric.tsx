@@ -23,11 +23,17 @@ import { scrollTo } from '@/utils/scroll'
 import LyricMenu, { type LyricMenuType } from '../components/LyricMenu'
 import LyricAdjustBar from '../components/LyricAdjustBar'
 import { LYRIC_ANCHOR_RATIO, useLyricAdjust } from '../components/useLyricAdjust'
+import { getSP, SP_FONT, SP_SPACING } from '@/theme/spotify/tokens'
 // import { screenkeepAwake } from '@/utils/nativeModules/utils'
 // import { log } from '@/utils/log'
 // import { toast } from '@/utils/tools'
 
 type FlatListType = FlatListProps<Line>
+
+/** 设置项 playDetail.vertical.style.lrcFontSize 的默认值是 200，对应 20 号字 */
+const LRC_FONT_BASE = 200
+/** spoti.pw 歌词：30 / Bold；行距 24（= 字号之外再留 24） */
+const LRC_LINE_GAP = SP_SPACING.xxl
 
 // const useLock = () => {
 //   const showCommentRef = useRef(false)
@@ -78,17 +84,20 @@ interface LineProps {
 const LrcLine = memo(
   ({ line, lineNum, activeLine, onLayout, onPress, onLongPress }: LineProps) => {
     const theme = useTheme()
+    const sp = getSP(theme.isDark)
     const lrcFontSize = useSettingValue('playDetail.vertical.style.lrcFontSize')
     const textAlign = useSettingValue('playDetail.style.align')
-    const size = lrcFontSize / 10
-    const lineHeight = setSpText(size) * 1.3
+    // 默认设置值（200）折算成 30 号字；捏合缩放依旧按设置值等比放大，手势逻辑不变
+    const size = (lrcFontSize / LRC_FONT_BASE) * SP_FONT.lyric
+    const lineHeight = setSpText(size) + setSpText(LRC_LINE_GAP)
 
     const colors = useMemo(() => {
       const active = activeLine == lineNum
+      // spoti.pw：已唱 100% 白、未唱 30% 白（翻译行同色，跟整行一起明暗）
       return active
-        ? ([theme.isDark ? theme['c-font'] : theme['c-primary-font-active'], theme['c-primary-alpha-200'], 1] as const)
-        : ([theme['c-450'], theme['c-400'], 0.8] as const)
-    }, [activeLine, lineNum, theme])
+        ? ([sp.colors.text, sp.colors.text, 1] as const)
+        : ([sp.colors.text, sp.colors.text, 0.3] as const)
+    }, [activeLine, lineNum, sp])
 
     const handleLayout = ({ nativeEvent }: LayoutChangeEvent) => {
       onLayout(lineNum, nativeEvent.layout.height, nativeEvent.layout.width)
@@ -532,8 +541,8 @@ export default () => {
 const styles = createStyle({
   container: {
     flex: 1,
-    paddingLeft: 20,
-    paddingRight: 20,
+    paddingLeft: SP_SPACING.xxl,
+    paddingRight: SP_SPACING.xxl,
     // backgroundColor: 'rgba(0,0,0,0.1)',
   },
   space: {
@@ -561,12 +570,11 @@ const styles = createStyle({
     paddingTop: 6,
   },
   line: {
-    paddingTop: 10,
-    paddingBottom: 10,
-    // opacity: 0,
+    // 行距统一交给 lineHeight（字号 + 24），这里不再额外加内边距
   },
   lineText: {
     textAlign: 'center',
+    fontWeight: SP_FONT.lyricWeight,
     // fontSize: 16,
     // lineHeight: 20,
     // paddingTop: 5,

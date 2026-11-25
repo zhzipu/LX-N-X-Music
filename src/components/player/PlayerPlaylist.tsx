@@ -1,8 +1,10 @@
 import {forwardRef, useImperativeHandle, useRef, useState, useEffect, useCallback, memo, useMemo} from 'react';
 import AnimatedSlideUpPanel, { type AnimatedSlideUpPanelType } from '@/components/common/AnimatedSlideUpPanel';
 import { useI18n } from '@/lang';
-import { FlatList, View, TouchableOpacity } from 'react-native';
+import { FlatList, View, TouchableOpacity, StyleSheet } from 'react-native';
 import Text from '@/components/common/Text';
+import GlassSurface from '@/components/spotify/GlassSurface';
+import { getSP } from '@/theme/spotify/tokens';
 import { useTheme } from '@/store/theme/hook';
 import playerState from '@/store/player/state';
 import { getListMusicSync } from '@/utils/listManage';
@@ -43,6 +45,7 @@ export default forwardRef<PlayerPlaylistType, {}>((props, ref) => {
   const flatListRef = useRef<FlatList>(null);
   const t = useI18n();
   const theme = useTheme();
+  const sp = getSP(theme.isDark);
   const playerInfo = usePlayInfo();
   const playerMusicInfo = usePlayerMusicInfo();
   const [playlist, setPlaylist] = useState<LX.Player.PlayMusic[]>([]);
@@ -248,7 +251,15 @@ export default forwardRef<PlayerPlaylistType, {}>((props, ref) => {
   return (
     <>
       <AnimatedSlideUpPanel ref={panelRef} onHide={handlePanelHide}>
-        <View style={{ ...styles.panelContent, backgroundColor: theme['c-content-background'] }}>
+        <View style={styles.panelContent}>
+          {/* 玻璃底：面板是独立窗口，原生玻璃走兜底（半透明 tint + 描边），
+              底部多留 28 让圆角落在屏幕外，只露顶部圆角 */}
+          <GlassSurface
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { bottom: -28 }]}
+            borderRadius={sp.radius.sheet}
+            glassAmount={0.55}
+          />
           <View style={{ ...styles.header, borderBottomColor: theme['c-border-background'] }}>
             <View style={styles.headerTitleContainer}>
               <Text style={styles.panelTitle}>{t('list_name_temp')}</Text>
@@ -299,8 +310,9 @@ export default forwardRef<PlayerPlaylistType, {}>((props, ref) => {
 const styles = createStyle({
   panelContent: {
     flex: 1,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    // 底部是两个圆角，露在屏幕外；顶部圆角 28 与 sheet 令牌一致
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     overflow: 'hidden',
   },
   header: {
@@ -316,7 +328,8 @@ const styles = createStyle({
   panelTitle: {
     paddingVertical: 15,
     // paddingLeft: 15,
-    fontSize: 14,
+    fontSize: 22,
+    fontWeight: '700',
   },
   countText: {
     marginLeft: 8,

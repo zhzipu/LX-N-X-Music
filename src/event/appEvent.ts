@@ -12,6 +12,7 @@ import {navigations} from "@/navigation";
 import {getDailyRecCache} from "@/utils/data.ts";
 import {toast} from "@/utils/tools.ts";
 import { isOneDriveMusicInfo } from '@/core/oneDrive/utils'
+import { setMyMusicSegment } from '@/screens/Home/Views/MyMusic/segment'
 
 // {
 //   // sync: {
@@ -175,6 +176,14 @@ export class AppEvent extends Event {
     this.emit('changeMenuVisible', visible)
   }
 
+  setWidePlayerLyrics(visible: boolean) {
+    this.emit('setWidePlayerLyrics', visible)
+  }
+
+  setBottomBarHidden(hidden: boolean) {
+    this.emit('setBottomBarHidden', hidden)
+  }
+
   /**
    * 搜索类型改变事件
    * @param type
@@ -198,12 +207,10 @@ export class AppEvent extends Event {
     }
 
     if (!listId || !musicInfo) {
-      if (commonState.navActiveId === 'nav_love') {
-        this.emit('jumpListPosition')
-      } else {
-        setNavActiveId('nav_love')
-        setTimeout(() => this.emit('jumpListPosition'), 200)
-      }
+      // 「我的列表」已并入「我的歌单」，这里切到该页的本地列表分段
+      setMyMusicSegment('local')
+      setNavActiveId('nav_my_playlist')
+      setTimeout(() => this.emit('jumpListPosition'), 200)
       return
     }
 
@@ -235,6 +242,9 @@ export class AppEvent extends Event {
       const isSubscribed = userState.wy_subscribed_playlists.some(p => String(p.id) === sourceId)
       const targetNavId: NAV_ID_Type = isSubscribed ? 'nav_my_playlist' : 'nav_songlist'
 
+      // 订阅歌单在合并后的「我的歌单」页里属于「网易云歌单」分段
+      if (isSubscribed) setMyMusicSegment('online')
+
       if (commonState.navActiveId !== targetNavId) {
         global.lx.jumpMyListPosition = true
         setNavActiveId(targetNavId)
@@ -255,8 +265,9 @@ export class AppEvent extends Event {
         navigatedToDetail = true;
       }
     } else {
-      // 默认处理“我的列表”
-      const targetNavId: NAV_ID_Type = 'nav_love'
+      // 默认处理「我的歌单」页里的本地列表分段
+      setMyMusicSegment('local')
+      const targetNavId: NAV_ID_Type = 'nav_my_playlist'
       if (commonState.navActiveId !== targetNavId) {
         global.lx.jumpMyListPosition = true
         setNavActiveId(targetNavId)

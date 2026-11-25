@@ -1,39 +1,40 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { View, BackHandler, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, BackHandler, StyleSheet } from 'react-native'
 import MusicList, { type MusicListType } from './MusicList'
 import { type ListInfoItem } from '@/store/songlist/state'
 import { ListInfoContext } from './state'
 import ActionBar from './ActionBar'
-import Image from '@/components/common/Image'
+import DetailHero from './DetailHero'
+import PageScrim from '@/components/spotify/PageScrim'
 import Text from '@/components/common/Text'
-import { NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
+import Loading from '@/components/common/Loading'
 import { confirmDialog, createStyle, toast } from '@/utils/tools'
-import { scaleSizeW } from '@/utils/pixelRatio'
 import { useTheme } from '@/store/theme/hook'
-import { BorderWidths } from '@/theme'
-import { pop } from '@/navigation'
+import { getSP } from '@/theme/spotify/tokens'
+import { useI18n } from '@/lang'
 import commonState from '@/store/common/state'
-import { Icon } from '@/components/common/Icon'
 import { useIsWyPlaylistSubscribed, useWySubscribedPlaylists, useWyUid } from '@/store/user/hook'
 import wyApi from '@/utils/musicSdk/wy/user'
 import { addWySubscribedPlaylist, removeWySubscribedPlaylist } from '@/store/user/action'
-import { COMPONENT_IDS } from '@/config/constant'
-import Menu, { type MenuType } from '@/components/common/Menu'
+import Menu, { type MenuType, type Position } from '@/components/common/Menu'
 import PlaylistEditModal, { type PlaylistEditModalType } from '../Home/Views/MyPlaylist/PlaylistEditModal'
 import { type DetailInfo } from "@/screens/SonglistDetail/Header.tsx"
+import { handleCollect } from './listAction'
 import playerState from '@/store/player/state'
-import { LIST_IDS } from '@/config/constant'
+import { COMPONENT_IDS, LIST_IDS, NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 import listState from '@/store/list/state'
-import {usePlayerMusicInfo} from "@/store/player/hook.ts"
+import { usePlayerMusicInfo } from "@/store/player/hook.ts"
 import MusicInfoOnline = LX.Music.MusicInfoOnline
+import { popHomeDetail, pushHomeDetail } from '@/screens/Home/Views/Music/detailState'
 
-const IMAGE_WIDTH = scaleSizeW(70)
+type MenuAction = 'collect' | 'subscribe' | 'edit' | 'delete'
 
-const ListHeader = ({ detailInfo, info, onBack }: { detailInfo: DetailInfo, info: ListInfoItem, onBack: () => void }) => {
+const ListHeader = ({ detailInfo, info, onBack }: { detailInfo: DetailInfo, info: ListInfoItem, onBack?: () => void }) => {
+  const t = useI18n()
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
   const loggedInUserId = useWyUid()
   const isSubscribed = useIsWyPlaylistSubscribed(info.id)
-  const moreBtnRef = useRef<TouchableOpacity>(null)
   const menuRef = useRef<MenuType>(null)
   const playlistEditModalRef = useRef<PlaylistEditModalType>(null)
   const [isMenuVisible, setMenuVisible] = useState(false)
@@ -68,19 +69,39 @@ const ListHeader = ({ detailInfo, info, onBack }: { detailInfo: DetailInfo, info
     })
   }, [isSubscribed, info, detailInfo])
 
-  const showMenu = () => {
-    moreBtnRef.current?.measure((fx, fy, width, height, px, py) => {
-      const position = { x: Math.ceil(px), y: Math.ceil(py), w: Math.ceil(width), h: Math.ceil(height) }
-      setMenuVisible(true)
-      requestAnimationFrame(() => {
-        menuRef.current?.show(position)
+  /** 「更多」菜单：把原来底栏的收藏 + 创作者的编辑 / 删除都收在这里 */
+  const menus = useMemo(() => {
+    const items: Array<{ action: MenuAction, label: string }> = [
+      { action: 'collect', label: t('collect_songlist') },
+    ]
+    if (showSubscribeButton) {
+      items.push({
+        action: 'subscribe',
+        label: isSubscribed ? '取消网易云收藏' : '收藏到网易云',
       })
-    })
-  }
+    }
+    if (isCreator) {
+      items.push({ action: 'edit', label: '编辑' }, { action: 'delete', label: '删除' })
+    }
+    return items
+  }, [showSubscribeButton, isSubscribed, isCreator, t])
 
-  const handleMenuPress = ({ action }: { action: 'edit' | 'delete' }) => {
+  const showMenu = useCallback((position: Position) => {
+    setMenuVisible(true)
+    requestAnimationFrame(() => {
+      menuRef.current?.show(position)
+    })
+  }, [])
+
+  const handleMenuPress = useCallback(({ action }: { action: string }) => {
     setMenuVisible(false)
     switch (action) {
+      case 'collect':
+        void handleCollect(info.id, info.source, info.name)
+        break
+      case 'subscribe':
+        toggleSubscribe()
+        break
       case 'edit':
         playlistEditModalRef.current?.show({
           id: String(info.id),
@@ -97,58 +118,42 @@ const ListHeader = ({ detailInfo, info, onBack }: { detailInfo: DetailInfo, info
           wyApi.deletePlaylist(info.id).then(() => {
             toast('删除成功')
             removeWySubscribedPlaylist(info.id)
-            onBack()
+            onBack?.()
           }).catch(err => {
             toast(`删除失败: ${err.message}`)
           })
         })
         break
     }
-  }
+  }, [info, detailInfo, toggleSubscribe, onBack])
+
+  const meta = useMemo(() => {
+    const parts: string[] = []
+    if (detailInfo.playCount) parts.push(`${detailInfo.playCount} 次播放`)
+    if (detailInfo.total) parts.push(`${detailInfo.total} 首`)
+    return parts.join(' · ')
+  }, [detailInfo.playCount, detailInfo.total])
+
+  const actions = useMemo(() => <ActionBar onMore={showMenu} />, [showMenu])
 
   return (
     <>
-      <View style={{ ...styles.listHeaderContainer, borderBottomColor: theme['c-border-background'] }}>
-        <View style={{ flexDirection: 'row', flexGrow: 0, flexShrink: 0, padding: 10 }}>
-          <View style={{ ...styles.listItemImg, width: IMAGE_WIDTH, height: IMAGE_WIDTH }}>
-            <Image
-              nativeID={`${NAV_SHEAR_NATIVE_IDS.songlistDetail_pic}_to_${info.id}`}
-              url={detailInfo.imgUrl}
-              style={{ flex: 1, borderRadius: 4 }}
-            />
-          </View>
-          <View
-            style={{ flexDirection: 'column', flexGrow: 1, flexShrink: 1, paddingLeft: 5 }}
-            nativeID={NAV_SHEAR_NATIVE_IDS.songlistDetail_title}
-          >
-            <Text size={14} numberOfLines={1}>
-              {detailInfo.name}
-            </Text>
-            <View style={styles.descContainer}>
-              <View style={{ flexGrow: 1, flexShrink: 1 }}>
-                <Text size={13} color={theme['c-font-label']} numberOfLines={4}>
-                  {detailInfo.desc}
-                </Text>
-              </View>
-              {showSubscribeButton && (
-                <TouchableOpacity style={styles.subscribeButton} onPress={toggleSubscribe}>
-                  <Icon name={isSubscribed ? 'love-filled' : 'love'} color={isSubscribed ? theme['c-liked'] : theme['c-font-label']} size={20} />
-                </TouchableOpacity>
-              )}
-              {isCreator && (
-                <TouchableOpacity ref={moreBtnRef} style={styles.subscribeButton} onPress={showMenu}>
-                  <Icon name="dots-vertical" color={theme['c-font-label']} size={20} />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </View>
-        <ActionBar onBack={onBack} />
-      </View>
-      {isCreator && isMenuVisible && (
+      <DetailHero
+        pageTitle={t('nav_songlist')}
+        onBack={onBack}
+        cover={detailInfo.imgUrl}
+        coverNativeID={`${NAV_SHEAR_NATIVE_IDS.songlistDetail_pic}_to_${info.id}`}
+        titleNativeID={NAV_SHEAR_NATIVE_IDS.songlistDetail_title}
+        title={detailInfo.name}
+        author={info.author}
+        meta={meta}
+        desc={detailInfo.desc}
+        actions={actions}
+      />
+      {isMenuVisible && (
         <Menu
           ref={menuRef}
-          menus={[{ action: 'edit', label: '编辑' }, { action: 'delete', label: '删除' }]}
+          menus={menus}
           onPress={handleMenuPress}
           onHide={() => setMenuVisible(false)}
         />
@@ -160,6 +165,9 @@ const ListHeader = ({ detailInfo, info, onBack }: { detailInfo: DetailInfo, info
 
 export default ({ info, onBack, initialScrollToInfo }: { info: ListInfoItem, onBack?: () => void, initialScrollToInfo: MusicInfoOnline | null }) => {
   const musicListRef = useRef<MusicListType>(null)
+  const [loading, setLoading] = useState(true)
+  const loadVersion = useRef(0)
+  useEffect(() => () => { loadVersion.current++ }, [])
   const [detailInfo, setDetailInfo] = useState<DetailInfo>({
     name: info.name,
     desc: info.desc || '',
@@ -174,10 +182,25 @@ export default ({ info, onBack, initialScrollToInfo }: { info: ListInfoItem, onB
   const playerMusicInfo = usePlayerMusicInfo()
   const initialScrollDoneRef = useRef(false)
 
+  useEffect(() => {
+    pushHomeDetail()
+    return () => { popHomeDetail() }
+  }, [])
+
   const handleBack = onBack
 
   const refreshList = useCallback((isRefresh = false) => {
-    musicListRef.current?.loadList(info.source, info.id, isRefresh).then(setDetailInfo)
+    const version = ++loadVersion.current
+    setLoading(true)
+    const request = musicListRef.current?.loadList(info.source, info.id, isRefresh)
+    if (!request) { setLoading(false); return }
+    void request.then(detail => {
+      if (version === loadVersion.current) setDetailInfo(detail)
+    }).catch(() => {
+      // MusicList already switches to its retryable error state.
+    }).finally(() => {
+      if (version === loadVersion.current) setLoading(false)
+    })
   }, [info.source, info.id])
 
   useEffect(() => {
@@ -225,6 +248,7 @@ export default ({ info, onBack, initialScrollToInfo }: { info: ListInfoItem, onB
       }
 
       // 否则，处理返回事件，关闭当前的歌单详情浮层
+      if (!handleBack) return false
       handleBack()
       return true
     }
@@ -260,7 +284,10 @@ export default ({ info, onBack, initialScrollToInfo }: { info: ListInfoItem, onB
     }
   }, [detailInfo.total, initialScrollToInfo])
 
-  const ListHeaderComponent = useMemo(() => <ListHeader detailInfo={detailInfo} info={info} onBack={handleBack} />, [detailInfo, info, handleBack])
+  const ListHeaderComponent = useMemo(
+    () => <ListHeader detailInfo={detailInfo} info={info} onBack={handleBack} />,
+    [detailInfo, info, handleBack],
+  )
 
   const isCreator = useMemo(() => {
     return info.source === 'wy' &&
@@ -276,49 +303,32 @@ export default ({ info, onBack, initialScrollToInfo }: { info: ListInfoItem, onB
   }, [])
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
+      {/* 页面级渐黑遮罩：第一个子节点，压在内容下面、全局模糊封面底上面 */}
+      <PageScrim />
+      {loading && <View pointerEvents="none" style={styles.loading}><Loading size={28} /></View>}
       <ListInfoContext.Provider value={info}>
-        {ListHeaderComponent}
-        <MusicList ref={musicListRef} playingId={playerMusicInfo.id} componentId={commonState.componentIds[commonState.componentIds.length - 1]?.id} isCreator={isCreator} onListUpdate={handleListUpdate} />
+        <MusicList
+          ref={musicListRef}
+          playingId={playerMusicInfo.id}
+          componentId={commonState.componentIds[commonState.componentIds.length - 1]?.id}
+          isCreator={isCreator}
+          onListUpdate={handleListUpdate}
+          ListHeaderComponent={ListHeaderComponent}
+        />
       </ListInfoContext.Provider>
     </View>
   )
 }
 
 const styles = createStyle({
-  listHeaderContainer: {
-    flexDirection: 'column',
-    flexWrap: 'nowrap',
-    borderBottomWidth: BorderWidths.normal,
-  },
-  listItemImg: {
-    flexGrow: 0,
-    flexShrink: 0,
-    overflow: 'hidden',
-  },
-  playCount: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    fontSize: 12,
-    paddingLeft: 3,
-    paddingRight: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    color: '#fff',
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 4,
-  },
-  descContainer: {
-    flexDirection: 'row',
+  loading: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
     alignItems: 'center',
-    flexGrow: 1,
-    flexShrink: 1,
-  },
-  subscribeButton: {
-    paddingLeft: 10,
-    paddingRight: 5,
     justifyContent: 'center',
-    alignItems: 'center',
+  },
+  container: {
+    flex: 1,
   },
 })

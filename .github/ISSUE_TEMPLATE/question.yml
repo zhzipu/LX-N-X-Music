@@ -10,7 +10,7 @@ body:
       options:
         - label: 我已阅读 [常见问题](https://lyswhut.github.io/lx-music-doc/mobile/faq)，但没有找到解决方案。
           required: true
-        - label: 我已搜索 [Issue 列表](https://github.com/zhzipu/LX-N-X-Music/issues?q=is%3Aissue+)，但没有发现类似的问题。
+        - label: 我已搜索 [Issue 列表](https://github.com/zhzipu/milky-music/issues?q=is%3Aissue+)，但没有发现类似的问题。
           required: true
   - type: textarea
     id: question-description
@@ -22,8 +22,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: LX-N-X Music 版本
-      description: 你使用什么版本的 LX-N-X Music？（如果与你的问题有关）
+      label: 奶音版本
+      description: 你使用什么版本的奶音（Milky Music）？（如果与你的问题有关）
       placeholder: 例如 1.6.0 arm64-v8a
     validations:
       required: true

@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
-import { type LayoutChangeEvent, View, BackHandler } from 'react-native'
+import { type LayoutChangeEvent, View, BackHandler, StyleSheet } from 'react-native'
 import HeaderBar, { type HeaderBarProps, type HeaderBarType } from './HeaderBar'
 import searchState, { type SearchType } from '@/store/search/state'
 import commonState from '@/store/common/state'
@@ -11,7 +11,13 @@ import TipList, { type TipListType } from './TipList'
 import List, { type ListType } from './List'
 import { addHistoryWord, setSearchText as setSearchState } from '@/core/search/search'
 import SonglistDetail from '../../../SonglistDetail'
+import DetailView, { type DetailKind } from './DetailView'
+import RecommendRows from './RecommendRows'
+import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
+import { useNavActiveId } from '@/store/common/hook'
 import {COMPONENT_IDS} from "@/config/constant.ts"
+import { popHomeDetail, pushHomeDetail } from '@/screens/Home/Views/Music/detailState'
 
 interface SearchInfo {
   temp_source: LX.OnlineSource
@@ -20,13 +26,45 @@ interface SearchInfo {
 }
 
 export default () => {
+  const activeNavId = useNavActiveId()
+  const theme = useTheme()
+  const sp = getSP(theme.isDark)
   const headerBarRef = useRef<HeaderBarType>(null)
   const searchTipListRef = useRef<TipListType>(null)
   const listRef = useRef<ListType>(null)
   const layoutHeightRef = useRef<number>(0)
   const searchInfo = useRef<SearchInfo>({ temp_source: 'kw', source: 'kw', searchType: 'music' })
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [selectedList, setSelectedList] = useState<ListInfoItem | null>(null)
+  /** 搜索里点开的歌手/专辑/歌单详情 */
+  const [detailItem, setDetailItem] = useState<{ kind: DetailKind, item: any, source?: string } | null>(null)
+  /** 当前结果分类；搜索框在各分类下共用。 */
+  const [searchTypeState, setSearchTypeState] = useState<SearchType>(searchInfo.current.searchType)
+  const [searchTextState, setSearchTextState] = useState(searchState.searchText)
+  const [hasRecommend, setHasRecommend] = useState(false)
+  const [recExpanded, setRecExpanded] = useState(false)
+  const showSearchHeader = activeNavId === 'nav_search' && !selectedList && !detailItem
+
+  useEffect(() => {
+    if (!detailItem) return
+    pushHomeDetail()
+    return () => { popHomeDetail() }
+  }, [detailItem])
+
+  /** 切换搜索类型（歌手 / 专辑 / 歌单）——分类胶囊移除后，由结果页顶部方块触发 */
+  const handleTypeChange = useCallback((type: SearchType) => {
+    setSearchTypeState(type)
+    setSelectedList(null)
+    searchInfo.current.searchType = type
+    void saveSearchSetting({ type })
+    if ((type === 'singer' || type === 'album') && searchInfo.current.source !== 'wy') {
+      toast('歌手与专辑搜索目前仅支持网易云源')
+    }
+    if (searchState.searchText) {
+      listRef.current?.loadList(searchState.searchText, searchInfo.current.source, type)
+    }
+  }, [])
+  const handleTypeChangeRef = useRef(handleTypeChange)
+  handleTypeChangeRef.current = handleTypeChange
   const selectedListRef = useRef(selectedList)
   const hasOpenedDetailRef = useRef(false)
   selectedListRef.current = selectedList
@@ -71,6 +109,7 @@ export default () => {
     handleHideTipList()
     setSelectedList(null)
     setSearchState(text) // 更新全局状态
+    setSearchTextState(text)
     searchTipListRef.current?.search(text, layoutHeightRef.current)
     headerBarRef.current?.setText(text)
     headerBarRef.current?.blur()
@@ -83,6 +122,7 @@ export default () => {
       searchInfo.current.temp_source = info.temp_source
       searchInfo.current.source = info.source
       searchInfo.current.searchType = info.type
+      setSearchTypeState(info.type)
       switch (info.type) {
         case 'music':
         case 'singer':
@@ -101,23 +141,61 @@ export default () => {
       )
     })
 
-    const handleTypeChange = (type: SearchType) => {
-      setSelectedList(null)
-      searchInfo.current.searchType = type
-      void saveSearchSetting({ type })
-      if ((type === 'singer' || type === 'album') && searchInfo.current.source !== 'wy') {
-        toast('歌手与专辑搜索目前仅支持网易云源')
-      }
-      if (searchState.searchText) {
-        listRef.current?.loadList(searchState.searchText, searchInfo.current.source, type)
-      }
-    }
+    const handleTypeChange = handleTypeChangeRef.current
     global.app_event.on('searchTypeChanged', handleTypeChange)
 
     return () => {
       global.app_event.off('searchTypeChanged', handleTypeChange)
     }
   }, [headerKey])
+
+  // HeaderBar 在切换 tab 或进入详情时会卸载。回到搜索页后，等它重新挂载
+  // 再恢复音源和搜索词，不能只依赖导航事件发生时可能为空的 ref。
+  useEffect(() => {
+    if (!showSearchHeader) {
+      // 离开搜索页（切 tab / 进详情）时顺手收起历史/候选面板
+      searchTipListRef.current?.hide()
+      return
+    }
+    const { source, searchType } = searchInfo.current
+    headerBarRef.current?.setSourceList(
+      searchType === 'songlist' ? searchSonglistState.sources : searchMusicState.sources,
+      source,
+    )
+    headerBarRef.current?.setText(searchState.searchText)
+  }, [showSearchHeader, searchTypeState, headerKey])
+
+  // 返回键：分类列表 → 歌曲结果页 → 空搜索页
+  useEffect(() => {
+    const onBackPress = () => {
+      // 只有当前停在「搜索」tab 时才接管返回键
+      if (activeNavId !== 'nav_search') return false
+      // 0) 详情页 → 回到分类列表
+      if (detailItem) {
+        setDetailItem(null)
+        return true
+      }
+      const { searchType } = searchInfo.current
+      // 1) 歌手/专辑/歌单 → 回到歌曲结果页
+      if (searchType !== 'music') {
+        handleTypeChange('music')
+        return true
+      }
+      // 2) 有搜索结果 → 回到空白的搜索页
+      if (searchState.searchText) {
+        setSelectedList(null)
+        headerBarRef.current?.setText('')
+        setSearchState('')
+        setSearchTextState('')
+        handleHideTipList()
+        listRef.current?.loadList('', searchInfo.current.source, 'music')
+        return true
+      }
+      return false
+    }
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+    return () => { sub.remove() }
+  }, [handleTypeChange, activeNavId, detailItem])
 
   useEffect(() => {
     const handleNavChange = (id: string) => {
@@ -159,22 +237,16 @@ export default () => {
   }
 
   const handleTipSearch: HeaderBarProps['onTipSearch'] = (text) => {
-    setTimeout(() => {
-      searchTipListRef.current?.search(text, layoutHeightRef.current)
-    }, 500)
+    // 有输入立刻切到候选列表；清空输入则回到搜索历史。
+    // 两者共用同一个下拉面板，不需要延迟切换。
+    searchTipListRef.current?.search(text, layoutHeightRef.current)
   }
   const handleHideTipList = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
-    }
     searchTipListRef.current?.hide()
   }
-  const handleShowTipList: HeaderBarProps['onShowTipList'] = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    timeoutRef.current = setTimeout(() => {
-      searchTipListRef.current?.show(layoutHeightRef.current)
-    }, 500)
+  const handleShowTipList: HeaderBarProps['onShowTipList'] = (text) => {
+    // 点搜索框：文本为空时展示搜索历史，已有文本时直接展示候选
+    searchTipListRef.current?.show(layoutHeightRef.current, text)
   }
 
   const handleOpenDetail = useCallback((item: ListInfoItem) => {
@@ -183,7 +255,13 @@ export default () => {
 
   return (
     <View style={styles.container}>
-      { !selectedList && (
+      {/*
+       * 只在搜索页处于激活状态时才挂 HeaderBar。
+       * 这条不是性能优化：PagerView 会把相邻页一起挂载，宿主的玻璃/浮层是按窗口坐标补画的，
+       * 离屏页的搜索框玻璃会被画到当前页上（表现为标题右侧一块圆角磨砂"幽灵"）。
+       * 卸载掉就彻底没有这个源。
+       */}
+      {showSearchHeader && (
         <HeaderBar
           key={headerKey}
           ref={headerBarRef}
@@ -194,19 +272,43 @@ export default () => {
           onShowTipList={handleShowTipList}
         />
       )}
-      <View style={styles.content} onLayout={handleLayout}>
-        { selectedList
-          ? <SonglistDetail
-            componentId={commonState.componentIds.find(c => c.name === COMPONENT_IDS.home)?.id}
-            info={selectedList} onBack={() => setSelectedList(null)}
-          />
-          : (
-            <>
-              <TipList ref={searchTipListRef} onSearch={handleSearch} />
-              <List ref={listRef} onSearch={handleSearch} onOpenDetail={handleOpenDetail} />
-            </>
+      { !detailItem && !selectedList && !searchTextState.trim()
+        ? (
+            <RecommendRows
+              onOpenPlaylist={(item) => { setRecExpanded(false); setDetailItem({ kind: 'songlist', item, source: 'wy' }) }}
+              onLoaded={setHasRecommend}
+              onExpandChange={setRecExpanded}
+            />
           )
-        }
+        : null}
+      <View style={[styles.content, recExpanded ? styles.hidden : null]} onLayout={handleLayout}>
+        {/* 列表保持挂载（用 display 隐藏），这样从详情返回时不会丢掉搜索结果状态 */}
+        <View style={[styles.listLayer, detailItem ? styles.hidden : null]}>
+          { selectedList
+            ? <SonglistDetail
+                componentId={commonState.componentIds.find(c => c.name === COMPONENT_IDS.home)?.id}
+                info={selectedList} onBack={() => setSelectedList(null)}
+              />
+            : (
+                <>
+                  <TipList ref={searchTipListRef} onSearch={handleSearch} onPressBg={() => { headerBarRef.current?.blur() }} />
+                  <List ref={listRef} onSearch={handleSearch} onSelectType={handleTypeChange} onOpenItem={(kind, item) => { setDetailItem({ kind, item }) }} onOpenDetail={handleOpenDetail} hideWelcome={hasRecommend} />
+                </>
+              )
+          }
+        </View>
+        {detailItem
+          ? (
+              <View style={styles.detailLayer}>
+                <DetailView
+                  kind={detailItem.kind}
+                  item={detailItem.item}
+                  source={detailItem.source ?? String(searchInfo.current.source)}
+                  onBack={() => { setDetailItem(null) }}
+                />
+              </View>
+            )
+          : null}
       </View>
     </View>
   )
@@ -220,5 +322,15 @@ const styles = createStyle({
   },
   content: {
     flex: 1,
+  },
+  listLayer: {
+    flex: 1,
+  },
+  hidden: {
+    display: 'none',
+  },
+  detailLayer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'transparent',
   },
 })

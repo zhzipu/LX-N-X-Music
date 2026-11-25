@@ -77,7 +77,7 @@ export const setStatusbarHeight = (size: number) => {
   commonActions.setStatusbarHeight(size)
 }
 
-export const setComponentId = (name: keyof CommonStateType['componentIds'], id: string) => {
+export const setComponentId = (name: CommonStateType['componentIds'][number]['name'], id: string) => {
   commonActions.setComponentId(name as any, id)
 }
 export const removeComponentId = (name: string) => {

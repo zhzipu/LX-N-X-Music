@@ -1,15 +1,18 @@
-// import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { View } from 'react-native'
 import { useTheme } from '@/store/theme/hook'
 import ImageBackground from '@/components/common/ImageBackground'
+import { getImageHeaders, normalizeImageUri } from '@/components/common/Image'
 import { useWindowSize } from '@/utils/hooks'
 import { useMemo } from 'react'
 import { scaleSizeAbsHR } from '@/utils/pixelRatio'
-import { defaultHeaders } from './common/Image'
 import SizeView from './SizeView'
 import { useBgPic } from '@/store/common/hook'
+import { usePlayerMusicInfo } from '@/store/player/hook'
 
 import { useSettingValue } from '@/store/setting/hook'
+
+const idlePlayerCover = require('@/resources/images/milky-music-icon.png')
 interface Props {
   children: React.ReactNode
 }
@@ -20,8 +23,11 @@ export default ({ children }: Props) => {
   const theme = useTheme();
   const windowSize = useWindowSize();
   const dynamicPic = useBgPic();
+  const playerMusicInfo = usePlayerMusicInfo();
   const customBgPicPath = useSettingValue('theme.customBgPicPath');
-  const pic = customBgPicPath || dynamicPic;
+  const dynamicBgEnabled = useSettingValue('theme.dynamicBg');
+  const pic = customBgPicPath || (dynamicBgEnabled ? playerMusicInfo.pic || dynamicPic : null);
+  const [failedPic, setFailedPic] = useState<string | null>(null);
   const picOpacity = useSettingValue('theme.picOpacity');
   const blur = useSettingValue('theme.blur');
   // const BLUR_RADIUS = Math.max(scaleSizeAbsHR(blur), 10)
@@ -58,7 +64,13 @@ export default ({ children }: Props) => {
             width: windowSize.width,
             backgroundColor: theme['c-content-background'],
           }}
-          source={pic ? { uri: pic, headers: defaultHeaders } : theme['bg-image']}
+          source={pic
+            ? pic === failedPic
+              ? idlePlayerCover
+              : { uri: normalizeImageUri(pic), headers: getImageHeaders(pic) }
+            : theme['bg-image']}
+          defaultSource={pic ? idlePlayerCover : undefined}
+          onError={() => { if (pic) setFailedPic(pic) }}
           resizeMode="cover"
           blurRadius={pic ? BLUR_RADIUS : undefined}
         >
@@ -84,7 +96,7 @@ export default ({ children }: Props) => {
         </View>
       </View>
     );
-  }, [children, pic, theme, windowSize.height, windowSize.width, BLUR_RADIUS, picOpacity]);
+  }, [children, pic, failedPic, theme, windowSize.height, windowSize.width, BLUR_RADIUS, picOpacity]);
 
   return (
     <>

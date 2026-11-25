@@ -285,6 +285,8 @@ export default forwardRef<WebLoginModalType, {}>((props, ref) => {
           domStorageEnabled={true}
           sharedCookiesEnabled={true}
           thirdPartyCookiesEnabled={true}
+          // Keep native touch sequences in WebView instead of the modal responder.
+          nestedScrollEnabled={true}
         />
       </View>
     </Modal>

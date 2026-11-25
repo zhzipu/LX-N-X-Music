@@ -128,10 +128,10 @@ jobs:
           draft: false
           tag_name: ${{ needs.Android.outputs.release_tag }}
           files: |
-            artifacts/LX-N-X-Music-v${{ needs.Android.outputs.package_version }}-arm64-v8a.apk
-            artifacts/LX-N-X-Music-v${{ needs.Android.outputs.package_version }}-armeabi-v7a.apk
-            artifacts/LX-N-X-Music-v${{ needs.Android.outputs.package_version }}-x86_64.apk
-            artifacts/LX-N-X-Music-v${{ needs.Android.outputs.package_version }}-x86.apk
-            artifacts/LX-N-X-Music-v${{ needs.Android.outputs.package_version }}-universal.apk
+            artifacts/milky-music-v${{ needs.Android.outputs.package_version }}-arm64-v8a.apk
+            artifacts/milky-music-v${{ needs.Android.outputs.package_version }}-armeabi-v7a.apk
+            artifacts/milky-music-v${{ needs.Android.outputs.package_version }}-x86_64.apk
+            artifacts/milky-music-v${{ needs.Android.outputs.package_version }}-x86.apk
+            artifacts/milky-music-v${{ needs.Android.outputs.package_version }}-universal.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

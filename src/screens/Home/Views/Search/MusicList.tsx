@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import OnlineList, { type OnlineListType, type OnlineListProps } from '@/components/OnlineList'
 import { search } from '@/core/search/music'
 import searchMusicState, { type Source } from '@/store/search/music/state'
@@ -13,7 +13,11 @@ export interface MusicListType {
   loadList: (text: string, source: Source) => void
 }
 
-export default forwardRef<MusicListType, {}>((props, ref) => {
+export default forwardRef<MusicListType, {
+  onSelectType?: (type: 'singer' | 'album' | 'songlist') => void
+}>(({ onSelectType }, ref) => {
+  const [keyword, setKeyword] = useState('')
+  const [sourceForTop, setSourceForTop] = useState<Source>('wy')
   const listRef = useRef<OnlineListType>(null)
   const searchInfoRef = useRef<{ text: string; source: Source }>({ text: '', source: 'kw' })
   const isUnmountedRef = useRef(false)
@@ -60,6 +64,8 @@ export default forwardRef<MusicListType, {}>((props, ref) => {
         const requestId = ++requestIdRef.current
         searchInfoRef.current.text = text
         searchInfoRef.current.source = source
+        setKeyword(text)
+        setSourceForTop(source)
         // const listDetailInfo = searchMusicState.listDetailInfo
         listRef.current?.setList([], false, source == 'all')
         if (

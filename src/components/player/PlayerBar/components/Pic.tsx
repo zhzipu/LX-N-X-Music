@@ -6,16 +6,19 @@ import commonState from '@/store/common/state'
 import playerState from '@/store/player/state'
 import { LIST_IDS, NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 import Image from '@/components/common/Image'
+import idlePlayerCover from '@/resources/images/milky-music-icon.png'
 import { useCallback, useRef } from 'react'
 import { setLoadErrorPicUrl, setMusicInfo } from '@/core/player/playInfo'
+import { SP_SIZE } from '@/theme/spotify/tokens'
 
-const PIC_HEIGHT = scaleSizeH(46)
+/** 迷你播放条封面：spoti.pw 是 40dp 全圆（之前是 48 圆角 8） */
+const PIC_SIZE = scaleSizeH(SP_SIZE.playerBarCover)
 
 const styles = StyleSheet.create({
   image: {
-    width: PIC_HEIGHT,
-    height: PIC_HEIGHT,
-    borderRadius: 2,
+    width: PIC_SIZE,
+    height: PIC_SIZE,
+    borderRadius: PIC_SIZE / 2,
   },
 })
 
@@ -28,7 +31,6 @@ export default ({ isHome }: { isHome: boolean }) => {
       longPressedRef.current = false
       return
     }
-    if (!musicInfo.id) return
     navigations.pushPlayDetailScreen(commonState.componentIds[commonState.componentIds.length - 1]?.id!)
   }
 
@@ -50,7 +52,7 @@ export default ({ isHome }: { isHome: boolean }) => {
   return (
     <TouchableOpacity onLongPress={handleLongPress} onPress={handlePress} activeOpacity={0.7}>
       <Image
-        url={musicInfo.pic}
+        url={musicInfo.pic || idlePlayerCover}
         nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic}
         style={styles.image}
         onError={handleError}
@@ -58,9 +60,3 @@ export default ({ isHome }: { isHome: boolean }) => {
     </TouchableOpacity>
   )
 }
-
-// const styles = StyleSheet.create({
-//   playInfoImg: {
-
-//   },
-// })

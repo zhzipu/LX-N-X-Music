@@ -2,6 +2,7 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
+
 import com.android.build.OutputFile
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
@@ -50,9 +51,6 @@ react {
     /* Hermes Commands */
     //   The hermes compiler command to run. By default it is 'hermesc'
     // hermesCommand = "$rootDir/my-custom-hermesc/bin/hermesc"
-    //   本机 node_modules 目录带有特殊 ACL，该路径下的 hermesc 无法打开任何文件
-    //   （报 Failed to open file），改用项目外的同一份副本（字节完全一致）。
-    hermesCommand = "C:/Users/zhang/.hermesc/win64-bin/hermesc.exe"
     //
     //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
     // hermesFlags = ["-O", "-output-source-map"]
@@ -111,13 +109,35 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+    // RN 0.73 的 jvmToolchain 自动对齐已关闭（见 gradle.properties），
+    // 这里显式对齐 Java 与 Kotlin 的字节码目标版本，避免 KGP 报 JVM-target 不一致。
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+        }
+    }
+
     namespace "com.lxnx.music"
+    packaging {
+        jniLibs {
+            excludes += [
+                    "**/libmapbufferjni.so",
+                    "**/libreact_render_telemetry.so"
+            ]
+        }
+    }
     defaultConfig {
-        applicationId "com.lxnx.music"
+        applicationId "OMG.Milky.Music"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode verCode
         versionName verName
+        testInstrumentationRunner "com.lxnx.music.spectrum.SpectrumInstrumentation"
     }
 
     splits {
@@ -141,12 +161,22 @@ android {
                 if (keystorePropertiesFile.exists()) {
                     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
                 }
-                    if (keystoreProperties.containsKey('MYAPP_UPLOAD_STORE_FILE')) {
-                                storeFile file(keystoreProperties['MYAPP_UPLOAD_STORE_FILE'])
-                                storePassword keystoreProperties['MYAPP_UPLOAD_STORE_PASSWORD']
-                                keyAlias keystoreProperties['MYAPP_UPLOAD_KEY_ALIAS']
-                                keyPassword keystoreProperties['MYAPP_UPLOAD_KEY_PASSWORD']
-                  }
+                if (keystoreProperties.containsKey('MYAPP_UPLOAD_STORE_FILE')) {
+                    storeFile file(keystoreProperties['MYAPP_UPLOAD_STORE_FILE'])
+                    storePassword keystoreProperties['MYAPP_UPLOAD_STORE_PASSWORD']
+                    keyAlias keystoreProperties['MYAPP_UPLOAD_KEY_ALIAS']
+                    keyPassword keystoreProperties['MYAPP_UPLOAD_KEY_PASSWORD']
+                } else {
+                    // 本地构建回退：既没有 -PMYAPP_UPLOAD_* 参数，也没有 android/keystore.properties 时，
+                    // 用 debug 证书签名 release 包。否则 AGP 会在 packageRelease 阶段直接失败：
+                    //   SigningConfig "release" is missing required property "storeFile".
+                    // 这样 assembleRelease 才能产出可安装的 release APK（仍未 debuggable）。
+                    // 需要发布到应用商店时，按 reactnative.dev/docs/signed-apk-android 填 keystore.properties 即可覆盖。
+                    storeFile file('debug.keystore')
+                    storePassword 'android'
+                    keyAlias 'androiddebugkey'
+                    keyPassword 'android'
+                }
             }
         }
         debug {
@@ -195,6 +225,7 @@ android {
 }
 
 dependencies {
+    androidTestImplementation "androidx.media3:media3-exoplayer:1.8.0"
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
     implementation("com.facebook.react:flipper-integration")
@@ -205,6 +236,9 @@ dependencies {
     implementation 'com.google.mlkit:barcode-scanning:17.2.0'
     // 实时扫码取景框（ZXing），与 跨屏输入 项目同一套做法
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+    // 液态玻璃的 AGSL 着色器（折射 / 色散 / 高光）已经逐字复制进
+    // app/src/main/java/com/lxnx/music/glass/GlassShaderLib.kt（Apache-2.0），
+    // 不再依赖 io.github.kyant0:backdrop / shapes，也就不需要排除 Compose 传递依赖了。
 
   if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
@@ -214,3 +248,69 @@ dependencies {
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+
+import com.android.build.api.instrumentation.AsmClassVisitorFactory
+import com.android.build.api.instrumentation.ClassContext
+import com.android.build.api.instrumentation.ClassData
+import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.instrumentation.InstrumentationParameters
+import com.android.build.api.instrumentation.InstrumentationScope
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.Label
+import org.objectweb.asm.MethodVisitor
+import org.objectweb.asm.Opcodes
+
+// RN 0.73 ships as a precompiled AAR: editing node_modules/ReactAndroid would
+// not fix the installed app. Instrument only this method in the actual AAR.
+// RNN shared-element transitions temporarily put views under a native overlay.
+// Treat a non-View parent as a missing React root, just like a detached view.
+// NativeViewHierarchyManager/UIViewOperationQueue already handle null roots
+// by cancelling measurement and invoking the callback without coordinates.
+abstract class ReactRootMeasureGuard implements AsmClassVisitorFactory<InstrumentationParameters.None> {
+    @Override
+    boolean isInstrumentable(ClassData data) {
+        return data.className == 'com.facebook.react.uimanager.RootViewUtil'
+    }
+
+    @Override
+    ClassVisitor createClassVisitor(ClassContext context, ClassVisitor next) {
+        return new ClassVisitor(Opcodes.ASM9, next) {
+            @Override
+            MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                MethodVisitor original = super.visitMethod(access, name, descriptor, signature, exceptions)
+                if (name != 'getRootView' || descriptor != '(Landroid/view/View;)Lcom/facebook/react/uimanager/RootView;') return original
+                return new MethodVisitor(Opcodes.ASM9, original) {
+                    int guards = 0
+
+                    @Override
+                    void visitMethodInsn(int opcode, String owner, String method, String desc, boolean isInterface) {
+                        if (opcode == Opcodes.INVOKESTATIC && owner == 'com/facebook/infer/annotation/Assertions' &&
+                                method == 'assertCondition' && desc == '(Z)V') {
+                            guards++
+                            Label validParent = new Label()
+                            super.visitJumpInsn(Opcodes.IFNE, validParent)
+                            super.visitInsn(Opcodes.ACONST_NULL)
+                            super.visitInsn(Opcodes.ARETURN)
+                            super.visitLabel(validParent)
+                        } else {
+                            super.visitMethodInsn(opcode, owner, method, desc, isInterface)
+                        }
+                    }
+
+                    @Override
+                    void visitEnd() {
+                        if (guards != 1) throw new GradleException('React RootViewUtil changed; review the transition measurement guard')
+                        super.visitEnd()
+                    }
+                }
+            }
+        }
+    }
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.instrumentation.transformClassesWith(ReactRootMeasureGuard, InstrumentationScope.ALL) {}
+        variant.instrumentation.setAsmFramesComputationMode(FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS)
+    }
+}

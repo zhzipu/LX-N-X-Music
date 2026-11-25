@@ -2,7 +2,6 @@ import { useRef, forwardRef, useImperativeHandle } from 'react'
 import { View } from 'react-native'
 
 // import music from '@/utils/musicSdk'
-import { BorderWidths } from '@/theme'
 // import InsetShadow from 'react-native-inset-shadow'
 import SourceSelector, {
   type SourceSelectorType as _SourceSelectorType,
@@ -10,7 +9,6 @@ import SourceSelector, {
 } from '@/components/SourceSelector'
 import SearchInput, { type SearchInputType, type SearchInputProps } from './SearchInput'
 import { createStyle } from '@/utils/tools'
-import { useTheme } from '@/store/theme/hook'
 import { type Source as MusicSource } from '@/store/search/music/state'
 import { type Source as SonglistSource } from '@/store/search/songlist/state'
 
@@ -36,7 +34,6 @@ export default forwardRef<HeaderBarType, HeaderBarProps>(
   ({ onSourceChange, onTipSearch, onSearch, onHideTipList, onShowTipList }, ref) => {
     const sourceSelectorRef = useRef<SourceSelectorType>(null)
     const searchInputRef = useRef<SearchInputType>(null)
-    const theme = useTheme()
 
     useImperativeHandle(
       ref,
@@ -55,11 +52,16 @@ export default forwardRef<HeaderBarType, HeaderBarProps>(
     )
 
     return (
-      <View style={{ ...styles.searchBar, borderBottomColor: theme['c-border-background'] }}>
-        <View style={styles.selector}>
-          <SourceSelector ref={sourceSelectorRef} onSourceChange={onSourceChange} center />
-        </View>
+      <View style={styles.searchBar}>
         <SearchInput
+          left={
+            <SourceSelector
+              ref={sourceSelectorRef}
+              onSourceChange={onSourceChange}
+              icon="search-2"
+              iconSize={18}
+            />
+          }
           ref={searchInputRef}
           onChangeText={onTipSearch}
           onSubmit={onSearch}
@@ -74,12 +76,14 @@ export default forwardRef<HeaderBarType, HeaderBarProps>(
 const styles = createStyle({
   searchBar: {
     flexDirection: 'row',
-    height: 38,
+    alignItems: 'center',
+    // spoti.pw：搜索条是一条 48 高的胶囊，不画分隔线
+    height: 56,
     zIndex: 2,
-    paddingRight: 10,
-    borderBottomWidth: BorderWidths.normal,
+    paddingLeft: 16,
+    paddingRight: 16,
   },
   selector: {
-    // width: 86,
+    marginRight: 8,
   },
 })

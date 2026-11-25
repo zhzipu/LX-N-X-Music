@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 液态玻璃底栏：拖动每跨一格触发轻震 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -124,15 +126,61 @@
           <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
         </intent-filter>
         <intent-filter>
-          <action android:name="com.lxnx.music.widget.PLAY_PAUSE" />
-          <action android:name="com.lxnx.music.widget.PREV" />
-          <action android:name="com.lxnx.music.widget.NEXT" />
-          <action android:name="com.lxnx.music.widget.UPDATE" />
-          <action android:name="com.lxnx.music.widget.UPDATE_LYRIC" />
+          <action android:name="OMG.Milky.Music.widget.PLAY_PAUSE" />
+          <action android:name="OMG.Milky.Music.widget.PREV" />
+          <action android:name="OMG.Milky.Music.widget.NEXT" />
+          <action android:name="OMG.Milky.Music.widget.UPDATE" />
+          <action android:name="OMG.Milky.Music.widget.UPDATE_LYRIC" />
         </intent-filter>
         <meta-data
           android:name="android.appwidget.provider"
           android:resource="@xml/widget_music_info" />
+      </receiver>
+
+      <!-- Music Widget（透明背景 / 白色文字） -->
+      <receiver
+        android:name=".widget.MusicWidgetTransparentProvider"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+        <meta-data
+          android:name="android.appwidget.provider"
+          android:resource="@xml/widget_music_info_transparent" />
+      </receiver>
+
+      <!-- Music Widget（配色跟随主题） -->
+      <receiver
+        android:name=".widget.MusicWidgetThemeProvider"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+        <meta-data
+          android:name="android.appwidget.provider"
+          android:resource="@xml/widget_music_info_theme" />
+      </receiver>
+
+      <receiver
+        android:name=".widget.MusicWidgetDarkProvider"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+        <meta-data
+          android:name="android.appwidget.provider"
+          android:resource="@xml/widget_music_info_dark" />
+      </receiver>
+
+      <receiver
+        android:name=".widget.MusicWidgetLightProvider"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+        <meta-data
+          android:name="android.appwidget.provider"
+          android:resource="@xml/widget_music_info_light" />
       </receiver>
     </application>
 </manifest>

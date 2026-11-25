@@ -303,6 +303,25 @@ declare global {
           'c-badge-primary': string
           'c-badge-secondary': string
           'c-badge-tertiary': string
+
+          // 以下为可选「精确覆盖派生色」，写在 themes.ts 的 extInfo 里即可覆盖
+          // buildActiveThemeColors() 中同名派生色（见 src/theme/themes/index.ts）。
+          'c-content-background'?: string
+          'c-border-background'?: string
+          'c-font'?: string
+          'c-font-label'?: string
+          'c-button-background'?: string
+          'c-button-font'?: string
+          'c-primary-font-active'?: string
+          'c-list-header-border-bottom'?: string
+
+          // 语义面/占位符色：用于把输入框底、抽屉选中态、占位文字等
+          // 由主色派生出来的「有色面」改写成中性灰（Myspotify 皮肤依赖此项）。
+          'c-primary-input-background'?: string
+          'c-primary-dark-100-alpha-600'?: string
+          'c-primary-light-700-alpha-500'?: string
+          'c-primary-background-hover'?: string
+          'c-primary-dark-100-alpha-300'?: string
         }
       }
     }

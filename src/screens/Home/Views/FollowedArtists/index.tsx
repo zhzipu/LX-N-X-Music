@@ -6,12 +6,16 @@ import wyApi from '@/utils/musicSdk/wy/user'
 import { setWyFollowedArtists } from '@/store/user/action'
 import { createStyle, toast } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
+import EmptyState from '@/components/spotify/EmptyState'
+import { useI18n } from '@/lang'
 import { useHorizontalMode } from '@/utils/hooks'
 
 export default memo(() => {
   const followedArtists = useWyFollowedArtists()
   const [loading, setLoading] = useState(false)
   const theme = useTheme()
+  const t = useI18n()
   const isHorizontal = useHorizontalMode()
   const onRefresh = useCallback(() => {
     setLoading(true)
@@ -31,6 +35,7 @@ export default memo(() => {
     <View style={{ flex: 1 }}>
       <FlatList
         onScrollBeginDrag={Keyboard.dismiss}
+        contentContainerStyle={{ paddingBottom: HOME_BOTTOM_OVERLAY_HEIGHT }}
         data={followedArtists}
         key={isHorizontal ? 'horizontal' : 'vertical'}
         numColumns={isHorizontal ? 2 : 1}
@@ -40,6 +45,7 @@ export default memo(() => {
           </View>
         )}
         keyExtractor={item => String(item.id)}
+        ListEmptyComponent={loading ? null : <EmptyState title={t('list_empty')} />}
         columnWrapperStyle={isHorizontal ? styles.columnWrapper : undefined}
         refreshControl={
           <RefreshControl

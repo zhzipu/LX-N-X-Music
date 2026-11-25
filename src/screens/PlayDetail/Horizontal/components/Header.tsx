@@ -1,6 +1,6 @@
 import { memo, useRef, useMemo, useCallback } from 'react'
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
-import { Icon } from '@/components/common/Icon'
+import GlassIconButton from '@/components/spotify/GlassIconButton'
 import { pop, navigations } from '@/navigation'
 import { useTheme } from '@/store/theme/hook'
 import { usePlayMusicInfo } from '@/store/player/hook'
@@ -9,7 +9,6 @@ import { scaleSizeH } from '@/utils/pixelRatio'
 import { HEADER_HEIGHT as _HEADER_HEIGHT, NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 import commonState from '@/store/common/state'
 import CommentBtn from './CommentBtn'
-import Btn from './Btn'
 import SettingPopup, { type SettingPopupType } from '../../components/SettingPopup'
 import DesktopLyricBtn from './DesktopLyricBtn'
 import { isOneDriveMusicInfo } from '@/core/oneDrive/utils'
@@ -109,13 +108,11 @@ export default memo(() => {
   return (
     <View style={{ height: HEADER_HEIGHT }} nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_header}>
       <View style={styles.container}>
-        <TouchableOpacity onPress={back} style={{ ...styles.button, width: HEADER_HEIGHT }}>
-          <Icon name="chevron-left" size={18} />
-        </TouchableOpacity>
+        <GlassIconButton glassTarget="header" icon="chevron-left" size={18} circleSize={32} hitSize={HEADER_HEIGHT} onPress={back} accessibilityLabel="返回" />
         <Title />
         <DesktopLyricBtn />
         {isOneDrive ? null : <CommentBtn />}
-        <Btn icon="slider" onPress={showSetting} />
+        <GlassIconButton glassTarget="header" icon="dots-vertical" size={18} circleSize={32} hitSize={HEADER_HEIGHT} onPress={showSetting} accessibilityLabel="更多" />
       </View>
       <SettingPopup ref={popupRef} position="left" direction="horizontal" />
     </View>

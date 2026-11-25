@@ -113,10 +113,9 @@ export default {
   },
 
   async getRecPlaylists(cookie, retryNum = 0) {
-    if (retryNum > 2) return Promise.reject(new Error('try max num'))
-
     try {
-      const _requestObj = httpFetch('https://music.163.com/weapi/v1/discovery/recommend/resource', {
+      const csrfToken = (cookie.match(/(?:^|;\s*)__csrf=([^;]*)/) || [])[1] || ''
+      const _requestObj = httpFetch(`https://music.163.com/weapi/v1/discovery/recommend/resource?csrf_token=${encodeURIComponent(csrfToken)}`, {
         method: 'post',
         headers: {
           'User-Agent':
@@ -126,13 +125,17 @@ export default {
           cookie,
         },
         form: weapi({
-          csrf_token: '',
+          csrf_token: csrfToken,
         }),
       })
       const { body, statusCode } = await _requestObj.promise
-      if (statusCode !== 200 || body.code !== 200) throw new Error('获取每日推荐歌单失败')
-      return body.recommend || []
+      if (statusCode !== 200 || body?.code !== 200) {
+        throw new Error(`获取推荐歌单失败（HTTP ${statusCode}，接口 ${Number(body?.code) || '未知'}）`)
+      }
+      if (!Array.isArray(body.recommend)) throw new Error('推荐歌单返回格式异常')
+      return body.recommend
     } catch (error) {
+      if (retryNum >= 2 || error.message === '登录状态已过期') throw error
       return this.getRecPlaylists(cookie, retryNum + 1);
     }
   },

@@ -158,7 +158,7 @@ export default memo(({ setHost }: { setHost: (host: string) => void }) => {
 const styles = createStyle({
   btn: {
     flexDirection: 'row',
-    marginLeft: 25,
+    flexWrap: 'wrap',
     marginBottom: 15,
   },
   tipText: {

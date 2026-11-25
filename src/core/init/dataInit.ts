@@ -3,7 +3,6 @@
 import { init as musicSdkInit } from '@/utils/musicSdk'
 import { getUserLists, setUserList } from '@/core/list'
 import { setNavActiveId } from '../common'
-import { getViewPrevState } from '@/utils/data'
 import { bootLog } from '@/utils/bootLog'
 import { getDislikeInfo, setDislikeInfo } from '@/core/dislikeList'
 import { unlink } from '@/utils/fs'
@@ -87,7 +86,8 @@ export default async (appSetting: LX.AppSetting) => {
       })
   }
 
-  setNavActiveId((await getViewPrevState()).id)
+  // 每次完整启动都从第一个「音乐」Tab开始，不恢复上次停留的页面。
+  setNavActiveId('nav_music')
   void unlink(TEMP_FILE_PATH)
   // await initPrevPlayInfo(appSetting).catch(err => log.error(err)) // 初始化上次的歌曲播放信息
 }

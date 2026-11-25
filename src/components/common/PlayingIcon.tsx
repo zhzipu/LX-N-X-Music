@@ -3,7 +3,7 @@ import { Animated, View } from 'react-native';
 import { createStyle } from '@/utils/tools';
 import { useIsPlay } from '@/store/player/hook';
 
-export default ({ color = '#1cd0a6' }: { color?: string }) => {
+export default ({ color = '#FFFFFF' }: { color?: string }) => {
     const isPlay = useIsPlay();
     const anim1 = useRef(new Animated.Value(0.3)).current;
     const anim2 = useRef(new Animated.Value(0.8)).current;

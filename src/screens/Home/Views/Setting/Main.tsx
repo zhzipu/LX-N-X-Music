@@ -1,9 +1,8 @@
-import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
-
 import Basic from './settings/Basic'
+import Appearance from './settings/Appearance'
+import Services from './settings/Services'
 import Player from './settings/Player'
 import LyricDesktop from './settings/LyricDesktop'
-import Search from './settings/Search'
 import List from './settings/List'
 import Download from './settings/Download'
 import Sync from './settings/Sync'
@@ -11,72 +10,26 @@ import Backup from './settings/Backup'
 import Other from './settings/Other'
 import Version from './settings/Version'
 import About from './settings/About'
+import type { SettingScreenIds } from './catalog'
 
-export const SETTING_SCREENS = [
-  'basic',
-  'player',
-  'lyric_desktop',
-  // 'search',
-  'list',
-  'download',
-  'sync',
-  'backup',
-  'other',
-  'version',
-  'about',
-] as const
+export { SETTING_SCREENS, type SettingScreenIds } from './catalog'
 
-export type SettingScreenIds = (typeof SETTING_SCREENS)[number]
+const SCREENS = {
+  basic: Basic,
+  appearance: Appearance,
+  services: Services,
+  player: Player,
+  lyric_desktop: LyricDesktop,
+  list: List,
+  download: Download,
+  sync: Sync,
+  backup: Backup,
+  other: Other,
+  version: Version,
+  about: About,
+} satisfies Record<SettingScreenIds, React.ComponentType>
 
-// interface MainProps {
-//   onUpdateActiveId: (id: string) => void
-// }
-export interface MainType {
-  setActiveId: (id: SettingScreenIds) => void
+export default ({ id }: { id: SettingScreenIds }) => {
+  const Screen = SCREENS[id]
+  return <Screen />
 }
-
-const Main = forwardRef<MainType, {}>((props, ref) => {
-  const [id, setId] = useState(global.lx.settingActiveId)
-
-  useImperativeHandle(ref, () => ({
-    setActiveId(id) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setId(id)
-        })
-      })
-    },
-  }))
-
-  const component = useMemo(() => {
-    switch (id) {
-      case 'player':
-        return <Player />
-      case 'lyric_desktop':
-        return <LyricDesktop />
-      case 'search':
-        return <Search />
-      case 'list':
-        return <List />
-      case 'download':
-        return <Download />
-      case 'sync':
-        return <Sync />
-      case 'backup':
-        return <Backup />
-      case 'other':
-        return <Other />
-      case 'version':
-        return <Version />
-      case 'about':
-        return <About />
-      case 'basic':
-      default:
-        return <Basic />
-    }
-  }, [id])
-
-  return component
-})
-
-export default Main

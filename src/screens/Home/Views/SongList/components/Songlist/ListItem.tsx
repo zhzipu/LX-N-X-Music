@@ -7,6 +7,7 @@ import { scaleSizeW } from '@/utils/pixelRatio'
 import { NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
 import { useTheme } from '@/store/theme/hook'
 import Image from '@/components/common/Image'
+import { MS_FONT, MS_RADIUS } from '@/theme/myspotify/tokens'
 
 const gap = scaleSizeW(15)
 export default memo(
@@ -35,7 +36,7 @@ export default memo(
             <Image
               url={item.img}
               nativeID={`${NAV_SHEAR_NATIVE_IDS.songlistDetail_pic}_from_${item.id}`}
-              style={{ width: itemWidth, height: itemWidth, borderRadius: 4 }}
+              style={{ width: itemWidth, height: itemWidth, borderRadius: MS_RADIUS.card }}
             />
             {showSource ? (
               <Text style={styles.sourceLabel} size={9} color="#fff">
@@ -45,7 +46,7 @@ export default memo(
           </TouchableOpacity>
         </View>
         <TouchableOpacity activeOpacity={0.5} onPress={handlePress}>
-          <Text style={styles.listItemTitle} numberOfLines={2}>
+          <Text style={styles.listItemTitle} size={MS_FONT.rowSubtitle} numberOfLines={2}>
             {item.name}
           </Text>
         </TouchableOpacity>
@@ -64,7 +65,7 @@ const styles = createStyle({
   },
   listItemImg: {
     // backgroundColor: '#eee',
-    borderRadius: 4,
+    borderRadius: MS_RADIUS.card,
     marginBottom: 5,
     overflow: 'hidden',
     ...Platform.select({
@@ -93,7 +94,7 @@ const styles = createStyle({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   listItemTitle: {
-    fontSize: 12,
+    fontWeight: MS_FONT.rowTitleWeight,
     // overflow: 'hidden',
     marginBottom: 5,
   },

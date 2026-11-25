@@ -7,6 +7,7 @@ import Header from './components/Header'
 import { setComponentId } from '@/core/common'
 import { COMPONENT_IDS } from '@/config/constant'
 import PageContent from '@/components/PageContent'
+import PageScrim from '@/components/spotify/PageScrim'
 import commonState, { type InitState as CommonState } from '@/store/common/state'
 
 import Pic from './Pic'
@@ -51,6 +52,8 @@ export default memo(({ componentId }: { componentId: string }) => {
 
   return (
     <PageContent>
+      {/* 页面级渐黑遮罩：第一个子节点，压在内容下面、全局模糊封面底上面 */}
+      <PageScrim />
       <StatusBar />
       <View style={{ ...styles.container, paddingTop: statusBarHeight }}>
         <View style={styles.left}>

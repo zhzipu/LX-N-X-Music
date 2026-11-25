@@ -49,7 +49,7 @@ export default forwardRef<ModalType, ModalProps>(
       onHide = () => {},
       keyHide = true,
       bgHide = true,
-      bgColor = 'rgba(0,0,0,0)',
+      bgColor = 'rgba(0,0,0,0.55)',
       statusBarPadding = true,
       children,
       ...props
@@ -95,6 +95,7 @@ export default forwardRef<ModalType, ModalProps>(
         {/* <StatusBar /> */}
         {/* <View style={{ flex: 1, paddingTop: statusBarPadding ? StatusBar.currentHeight : 0 }}> */}
         <TouchableWithoutFeedback
+          disabled={!bgHide}
           style={{ flex: 1, paddingTop: statusBarPadding ? statusBarHeight : 0 }}
           onPress={handleBgClose}
         >

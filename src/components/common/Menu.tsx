@@ -1,8 +1,10 @@
 import { useImperativeHandle, forwardRef, useMemo, useRef, useState, type Ref } from 'react'
-import { View, Animated, TouchableHighlight } from 'react-native'
+import { View, Animated, TouchableHighlight, StyleSheet } from 'react-native'
 import { useWindowSize } from '@/utils/hooks'
 
 import Modal, { type ModalType } from './Modal'
+import GlassSurface from '@/components/spotify/GlassSurface'
+import { getSP } from '@/theme/spotify/tokens'
 
 import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
@@ -38,10 +40,9 @@ const styles = createStyle({
   },
   menu: {
     position: 'absolute',
-    // borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'lightgray',
-    borderRadius: 2,
-    backgroundColor: 'white',
+    // 底色/描边都交给 GlassSurface：菜单是 RN Modal（独立窗口），拿不到宿主，
+    // 原生玻璃会走兜底（半透明 tint + 1dp 上亮下暗描边），和页面上的玻璃同一套观感。
+    overflow: 'hidden',
     elevation: 3,
   },
   menuItem: {
@@ -85,6 +86,7 @@ const Menu = ({
   center = false,
 }: Props) => {
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
   const windowSize = useWindowSize()
   // const fadeAnim = useRef(new Animated.Value(0)).current
   // console.log(buttonPosition)
@@ -139,9 +141,16 @@ const Menu = ({
   // console.log(menuItemStyle)
   return (
     <View
-      style={{ ...styles.menu, ...menuStyle, backgroundColor: theme['c-content-background'] }}
+      style={{ ...styles.menu, ...menuStyle, borderRadius: sp.radius.card }}
       onStartShouldSetResponder={() => true}
     >
+      {/* 玻璃底：绝对定位、不吃触摸 */}
+      <GlassSurface
+        pointerEvents="none"
+        style={StyleSheet.absoluteFill}
+        borderRadius={sp.radius.card}
+        glassAmount={0.5}
+      />
       <Animated.ScrollView keyboardShouldPersistTaps={'always'}>
         {menus.map((menu, index) =>
           menu.disabled ? (
@@ -155,7 +164,7 @@ const Menu = ({
               }}
             >
               <Text
-                style={{ textAlign: center ? 'center' : 'left' }}
+                style={{ textAlign: center ? 'center' : 'left', fontWeight: '500' }}
                 size={fontSize}
                 numberOfLines={1}
               >
@@ -172,7 +181,7 @@ const Menu = ({
               }}
             >
               <Text
-                style={{ textAlign: center ? 'center' : 'left' }}
+                style={{ textAlign: center ? 'center' : 'left', fontWeight: '500' }}
                 color={theme['c-primary-font-active']}
                 size={fontSize}
                 numberOfLines={1}
@@ -194,7 +203,7 @@ const Menu = ({
               }}
             >
               <Text
-                style={{ textAlign: center ? 'center' : 'left' }}
+                style={{ textAlign: center ? 'center' : 'left', fontWeight: '500' }}
                 size={fontSize}
                 numberOfLines={1}
               >

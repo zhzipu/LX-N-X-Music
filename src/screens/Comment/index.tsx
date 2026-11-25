@@ -12,6 +12,7 @@ import { useI18n } from '@/lang'
 import { COMPONENT_IDS } from '@/config/constant'
 import { setComponentId } from '@/core/common'
 import PageContent from '@/components/PageContent'
+import PageScrim from '@/components/spotify/PageScrim'
 import playerState from '@/store/player/state'
 import { scaleSizeH } from '@/utils/pixelRatio'
 import { BorderWidths } from '@/theme'
@@ -334,6 +335,8 @@ export default memo(({ componentId }: { componentId: string }) => {
 
   return (
     <PageContent>
+      {/* 页面级渐黑遮罩：第一个子节点，压在内容下面、全局模糊封面底上面 */}
+      <PageScrim />
       {musicInfo == null ? null : (
         <>
           <Header musicInfo={musicInfo} />

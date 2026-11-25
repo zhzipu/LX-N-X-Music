@@ -14,11 +14,14 @@ const Btn = forwardRef(({
                           color,
                           onPress,
                           onLongPress,
+                          iconSize = BTN_ICON_SIZE,
                         }: {
   icon: string
   color?: string
   onPress: () => void
   onLongPress?: () => void
+  /** 图标尺寸，默认 BTN_ICON_SIZE；播放页信息区的播放模式图标会传更小的一档 */
+  iconSize?: number
 }, ref: React.Ref<TouchableOpacity>) => {
   const theme = useTheme()
   return (
@@ -30,8 +33,8 @@ const Btn = forwardRef(({
       onLongPress={onLongPress}
     >
       {icon.startsWith('svg:') 
-        ? <SvgIcon name={icon.replace('svg:', '')} color={color ?? theme['c-font-label']} size={BTN_ICON_SIZE} /> 
-        : <Icon name={icon} color={color ?? theme['c-font-label']} size={BTN_ICON_SIZE} />
+        ? <SvgIcon name={icon.replace('svg:', '')} color={color ?? theme['c-font-label']} size={iconSize} /> 
+        : <Icon name={icon} color={color ?? theme['c-font-label']} size={iconSize} />
       }
     </TouchableOpacity>
   )

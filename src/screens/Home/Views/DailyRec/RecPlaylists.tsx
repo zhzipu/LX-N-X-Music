@@ -1,18 +1,98 @@
 import { memo, useEffect, useState, useCallback } from 'react'
-import { View, FlatList, RefreshControl, Keyboard } from 'react-native'
+import { View, FlatList, RefreshControl, Keyboard, ScrollView } from 'react-native'
 import { useSettingValue } from '@/store/setting/hook'
-import { toast } from '@/utils/tools'
+import { createStyle, toast } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import wyApi from '@/utils/musicSdk/wy/dailyRec'
 import wy from '@/utils/musicSdk/wy/index'
-import ListItem from '../MyPlaylist/ListItem'
 import { getDailyRecPlaylistsCache, setDailyRecPlaylistsCache, clearDailyRecPlaylistsCache } from '@/core/cache'
+import SectionTitle from '@/components/spotify/SectionTitle'
+import PressScale from '@/components/myspotify/PressScale'
+import Image from '@/components/common/Image'
+import Text from '@/components/common/Text'
+import { getSP } from '@/theme/spotify/tokens'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
+import { formatPlayCount } from '@/utils'
+import { type ListInfoItem } from '@/store/songlist/state'
+
+/**
+ * 推荐歌单卡（spoti.pw 的横滑封面卡）。
+ *
+ * 为什么不上边框/底色：spoti.pw 的层级完全由「封面 + 留白」表达，
+ * 卡片本体保持透明，只有封面是实心的 149×149 圆角 8。
+ */
+const PlaylistTile = ({ item, onPress }: { item: any, onPress: (item: any) => void }) => {
+  const theme = useTheme()
+  const sp = getSP(theme.isDark)
+  const coverSize = sp.size.tileCover
+
+  // 播放量优先（更接近 spoti.pw 卡片的副标题），缺失时退回曲目数
+  const count = Number(item.playCount)
+  const subtitle = Number.isFinite(count) && count > 0
+    ? `${formatPlayCount(count)} 次播放`
+    : Number(item.trackCount) > 0 ? `${item.trackCount} 首` : undefined
+
+  return (
+    <PressScale
+      style={{ width: sp.size.tileWidth }}
+      onPress={() => { onPress(item) }}
+      accessibilityLabel={item.name}
+    >
+      {item.coverImgUrl
+        ? (
+            <Image
+              url={item.coverImgUrl}
+              style={{
+                width: coverSize,
+                height: coverSize,
+                borderRadius: sp.radius.tile,
+                backgroundColor: sp.colors.surface,
+              }}
+            />
+          )
+        : (
+            <View
+              style={{
+                width: coverSize,
+                height: coverSize,
+                borderRadius: sp.radius.tile,
+                backgroundColor: sp.colors.surface,
+              }}
+            />
+          )}
+      <Text
+        size={sp.font.tileTitle}
+        numberOfLines={2}
+        color={sp.colors.text}
+        style={[styles.title, { fontWeight: sp.font.tileTitleWeight }]}
+      >
+        {item.name}
+      </Text>
+      {subtitle
+        ? (
+            <Text
+              size={sp.font.tileSubtitle}
+              numberOfLines={1}
+              color={sp.colors.textSecondary}
+              style={styles.subtitle}
+            >
+              {subtitle}
+            </Text>
+          )
+        : null}
+    </PressScale>
+  )
+}
+
+/** 卡片间距 12（token 的 spacing.md），最后一列不多出额外留白 */
+const TileSeparator = () => <View style={styles.tileSeparator} />
 
 export default memo(({ onOpenDetail }: { onOpenDetail: (info: any) => void }) => {
   const [playlists, setPlaylists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const cookie = useSettingValue('common.wy_cookie')
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
 
   const loadPlaylists = useCallback((isRefresh = false) => {
     if (!cookie) {
@@ -74,9 +154,21 @@ export default memo(({ onOpenDetail }: { onOpenDetail: (info: any) => void }) =>
     loadPlaylists()
   }, [loadPlaylists])
 
-  const handleItemPress = (playlistInfo: any) => {
+  // 与改动前一致：先转成 ListInfoItem 再交给详情页
+  const handleItemPress = useCallback((item: any) => {
+    const playlistInfo: ListInfoItem = {
+      id: String(item.id),
+      name: item.name,
+      author: item.creator?.nickname,
+      img: item.coverImgUrl,
+      play_count: item.playCount,
+      desc: item.description,
+      source: 'wy',
+      userId: item.userId,
+      total: item.trackCount,
+    }
     onOpenDetail(playlistInfo)
-  }
+  }, [onOpenDetail])
 
   const handleRefresh = () => {
     clearDailyRecPlaylistsCache()
@@ -84,20 +176,57 @@ export default memo(({ onOpenDetail }: { onOpenDetail: (info: any) => void }) =>
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <FlatList
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         onScrollBeginDrag={Keyboard.dismiss}
-        data={playlists}
-        renderItem={({ item }) => <ListItem item={item} onPress={handleItemPress} />}
-        keyExtractor={item => String(item.id)}
         refreshControl={
           <RefreshControl
-            colors={[theme['c-primary']]}
+            colors={[sp.colors.accent]}
             refreshing={loading}
             onRefresh={handleRefresh}
           />
         }
-      />
+      >
+        <SectionTitle title="推荐歌单" />
+        <FlatList
+          horizontal
+          data={playlists}
+          renderItem={({ item }) => <PlaylistTile item={item} onPress={handleItemPress} />}
+          keyExtractor={item => String(item.id)}
+          showsHorizontalScrollIndicator={false}
+          ItemSeparatorComponent={TileSeparator}
+          contentContainerStyle={{ paddingHorizontal: sp.size.pagePaddingH }}
+          style={styles.shelf}
+        />
+      </ScrollView>
     </View>
   )
+})
+
+const styles = createStyle({
+  container: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    // 底部浮层（迷你播放条 + Tab 栏）不占布局，用 padding 顶开
+    paddingBottom: HOME_BOTTOM_OVERLAY_HEIGHT,
+  },
+  shelf: {
+    flexGrow: 0,
+  },
+  title: {
+    paddingTop: 8,
+  },
+  subtitle: {
+    paddingTop: 2,
+  },
+  tileSeparator: {
+    width: 12,
+  },
 })

@@ -9,15 +9,16 @@
     android:gravity="center_vertical"
     android:clipToOutline="true">
 
-    <!-- Left: Album art (larger) -->
+    <!-- Left: Album art（无封面时由代码替换为白音符图标，底衬保持透明） -->
     <ImageView
         android:id="@+id/widget_album_art"
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:scaleType="centerCrop"
-        android:src="@mipmap/ic_launcher"
+        android:src="@drawable/widget_ic_note"
         android:contentDescription="Album Art"
-        android:background="@drawable/widget_album_bg" />
+        android:clipToOutline="true"
+        android:background="@drawable/widget_album_bg_transparent" />
 
     <!-- Right: Combined Info and Controls -->
     <LinearLayout

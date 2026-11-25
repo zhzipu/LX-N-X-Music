@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Myspotify 皮肤 · 视觉验收稿</title>
+<style>
+  /*
+   * 本文件的数值与 src/theme/myspotify/tokens.ts 一一对应（改动请同步两边）：
+   *   #000000 bg / #0A0A0A surface / #FA2D48 accent / #D81F38 accentPressed
+   *   #FFFFFF text / rgba(255,255,255,.62) secondary / rgba(255,255,255,.38) tertiary
+   *   rgba(255,255,255,.08) divider / rgba(255,255,255,.10) interactive / .16 pressed
+   *   radius：card 12 / thumb 8 / sheet 16 / pill 999 / cover 10
+   *   迷你播放条 64，封面 48，图标 22|26，间距 20，进度线 2
+   *   列表缩略图 52，行高 70，分隔线左缩进 68
+   *   进度条轨道 3 / 拖拽点 10
+   *   字号：大标题 30/700/-0.5，区块 22/700/-0.3，行标题 16/500，行副标题 13/400，
+   *        说明 11/400，播放页歌名 22/700、歌手 17/400
+   */
+  :root {
+    --bg: #000000;
+    --surface: #0a0a0a;
+    --accent: #fa2d48;
+    --accent-pressed: #d81f38;
+    --text: #ffffff;
+    --text-2: rgba(255, 255, 255, 0.62);
+    --text-3: rgba(255, 255, 255, 0.38);
+    --divider: rgba(255, 255, 255, 0.08);
+    --interactive: rgba(255, 255, 255, 0.1);
+    --interactive-pressed: rgba(255, 255, 255, 0.16);
+    --badge-liked: #fa2d48;
+    --badge-secondary: #6b4eff;
+    --badge-tertiary: #00c2a8;
+    --track: rgba(255, 255, 255, 0.22);
+    --track-fill: #ffffff;
+    --r-card: 12px;
+    --r-thumb: 8px;
+    --r-sheet: 16px;
+    --r-pill: 999px;
+    --r-cover: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #131316;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    padding: 40px 32px 72px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .doc-head { max-width: 1720px; margin: 0 auto 32px; }
+  .doc-head h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+  .doc-head p { margin-top: 10px; font-size: 13px; line-height: 1.7; color: rgba(255, 255, 255, 0.55); }
+  .doc-head code {
+    padding: 1px 5px; border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08); font-size: 12px;
+  }
+
+  .stage {
+    max-width: 1720px; margin: 0 auto;
+    display: flex; gap: 28px; align-items: flex-start;
+    overflow-x: auto; padding-bottom: 12px;
+  }
+
+  figure { flex: 0 0 auto; }
+  figcaption {
+    margin-bottom: 12px; font-size: 13px; font-weight: 500;
+    color: rgba(255, 255, 255, 0.7); letter-spacing: 0.2px;
+  }
+  figcaption span { color: rgba(255, 255, 255, 0.35); font-weight: 400; }
+
+  /* ---------- 手机画框 390 × 844 ---------- */
+  .phone {
+    position: relative; width: 390px; height: 844px;
+    background: var(--bg); overflow: hidden;
+    border-radius: 44px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 30px 80px rgba(0, 0, 0, 0.65);
+  }
+  .phone__screen {
+    position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 2;
+  }
+
+  /* 状态栏 */
+  .statusbar {
+    height: 44px; flex: 0 0 44px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 26px; font-size: 13px; font-weight: 600; letter-spacing: 0.2px;
+    color: var(--text); z-index: 3;
+  }
+  .statusbar__icons { display: flex; gap: 5px; align-items: center; }
+  .statusbar__icons i {
+    display: block; width: 16px; height: 10px; border-radius: 2px;
+    background: rgba(255, 255, 255, 0.85);
+  }
+  .statusbar__icons i:nth-child(1) { width: 17px; }
+  .statusbar__icons i:nth-child(3) { width: 22px; border-radius: 3px; }
+
+  /* 页头 */
+  .navbar {
+    flex: 0 0 auto; display: flex; align-items: center;
+    padding: 0 8px; height: 42px;
+  }
+  .navbtn {
+    width: 44px; height: 42px; display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+  }
+  .page-title {
+    flex: 1; padding: 0 8px;
+    font-size: 30px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* 滚动区 */
+  .scroll { flex: 1 1 auto; overflow: hidden; }
+  .section-title {
+    padding: 20px 16px 8px;
+    font-size: 22px; font-weight: 700; letter-spacing: -0.3px;
+  }
+
+  /* ---------- 封面「专辑图」：纯 CSS 色块，模拟封面 ---------- */
+  .art {
+    background:
+      radial-gradient(120% 120% at 18% 18%, #7a3cff 0%, rgba(122, 60, 255, 0) 58%),
+      radial-gradient(110% 110% at 86% 12%, #ff7a3c 0%, rgba(255, 122, 60, 0) 62%),
+      radial-gradient(130% 130% at 74% 92%, #00c2a8 0%, rgba(0, 194, 168, 0) 60%),
+      radial-gradient(90% 90% at 30% 86%, #fa2d48 0%, rgba(250, 45, 72, 0) 65%),
+      linear-gradient(155deg, #1c1038 0%, #2a1030 52%, #0b0b12 100%);
+  }
+
+  /* ---------- 书架卡片 ---------- */
+  .shelf {
+    display: flex; gap: 12px; padding: 4px 16px 0;
+    overflow: hidden;
+  }
+  .shelf__item { flex: 0 0 118px; }
+  .shelf__art {
+    width: 118px; height: 118px; border-radius: var(--r-card);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+  .shelf__title {
+    margin-top: 8px; font-size: 13px; font-weight: 500; line-height: 1.3;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .shelf__sub { margin-top: 2px; font-size: 11px; color: var(--text-3); }
+
+  /* ---------- 列表行 ---------- */
+  .row {
+    position: relative; height: 70px;
+    display: flex; align-items: center; padding-right: 14px;
+  }
+  .row__thumb {
+    flex: 0 0 52px; width: 52px; height: 52px; margin: 0 9px;
+    border-radius: var(--r-thumb);
+  }
+  .row__idx {
+    flex: 0 0 40px; width: 40px; text-align: center;
+    font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums;
+  }
+  .row__body { flex: 1 1 auto; min-width: 0; }
+  .row__title {
+    font-size: 16px; font-weight: 500; line-height: 1.25;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .row__sub {
+    margin-top: 3px; font-size: 13px; color: var(--text-2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .row__time {
+    flex: 0 0 auto; padding-left: 10px;
+    font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums;
+  }
+  /* 极细发丝分隔线，左缩进 68（与文字对齐） */
+  .row::after {
+    content: ""; position: absolute; left: 68px; right: 0; bottom: 0;
+    height: 1px; background: var(--divider);
+  }
+  .row--noindex::after { left: 70px; }
+  .row--plain::after { left: 0; }
+
+  /* 标签 */
+  .tag {
+    display: inline-block; margin-right: 5px; padding: 1px 5px;
+    font-size: 9px; font-weight: 600; line-height: 1.5; letter-spacing: 0.3px;
+    border-radius: 4px; color: #fff; background: var(--badge-secondary);
+    vertical-align: 1px;
+  }
+  .tag--sq { background: var(--badge-tertiary); }
+  .tag--liked { background: var(--badge-liked); }
+
+  /* ---------- 迷你播放条 64 ---------- */
+  .playerbar {
+    flex: 0 0 64px; height: 64px; position: relative;
+    display: flex; align-items: center;
+    padding: 0 6px 0 12px;
+    background: var(--surface);
+    border-top: 1px solid var(--divider);
+  }
+  .playerbar__progress {
+    position: absolute; left: 0; right: 0; top: 0; height: 2px;
+    background: var(--track);
+  }
+  .playerbar__progress > i {
+    display: block; height: 100%; width: 38%; background: var(--track-fill);
+  }
+  .playerbar__cover {
+    flex: 0 0 48px; width: 48px; height: 48px; border-radius: var(--r-thumb);
+  }
+  .playerbar__body { flex: 1 1 auto; min-width: 0; padding-left: 12px; }
+  .playerbar__title {
+    font-size: 16px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .playerbar__sub {
+    margin-top: 2px; font-size: 13px; color: var(--text-2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .playerbar__actions { flex: 0 0 auto; display: flex; align-items: center; }
+  .playerbar__btn {
+    width: 46px; height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+  }
+
+  svg { display: block; }
+
+  /* ---------- 播放页：模糊色雾背景 ---------- */
+  .fog { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+  .fog__blur {
+    position: absolute; inset: -80px;
+    filter: blur(40px); transform: scale(1.2); opacity: 0.92;
+  }
+  .fog__scrim { position: absolute; inset: 0; }
+  /* 4 层不同透明度模拟「顶部到底部的深色渐变」 */
+  .fog__scrim i { position: absolute; left: 0; right: 0; bottom: 0; display: block; }
+  .fog__scrim i:nth-child(1) { height: 100%; background: rgba(0, 0, 0, 0.1); }
+  .fog__scrim i:nth-child(2) { height: 72%; background: rgba(0, 0, 0, 0.12); }
+  .fog__scrim i:nth-child(3) { height: 45%; background: rgba(0, 0, 0, 0.16); }
+  .fog__scrim i:nth-child(4) { height: 22%; background: rgba(0, 0, 0, 0.22); }
+
+  .playdetail__body {
+    flex: 1 1 auto; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding-bottom: 8px;
+  }
+  /* 封面 318 = min(390 × 0.85, 可用高 × 0.42) */
+  .cover {
+    width: 318px; height: 318px; border-radius: var(--r-cover);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  .panel { flex: 0 0 auto; padding: 0 16px 20px; }
+  .info { display: flex; align-items: center; padding: 8px 0 10px; }
+  .info__body { flex: 1 1 auto; min-width: 0; }
+  .info__title {
+    font-size: 22px; font-weight: 700; letter-spacing: -0.2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .info__singer {
+    margin-top: 4px; font-size: 17px; color: var(--text-2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .info__mode { flex: 0 0 44px; color: var(--text-2); display: flex; justify-content: flex-end; }
+  .info__mode--on { color: var(--accent); }
+
+  /* 进度：轨道 3 / 拖拽点 10 */
+  .progress { display: flex; align-items: center; }
+  .progress__track {
+    position: relative; flex: 1 1 auto; height: 3px; border-radius: 2px;
+    background: var(--track);
+  }
+  .progress__buffered {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 62%;
+    background: rgba(255, 255, 255, 0.12); border-radius: 2px;
+  }
+  .progress__fill {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 38%;
+    background: var(--track-fill); border-radius: 2px;
+  }
+  .progress__thumb {
+    position: absolute; left: 38%; top: 50%; width: 10px; height: 10px;
+    margin: -5px 0 0 -5px; border-radius: 50%;
+    background: var(--track-fill); box-shadow: 0 0 4px rgba(0, 0, 0, 0.45);
+  }
+  .times {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 8px; font-size: 11px; color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .times__status { flex: 1 1 auto; text-align: center; color: var(--text-2); }
+
+  /* 控制区 */
+  .controls {
+    display: flex; align-items: center; justify-content: space-evenly;
+    padding: 20px 16px;
+  }
+  .controls__btn {
+    width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;
+    color: var(--text);
+  }
+
+  /* 底部操作行 */
+  .actions {
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 0 16px 26px; color: var(--text-2);
+  }
+  .actions__btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+
+  /* ---------- 歌单详情 ---------- */
+  .herolist { padding: 4px 16px 0; }
+  .hero__art {
+    width: 100%; height: 300px; border-radius: var(--r-card);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+  }
+  .hero__title {
+    margin-top: 16px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;
+  }
+  .hero__meta { margin-top: 6px; font-size: 13px; color: var(--text-2); }
+
+  .pillrow { display: flex; gap: 10px; padding: 16px 0 6px; }
+  .pill {
+    height: 44px; border-radius: var(--r-pill);
+    display: flex; align-items: center; gap: 8px; padding: 0 20px;
+    font-size: 15px; font-weight: 600;
+  }
+  .pill--primary { background: var(--accent); color: #fff; }
+  .pill--ghost { background: var(--interactive); color: var(--text); }
+  .pill--ghost:active { background: var(--interactive-pressed); }
+
+  /* 深色列表页 */
+  .listhead { display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 16px 10px; }
+  .listhead__title { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+  .listhead__sub { font-size: 13px; color: var(--text-2); padding-bottom: 4px; }
+
+  /* 弹层示意 */
+  .sheet {
+    position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 5;
+    border-radius: var(--r-sheet);
+    background: rgba(28, 28, 30, 0.96);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 20px 50px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+  }
+  .sheet__grab { width: 36px; height: 5px; margin: 8px auto 4px; border-radius: 999px; background: rgba(255,255,255,.18); }
+  .sheet__row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; font-size: 16px; font-weight: 500;
+    border-top: 1px solid var(--divider);
+  }
+  .sheet__row:first-of-type { border-top: 0; }
+  .sheet__row i { color: var(--text-2); display: flex; }
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <h1>Myspotify 皮肤 · 视觉验收稿</h1>
+  <p>
+    类 Apple Music 视觉：纯黑底 + 专辑封面重度模糊形成的「色雾」，内容以白色文字直接压在色雾上；
+    没有卡片边框，只有极细发丝分隔线；层级靠字重与透明度而非投影。<br />
+    所有数值与 <code>src/theme/myspotify/tokens.ts</code> 同一套（颜色 / 圆角 / 字号 / 间距 / 动效时长）。
+    封面为纯 CSS 色块，模糊背景用 <code>filter: blur(40px)</code> + 4 层半透明蒙层模拟，与 RN 侧实现方式一致（RN 用 blurRadius + 多层半透明 View）。
+  </p>
+</div>
+
+<div class="stage">
+
+  <!-- ============ 1. 首页 ============ -->
+  <figure>
+    <figcaption>① 首页 <span>大标题 30/700 · 书架卡片 · 迷你播放条 64</span></figcaption>
+    <div class="phone">
+      <div class="phone__screen">
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="statusbar__icons"><i></i><i></i><i></i></span>
+        </div>
+
+        <div class="navbar">
+          <div class="navbtn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </div>
+          <div class="page-title">音乐库</div>
+          <div class="navbtn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="scroll">
+          <div class="section-title">最近播放</div>
+          <div class="shelf">
+            <div class="shelf__item">
+              <div class="shelf__art art"></div>
+              <div class="shelf__title">Midnight Drive</div>
+              <div class="shelf__sub">播放列表</div>
+            </div>
+            <div class="shelf__item">
+              <div class="shelf__art art" style="filter: hue-rotate(120deg)"></div>
+              <div class="shelf__title">夜航</div>
+              <div class="shelf__sub">专辑</div>
+            </div>
+            <div class="shelf__item">
+              <div class="shelf__art art" style="filter: hue-rotate(240deg)"></div>
+              <div class="shelf__title">喜欢的声音</div>
+              <div class="shelf__sub">歌单</div>
+            </div>
+          </div>
+
+          <div class="section-title">我的歌单</div>
+
+          <div class="row row--noindex">
+            <div class="row__thumb art"></div>
+            <div class="row__body">
+              <div class="row__title">Midnight Drive</div>
+              <div class="row__sub">播放列表 · 42 首</div>
+            </div>
+            <div class="row__time">2:58</div>
+          </div>
+          <div class="row row--noindex">
+            <div class="row__thumb art" style="filter: hue-rotate(70deg)"></div>
+            <div class="row__body">
+              <div class="row__title">通勤电台</div>
+              <div class="row__sub">每天早上自动更新</div>
+            </div>
+            <div class="row__time">3:12</div>
+          </div>
+          <div class="row row--noindex">
+            <div class="row__thumb art" style="filter: hue-rotate(200deg)"></div>
+            <div class="row__body">
+              <div class="row__title">Focus 专注</div>
+              <div class="row__sub">歌单 · 68 首</div>
+            </div>
+            <div class="row__time">4:05</div>
+          </div>
+          <div class="row row--noindex">
+            <div class="row__thumb art" style="filter: hue-rotate(310deg)"></div>
+            <div class="row__body">
+              <div class="row__title">深夜钢琴</div>
+              <div class="row__sub">歌单 · 31 首</div>
+            </div>
+            <div class="row__time">5:21</div>
+          </div>
+        </div>
+
+        <!-- 迷你播放条 -->
+        <div class="playerbar">
+          <div class="playerbar__progress"><i></i></div>
+          <div class="playerbar__cover art"></div>
+          <div class="playerbar__body">
+            <div class="playerbar__title">Midnight Drive</div>
+            <div class="playerbar__sub">Aria Sound · Late Night</div>
+          </div>
+          <div class="playerbar__actions">
+            <div class="playerbar__btn">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6.5" y="5" width="3.4" height="14" rx="1.2" />
+                <rect x="14.1" y="5" width="3.4" height="14" rx="1.2" />
+              </svg>
+            </div>
+            <div class="playerbar__btn">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 5.5v13l11-6.5z" />
+                <rect x="17.4" y="5" width="2.6" height="14" rx="1.1" />
+              </svg>
+            </div>
+            <div class="playerbar__btn">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 6h16M4 12h16M4 18h10" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ============ 2. 歌单详情 ============ -->
+  <figure>
+    <figcaption>② 歌单详情 <span>头图 12 圆角 · 播放/随机胶囊 44 · 歌曲行 70</span></figcaption>
+    <div class="phone">
+      <div class="phone__screen">
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="statusbar__icons"><i></i><i></i><i></i></span>
+        </div>
+
+        <div class="navbar">
+          <div class="navbtn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </div>
+          <div class="navbtn"></div>
+        </div>
+
+        <div class="scroll">
+          <div class="herolist">
+            <div class="hero__art art"></div>
+            <div class="hero__title">Midnight Drive</div>
+            <div class="hero__meta">Aria Sound · 42 首 · 2 小时 58 分</div>
+
+            <div class="pillrow">
+              <div class="pill pill--primary">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z" /></svg>
+                播放
+              </div>
+              <div class="pill pill--ghost">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h4v4" /><path d="M20 4l-6.5 6.5" />
+                  <path d="M8 20H4v-4" /><path d="M4 20l6.5-6.5" />
+                </svg>
+                随机播放
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="row__idx">1</div>
+            <div class="row__body">
+              <div class="row__title">Midnight Drive</div>
+              <div class="row__sub"><span class="tag tag--liked">WY</span>Aria Sound</div>
+            </div>
+            <div class="row__time">2:58</div>
+          </div>
+          <div class="row">
+            <div class="row__idx">2</div>
+            <div class="row__body">
+              <div class="row__title">霓虹之外</div>
+              <div class="row__sub"><span class="tag tag--sq">SQ</span>林间信 · <span style="color:var(--text-3)">Neon</span></div>
+            </div>
+            <div class="row__time">3:12</div>
+          </div>
+          <div class="row">
+            <div class="row__idx">3</div>
+            <div class="row__body">
+              <div class="row__title">Slow Motion</div>
+              <div class="row__sub"><span class="tag">WY</span>Kite Club</div>
+            </div>
+            <div class="row__time">4:05</div>
+          </div>
+          <div class="row">
+            <div class="row__idx">4</div>
+            <div class="row__body">
+              <div class="row__title">凌晨四点</div>
+              <div class="row__sub"><span class="tag tag--sq">SQ</span>夜航员</div>
+            </div>
+            <div class="row__time">3:47</div>
+          </div>
+          <div class="row">
+            <div class="row__idx">5</div>
+            <div class="row__body">
+              <div class="row__title">Signal Lost</div>
+              <div class="row__sub"><span class="tag">WY</span>Aria Sound</div>
+            </div>
+            <div class="row__time">5:21</div>
+          </div>
+        </div>
+
+        <div class="playerbar">
+          <div class="playerbar__progress"><i></i></div>
+          <div class="playerbar__cover art"></div>
+          <div class="playerbar__body">
+            <div class="playerbar__title">Midnight Drive</div>
+            <div class="playerbar__sub">Aria Sound · Late Night</div>
+          </div>
+          <div class="playerbar__actions">
+            <div class="playerbar__btn">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6.5" y="5" width="3.4" height="14" rx="1.2" />
+                <rect x="14.1" y="5" width="3.4" height="14" rx="1.2" />
+              </svg>
+            </div>
+            <div class="playerbar__btn">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 5.5v13l11-6.5z" />
+                <rect x="17.4" y="5" width="2.6" height="14" rx="1.1" />
+              </svg>
+            </div>
+            <div class="playerbar__btn">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 6h16M4 12h16M4 18h10" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ============ 3. 播放页 ============ -->
+  <figure>
+    <figcaption>③ 播放页 <span>模糊色雾 + 大封面 318 · 细进度条 3/10 · 控制排布</span></figcaption>
+    <div class="phone">
+      <div class="fog">
+        <div class="fog__blur art"></div>
+        <div class="fog__scrim"><i></i><i></i><i></i><i></i></div>
+      </div>
+
+      <div class="phone__screen">
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="statusbar__icons"><i></i><i></i><i></i></span>
+        </div>
+
+        <div class="navbar">
+          <div class="navbtn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </div>
+          <div style="flex:1;padding:0 6px;font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            Midnight Drive · Aria Sound
+          </div>
+          <div class="navbtn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M5 8h11l-3-3M19 16H8l3 3" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="playdetail__body">
+          <div class="cover art"></div>
+        </div>
+
+        <div class="panel">
+          <div class="info">
+            <div class="info__body">
+              <div class="info__title">Midnight Drive</div>
+              <div class="info__singer">Aria Sound</div>
+            </div>
+            <div class="info__mode info__mode--on">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h4v4" /><path d="M20 4l-6.5 6.5" />
+                <path d="M8 20H4v-4" /><path d="M4 20l6.5-6.5" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="progress">
+            <div class="progress__track">
+              <div class="progress__buffered"></div>
+              <div class="progress__fill"></div>
+              <div class="progress__thumb"></div>
+            </div>
+          </div>
+          <div class="times">
+            <span>1:07</span>
+            <span class="times__status">无歌词</span>
+            <span>2:58</span>
+          </div>
+
+          <div class="controls">
+            <div class="controls__btn">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 5.5v13L7.6 12z" /><rect x="4" y="5" width="2.6" height="14" rx="1.1" />
+              </svg>
+            </div>
+            <div class="controls__btn">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6.5" y="5" width="3.6" height="14" rx="1.3" />
+                <rect x="13.9" y="5" width="3.6" height="14" rx="1.3" />
+              </svg>
+            </div>
+            <div class="controls__btn">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 5.5v13L16.4 12z" /><rect x="17.4" y="5" width="2.6" height="14" rx="1.1" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="actions">
+            <div class="actions__btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21" />
+              </svg>
+            </div>
+            <div class="actions__btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </div>
+            <div class="actions__btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 12a8 8 0 11-3.2-6.4" /><path d="M20 4v4h-4" />
+              </svg>
+            </div>
+            <div class="actions__btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5.5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="18.5" r="1.6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <!-- ============ 4. 深色列表 ============ -->
+  <figure>
+    <figcaption>④ 深色列表 <span>行高 70 · 缩略图 52/8 · 分隔线左缩进 68 · 弹层 16</span></figcaption>
+    <div class="phone">
+      <div class="phone__screen">
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="statusbar__icons"><i></i><i></i><i></i></span>
+        </div>
+
+        <div class="navbar">
+          <div class="navbtn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 5l-7 7 7 7" />
+            </svg>
+          </div>
+          <div class="navbtn"></div>
+        </div>
+
+        <div class="scroll">
+          <div class="listhead">
+            <div class="listhead__title">播放列表</div>
+            <div class="listhead__sub">42 首 · 2 小时 58 分</div>
+          </div>
+
+          <div class="row">
+            <div class="row__thumb art"></div>
+            <div class="row__body">
+              <div class="row__title">Midnight Drive</div>
+              <div class="row__sub"><span class="tag tag--liked">WY</span>Aria Sound</div>
+            </div>
+            <div class="row__time">2:58</div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art" style="filter: hue-rotate(45deg)"></div>
+            <div class="row__body">
+              <div class="row__title">霓虹之外</div>
+              <div class="row__sub"><span class="tag tag--sq">SQ</span>林间信</div>
+            </div>
+            <div class="row__time">3:12</div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art" style="filter: hue-rotate(90deg)"></div>
+            <div class="row__body">
+              <div class="row__title">Slow Motion</div>
+              <div class="row__sub"><span class="tag">WY</span>Kite Club</div>
+            </div>
+            <div class="row__time">4:05</div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art" style="filter: hue-rotate(160deg)"></div>
+            <div class="row__body">
+              <div class="row__title">凌晨四点</div>
+              <div class="row__sub"><span class="tag tag--sq">SQ</span>夜航员</div>
+            </div>
+            <div class="row__time">3:47</div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art" style="filter: hue-rotate(210deg)"></div>
+            <div class="row__body">
+              <div class="row__title">Signal Lost</div>
+              <div class="row__sub"><span class="tag">WY</span>Aria Sound</div>
+            </div>
+            <div class="row__time">5:21</div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art" style="filter: hue-rotate(280deg)"></div>
+            <div class="row__body">
+              <div class="row__title">纸飞机</div>
+              <div class="row__sub"><span class="tag">WY</span>小声说话</div>
+            </div>
+            <div class="row__time">3:33</div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art" style="filter: hue-rotate(330deg)"></div>
+            <div class="row__body">
+              <div class="row__title">Ocean Glass</div>
+              <div class="row__sub"><span class="tag tag--sq">SQ</span>Tide Room</div>
+            </div>
+            <div class="row__time">4:41</div>
+          </div>
+        </div>
+
+        <div class="playerbar">
+          <div class="playerbar__progress"><i></i></div>
+          <div class="playerbar__cover art"></div>
+          <div class="playerbar__body">
+            <div class="playerbar__title">Midnight Drive</div>
+            <div class="playerbar__sub">Aria Sound · Late Night</div>
+          </div>
+          <div class="playerbar__actions">
+            <div class="playerbar__btn">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6.5" y="5" width="3.4" height="14" rx="1.2" />
+                <rect x="14.1" y="5" width="3.4" height="14" rx="1.2" />
+              </svg>
+            </div>
+            <div class="playerbar__btn">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 5.5v13l11-6.5z" />
+                <rect x="17.4" y="5" width="2.6" height="14" rx="1.1" />
+              </svg>
+            </div>
+            <div class="playerbar__btn">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 6h16M4 12h16M4 18h10" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 播放列表弹层（radius 16） -->
+      <div class="sheet">
+        <div class="sheet__grab"></div>
+        <div class="sheet__row">
+          <i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg></i>
+          当前播放列表
+        </div>
+        <div class="sheet__row">
+          <i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14" /></svg></i>
+          收藏到歌单
+        </div>
+        <div class="sheet__row">
+          <i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v10M8 10l4 4 4-4M5 19h14" /></svg></i>
+          下载
+        </div>
+      </div>
+    </div>
+  </figure>
+
+</div>
+</body>
+</html>

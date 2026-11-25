@@ -6,6 +6,9 @@ import { setWySubscribedAlbums} from '@/store/user/action'
 import { createStyle, toast } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import { useSettingValue } from '@/store/setting/hook'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
+import EmptyState from '@/components/spotify/EmptyState'
+import { useI18n } from '@/lang'
 import Text from '@/components/common/Text'
 import ListItem from './ListItem'
 import { useHorizontalMode } from '@/utils/hooks'
@@ -14,6 +17,7 @@ export default memo(() => {
   const subscribedAlbums = useWySubscribedAlbums()
   const [loading, setLoading] = useState(false)
   const theme = useTheme()
+  const t = useI18n()
   const cookie = useSettingValue('common.wy_cookie')
   const isHorizontal = useHorizontalMode()
 
@@ -54,6 +58,7 @@ export default memo(() => {
     <View style={{ flex: 1 }}>
       <FlatList
         onScrollBeginDrag={Keyboard.dismiss}
+        contentContainerStyle={{ paddingBottom: HOME_BOTTOM_OVERLAY_HEIGHT }}
         data={subscribedAlbums}
         key={isHorizontal ? 'horizontal' : 'vertical'}
         numColumns={isHorizontal ? 2 : 1}
@@ -63,6 +68,7 @@ export default memo(() => {
           </View>
         )}
         keyExtractor={item => String(item.id)}
+        ListEmptyComponent={loading ? null : <EmptyState title={t('list_empty')} />}
         columnWrapperStyle={isHorizontal ? styles.columnWrapper : undefined}
         refreshControl={
           <RefreshControl

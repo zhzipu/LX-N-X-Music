@@ -1,50 +1,36 @@
 import { memo } from 'react'
 
-import Appearance from '../Appearance'
 import Section from '../../components/Section'
-import Source from './Source'
-import SourceName from './SourceName'
+import SubTitle from '../../components/SubTitle'
 import Language from './Language'
-import FontSize from './FontSize'
 import ShareType from './ShareType'
-import IsStartupAutoPlay from './IsStartupAutoPlay'
-import IsStartupPushPlayDetailScreen from './IsStartupPushPlayDetailScreen'
-import IsAutoHidePlayBar from './IsAutoHidePlayBar'
 import IsHomePageScroll from './IsHomePageScroll'
 import IsShowBackBtn from './IsShowBackBtn'
 import IsShowExitBtn from './IsShowExitBtn'
 import IsUseSystemFileSelector from './IsUseSystemFileSelector'
 import IsAlwaysKeepStatusbarHeight from './IsAlwaysKeepStatusbarHeight'
-import DrawerLayoutPosition from './DrawerLayoutPosition'
 import { useI18n } from '@/lang/i18n'
-import WyCookie from './WyCookie'
-import NavMenu from "@/screens/Home/Views/Setting/settings/Basic/NavMenu.tsx";
+import NavMenu from './NavMenu'
 
 export default memo(() => {
   const t = useI18n()
 
   return (
-    <Section title={t('setting_basic')}>
-      <IsStartupAutoPlay />
-      {/*<IsStartupPushPlayDetailScreen />*/}
-      {global.lx.isCarMode ? (
-        <>
-          <IsShowBackBtn />
-          <IsShowExitBtn />
-        </>
-      ) : null}
-      <IsHomePageScroll />
-      <IsUseSystemFileSelector />
-      <IsAlwaysKeepStatusbarHeight />
-      <Appearance />
-      <DrawerLayoutPosition />
-      <NavMenu />
+    <Section title={t('setting_basic')} description={t('setting_desc_basic')}>
       <Language />
-      <FontSize />
+      <SubTitle title={t('setting_group_operations')}>
+        <IsHomePageScroll />
+        <IsUseSystemFileSelector />
+        <IsAlwaysKeepStatusbarHeight />
+        {global.lx.isCarMode ? (
+          <>
+            <IsShowBackBtn />
+            <IsShowExitBtn />
+          </>
+        ) : null}
+      </SubTitle>
+      <NavMenu />
       <ShareType />
-      <Source />
-      <SourceName />
-      <WyCookie />
     </Section>
   )
 })

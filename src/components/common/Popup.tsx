@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react'
-import { View, TouchableOpacity } from 'react-native'
+import { View, TouchableOpacity, StyleSheet} from 'react-native'
 
 import Modal, { type ModalType } from './Modal'
 import { Icon } from '@/components/common/Icon'
@@ -8,6 +8,8 @@ import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import Text from './Text'
 import { useStatusbarHeight } from '@/store/common/hook'
+import GlassSurface from '@/components/spotify/GlassSurface'
+import { getSP } from '@/theme/spotify/tokens'
 
 const styles = createStyle({
   centeredView: {
@@ -19,6 +21,9 @@ const styles = createStyle({
     elevation: 6,
     flexGrow: 0,
     flexShrink: 1,
+    // 面板底色交给 GlassSurface（弹层是独立窗口，走原生兜底玻璃）
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   header: {
     flex: 0,
@@ -54,6 +59,12 @@ export interface PopupProps {
   closeBtn?: boolean
   position?: 'top' | 'left' | 'right' | 'bottom'
   title?: string
+  /** 玻璃强度 0~1，越大越通透；不传沿用 0.55 */
+  glassAmount?: number
+  /** Disable the glass backdrop for contexts that require standard surfaces. */
+  glassEnabled?: boolean
+  /** Optional panel backing color for menus that need stronger contrast. */
+  panelBackgroundColor?: string
   children: React.ReactNode
 }
 
@@ -70,11 +81,15 @@ export default forwardRef<PopupType, PopupProps>(
       closeBtn = true,
       position = 'bottom',
       title = '',
+      glassAmount = 0.55,
+      glassEnabled = true,
+      panelBackgroundColor,
       children,
     }: PopupProps,
     ref
   ) => {
     const theme = useTheme()
+  const sp = getSP(theme.isDark)
     const { keyboardShown, keyboardHeight } = useKeyboard()
     const statusBarHeight = useStatusbarHeight()
 
@@ -198,10 +213,23 @@ export default forwardRef<PopupType, PopupProps>(
             style={{
               ...styles.modalView,
               ...modalViewStyle,
-              backgroundColor: theme['c-content-background'],
             }}
             onStartShouldSetResponder={() => true}
           >
+            {/* 深色底：弹层在独立窗口里拿不到页面 backdrop，玻璃只剩一层很淡的 tint，
+                直接盖在封面/列表上时文字完全看不清，所以先铺一层中性深色底再叠玻璃。 */}
+            <View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, { backgroundColor: panelBackgroundColor ?? (glassEnabled ? 'rgba(16,16,16,0.88)' : sp.colors.surfaceElevated) }]}
+            />
+            {glassEnabled ? (
+              <GlassSurface
+                pointerEvents="none"
+                style={StyleSheet.absoluteFill}
+                borderRadius={sp.radius.card}
+                glassAmount={glassAmount}
+              />
+            ) : null}
             <View style={styles.header}>
               <Text size={13} style={styles.title} numberOfLines={1}>
                 {title}

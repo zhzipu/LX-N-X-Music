@@ -1,4 +1,5 @@
 export const HOME_SCREEN = 'lxm.HomeScreen'
+export const GLASS_TABS_SETTINGS_SCREEN = 'lxm.GlassTabsSettingsScreen'
 export const PLAY_DETAIL_SCREEN = 'lxm.PlayDetailScreen'
 export const SONGLIST_DETAIL_SCREEN = 'lxm.SonglistDetailScreen'
 export const COMMENT_SCREEN = 'lxm.CommentScreen'

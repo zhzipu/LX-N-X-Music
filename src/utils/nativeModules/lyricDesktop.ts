@@ -41,6 +41,10 @@ export const setSendLyricTextEvent = async (isSend: boolean) => {
   return LyricModule.setSendLyricTextEvent(isSend)
 }
 
+export const setWidgetLyricEventsEnabled = async (enabled: boolean) => {
+  return LyricModule.setWidgetLyricEventsEnabled(enabled)
+}
+
 /**
  * show lyric
  */

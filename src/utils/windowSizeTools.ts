@@ -3,6 +3,9 @@ import { getWindowSize as getWindowSizeRaw } from './nativeModules/utils'
 // import { log } from './log'
 
 export type SizeHandler = (size: { width: number; height: number }) => void
+let dimensionsSubscription: ReturnType<typeof Dimensions.addEventListener> | null = null
+let dimensionsRevision = 0
+
 export const getWindowSize = async () => {
   return getWindowSizeRaw().then((size) => {
     const scale = Dimensions.get('window').scale
@@ -29,27 +32,28 @@ export const windowSizeTools = {
     }
   },
   async init() {
-    // Dimensions.addEventListener('change', () => {
-    //   void getWindowSize().then((size) => {
-    //     if (!size.width) return
-    //     const scale = Dimensions.get('screen').scale
-    //     size.width = Math.round(size.width / scale)
-    //     size.height = Math.round(size.height / scale) + (StatusBar.currentHeight ?? 0)
-    //     this.size = size
-    //     for (const handler of this.listeners) handler(size)
-    //   })
-    // })
+    if (!dimensionsSubscription) {
+      dimensionsSubscription = Dimensions.addEventListener('change', ({ window }) => {
+        if (!window.width || !window.height) return
+        dimensionsRevision++
+        this.setWindowSize(window.width, window.height)
+      })
+    }
+    const revisionAtStart = dimensionsRevision
     const size = await getWindowSize()
     // log.info('win size', size)
-    if (size.width) {
+    if (size.width && dimensionsRevision === revisionAtStart) {
       this.size = size
-    } else {
+    } else if (dimensionsRevision === revisionAtStart) {
       const window = Dimensions.get('window')
       // log.info('Dimensions window size', window)
       this.size = {
         width: Math.round(window.width),
         height: Math.round(window.height) + (StatusBar.currentHeight ?? 0),
       }
+    }
+    if (dimensionsRevision === revisionAtStart) {
+      for (const handler of this.listeners) handler(this.size)
     }
     // console.log('init windowSizeTools')
     return size

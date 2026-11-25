@@ -1,4 +1,13 @@
 <resources>
-    <string name="app_name">LX-N-X Music</string>
-    <string name="widget_description">LX-N-X Widget</string>
+    <string name="app_name">奶音</string>
+    <string name="widget_description">奶音音乐小组件</string>
+    <string name="widget_label">奶音</string>
+    <string name="widget_description_transparent">透明背景 · 白色文字</string>
+    <string name="widget_label_transparent">奶音透明</string>
+    <string name="widget_description_theme">配色跟随主题设置</string>
+    <string name="widget_label_theme">奶音主题</string>
+    <string name="widget_description_dark">固定黑底白字，不随主题变化</string>
+    <string name="widget_label_dark">奶音暗色</string>
+    <string name="widget_description_light">固定白底黑字，不随主题变化</string>
+    <string name="widget_label_light">奶音亮色</string>
 </resources>

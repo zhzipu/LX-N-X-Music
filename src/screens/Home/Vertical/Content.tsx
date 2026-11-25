@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type { GestureResponderEvent } from 'react-native'
 // import { getWindowSise, onDimensionChange } from '@/utils/tools'
 import DrawerNav from './DrawerNav'
 import Header from './Header'
@@ -12,7 +13,19 @@ import { scaleSizeW } from '@/utils/pixelRatio'
 
 const MAX_WIDTH = scaleSizeW(300)
 
-const Content = () => {
+interface ContentProps {
+  onTouchStartCapture?: (event: GestureResponderEvent) => void
+  onTouchMoveCapture?: (event: GestureResponderEvent) => void
+  onTouchEndCapture?: (event: GestureResponderEvent) => void
+  onTouchCancelCapture?: (event: GestureResponderEvent) => void
+}
+
+const Content = ({
+  onTouchStartCapture,
+  onTouchMoveCapture,
+  onTouchEndCapture,
+  onTouchCancelCapture,
+}: ContentProps) => {
   const drawer = useRef<DrawerLayoutFixedType>(null)
   const drawerLayoutPosition = useSettingValue('common.drawerLayoutPosition')
 
@@ -44,6 +57,14 @@ const Content = () => {
       // drawerWidth={width}
       drawerPosition={drawerLayoutPosition}
       renderNavigationView={navigationView}
+      // 把抽屉的真实开合状态广播出去：点遮罩 / 侧滑关闭时不会走 changeMenuVisible，
+      // 这里补上，底部浮层才能可靠地隐藏/恢复（Home/Vertical 订阅这个事件）。
+      onDrawerOpen={() => global.app_event.changeMenuVisible(true)}
+      onDrawerClose={() => global.app_event.changeMenuVisible(false)}
+      onTouchStartCapture={onTouchStartCapture}
+      onTouchMoveCapture={onTouchMoveCapture}
+      onTouchEndCapture={onTouchEndCapture}
+      onTouchCancelCapture={onTouchCancelCapture}
     >
       <Header />
       <Main />

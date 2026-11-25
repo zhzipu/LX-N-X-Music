@@ -4,6 +4,7 @@ import musicSearch from '@/utils/musicSdk/wy/musicSearch'
 import { useTheme } from '@/store/theme/hook'
 import SingerListItem from '../FollowedArtists/ListItem'
 import AlbumListItem from '../../Views/SubscribedAlbums/ListItem'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
 
 export default forwardRef(({ searchType }, ref) => {
   const [list, setList] = useState([])
@@ -60,6 +61,7 @@ export default forwardRef(({ searchType }, ref) => {
   return (
     <FlatList
       data={list}
+      contentContainerStyle={{ paddingBottom: HOME_BOTTOM_OVERLAY_HEIGHT }}
       renderItem={renderItem}
       keyExtractor={item => String(item.id)}
       onEndReached={() => handleLoad(searchInfoRef.current.text, searchInfoRef.current.page)}

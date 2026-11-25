@@ -6,7 +6,6 @@ import { defaultUrl } from '@/config'
 import settingState from '@/store/setting/state'
 
 
-const list: LX.Player.Track[] = []
 
 const defaultUserAgent = 'Mozilla/5.0 (Linux; Android 10; Pixel 3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Mobile Safari/537.36'
 // B 站 App UA，与 api.ts 里 BILI_UA 保持一致，降低 CDN 风控概率
@@ -143,14 +142,11 @@ const buildTracks = (musicInfo: LX.Player.PlayMusic, url?: LX.Player.Track['url'
 export const isTempTrack = (trackId: string) => /\/\/default$/.test(trackId)
 
 
-export const getCurrentTrackId = async () => {
-  const currentTrackIndex = await TrackPlayer.getCurrentTrack()
-  return list[currentTrackIndex]?.id
-}
 export const getCurrentTrack = async () => {
   const currentTrackIndex = await TrackPlayer.getCurrentTrack()
-  return list[currentTrackIndex]
+  return currentTrackIndex == null ? null : await TrackPlayer.getTrack(currentTrackIndex) as LX.Player.Track | null
 }
+export const getCurrentTrackId = async () => (await getCurrentTrack())?.id
 
 export const updateMetaData = async (musicInfo: LX.Player.MusicInfo, isPlay: boolean, lyric?: string, force = false) => {
   if (!force && isPlay == state.isPlaying) {
@@ -173,7 +169,7 @@ export const updateMetaData = async (musicInfo: LX.Player.MusicInfo, isPlay: boo
 
 export const initTrackInfo = async (musicInfo: LX.Player.PlayMusic, mInfo: LX.Player.MusicInfo) => {
   const tracks = buildTracks(musicInfo)
-  await TrackPlayer.add(tracks).then(() => list.push(...tracks))
+  await TrackPlayer.add(tracks)
   const queue = await TrackPlayer.getQueue() as LX.Player.Track[]
   await TrackPlayer.skip(queue.findIndex(t => t.id == tracks[0].id))
   delayUpdateMusicInfo(mInfo)
@@ -186,7 +182,7 @@ const handlePlayMusic = async (musicInfo: LX.Player.PlayMusic, url: string, time
   const track = tracks[0]
   // await updateMusicInfo(track)
   const currentTrackIndex = await TrackPlayer.getCurrentTrack()
-  await TrackPlayer.add(tracks).then(() => list.push(...tracks))
+  await TrackPlayer.add(tracks)
   const queue = await TrackPlayer.getQueue() as LX.Player.Track[]
   await TrackPlayer.skip(queue.findIndex(t => t.id == track.id))
 
@@ -213,7 +209,7 @@ const handlePlayMusic = async (musicInfo: LX.Player.PlayMusic, url: string, time
   }
 
   if (queue.length > 2) {
-    void TrackPlayer.remove(Array(queue.length - 2).fill(null).map((_, i) => i)).then(() => list.splice(0, list.length - 2))
+    await TrackPlayer.remove(Array(queue.length - 2).fill(null).map((_, i) => i))
   }
 }
 let playPromise = Promise.resolve()
@@ -264,7 +260,7 @@ const updateMetaInfo = async (mInfo: LX.Player.MusicInfo, lyric?: string) => {
   )
 
   // Update home screen widget
-  const widgetTitle = mInfo.name ?? 'LX-N-X Music'
+  const widgetTitle = mInfo.name ?? '奶音'
   const widgetArtist = mInfo.singer ? `${mInfo.singer}${mInfo.album ? ` · ${mInfo.album}` : ''}` : '未在播放'
   void updateWidget(widgetTitle, widgetArtist, state.isPlaying, widgetArtwork).catch(() => { })
 }

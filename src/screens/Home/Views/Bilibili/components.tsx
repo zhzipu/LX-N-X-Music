@@ -5,6 +5,7 @@ import { Icon } from '@/components/common/Icon'
 import { SvgIcon } from '@/components/common/SvgIcon'
 import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
 
 /** 带返回按钮的子页面标题栏 */
 export const PageHeader = memo(({ title, onBack }: { title: string; onBack: () => void }) => {
@@ -192,7 +193,8 @@ export const styles = createStyle({
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    // Home 底部浮层（迷你播放条 + Tab 栏）不占布局，留出滚动空间
+    paddingBottom: 40 + HOME_BOTTOM_OVERLAY_HEIGHT,
   },
   loginActions: {
     marginTop: 6,
@@ -204,6 +206,7 @@ export const styles = createStyle({
     flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 32,
+    // Home 底部浮层（迷你播放条 + Tab 栏）不占布局，留出滚动空间
+    paddingBottom: 32 + HOME_BOTTOM_OVERLAY_HEIGHT,
   },
 })

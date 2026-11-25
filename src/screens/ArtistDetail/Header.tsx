@@ -1,29 +1,37 @@
-import { memo, useState, useMemo, useRef } from 'react'
-import { View, TouchableOpacity, ScrollView } from 'react-native'
-import ImageBackground from '@/components/common/ImageBackground'
-import Image from '@/components/common/Image'
+import { memo, useMemo, useRef, useState } from 'react'
+import { View } from 'react-native'
 import ImagePreviewModal from '@/components/common/ImagePreviewModal'
-import Text from '@/components/common/Text'
+import Chip from '@/components/spotify/Chip'
+import GlassIconButton from '@/components/spotify/GlassIconButton'
+import PlayPill from '@/components/spotify/PlayPill'
+import DetailHero from '@/screens/SonglistDetail/DetailHero'
 import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
 import { createStyle, toast } from '@/utils/tools'
 import { useStatusbarHeight } from '@/store/common/hook'
-import { Icon } from '@/components/common/Icon'
+import { pop } from '@/navigation'
 import wyApi from '@/utils/musicSdk/wy/user'
 import { useIsBiliArtistFollowed, useIsWyArtistFollowed } from '@/store/user/hook'
 import { addWyFollowedArtist, removeWyFollowedArtist } from '@/store/user/action'
 import { type FollowedArtistInfo } from '@/store/user/state'
 import SimilarArtistsModal, { type SimilarArtistsModalType } from './SimilarArtistsModal'
 import { toggleBiliArtistFollow } from '@/core/bilibili/favorite'
+import { useI18n } from '@/lang'
 
 interface Props {
   artist: any
-  onFollow?: () => void
   componentId: string
   source?: string
+  /** 播放歌手热门歌曲（沿用列表的播放逻辑） */
+  onPlayAll?: () => void
+  /** 随机播放歌手歌曲 */
+  onShuffle?: () => void
 }
 
-export default memo(({ artist, onFollow, componentId, source }: Props) => {
+export default memo(({ artist, componentId, source, onPlayAll, onShuffle }: Props) => {
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
+  const t = useI18n()
   const statusBarHeight = useStatusbarHeight()
   const similarArtistsModalRef = useRef<SimilarArtistsModalType>(null)
   const [isDescExpanded, setDescExpanded] = useState(false)
@@ -73,52 +81,68 @@ export default memo(({ artist, onFollow, componentId, source }: Props) => {
     })
   }
 
-  const truncatedDesc = useMemo(() => {
+  const meta = useMemo(() => {
+    const parts: string[] = []
+    if (artistAlias) parts.push(artistAlias.trim())
+    if (artist.albumSize) parts.push(`${artist.albumSize} 张专辑`)
+    return parts.join(' · ')
+  }, [artistAlias, artist.albumSize])
+
+  const desc = useMemo(() => {
     if (!isDescExpanded && description.length > 75) {
       return description.substring(0, 75) + '...'
     }
     return description
   }, [description, isDescExpanded])
 
-  return (
-    <View style={{ paddingTop: statusBarHeight }}>
-      <ImageBackground source={artist?.cover ? { uri: artist.cover } : null} style={styles.headerContainer} blurRadius={10}>
-        <View style={styles.overlay}>
-          <TouchableOpacity activeOpacity={0.85} disabled={!artistPic} onPress={() => setPreviewVisible(true)}>
-            <Image url={artistPic} style={styles.avatar} />
-          </TouchableOpacity>
-          <View style={styles.infoContainer}>
-            <Text style={styles.name} size={18} color="#FFF" numberOfLines={2}>
-              {artistName}
-              {artistAlias ? <Text size={12} color="rgba(255,255,255,0.8)">{artistAlias}</Text> : null}
-            </Text>
+  const actions = useMemo(() => (
+    <>
+      <GlassIconButton
+        icon="list-random"
+        onPress={onShuffle}
+        accessibilityLabel={t('play_list_random')}
+      />
+      <PlayPill
+        label={t('play')}
+        onPress={onPlayAll}
+        accessibilityLabel={t('play_all')}
+      />
+      <GlassIconButton
+        icon={isFollowed ? 'love-filled' : 'love'}
+        onPress={toggleFollow}
+        color={isFollowed ? sp.colors.accent : undefined}
+        accessibilityLabel={t('collect')}
+      />
+    </>
+  ), [t, isFollowed, sp.colors.accent, onPlayAll, onShuffle])
 
-            <View style={styles.descWrapper}>
-              <ScrollView nestedScrollEnabled={true}>
-                <TouchableOpacity activeOpacity={0.8} onPress={() => setDescExpanded(!isDescExpanded)}>
-                  <Text size={12} color="rgba(255,255,255,0.8)">
-                    {truncatedDesc}
-                  </Text>
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
-
-          </View>
-          <TouchableOpacity style={styles.followButton} onPress={toggleFollow}>
-            <Icon name={isFollowed ? 'love-filled' : 'love'} color={isFollowed ? theme['c-liked'] : '#fff'} size={18} />
-          </TouchableOpacity>
-          {isBili ? null : (
-            <TouchableOpacity
-              activeOpacity={0.82}
-              style={styles.similarButton}
-              onPress={() => similarArtistsModalRef.current?.show({ id: artist.id, name: artistName })}
-            >
-              <Text size={12} color="#fff" numberOfLines={1}>相似歌手</Text>
-              <Icon name="chevron-right" color="#fff" size={12} />
-            </TouchableOpacity>
-          )}
+  const footer = isBili
+    ? null
+    : (
+        <View style={styles.footer}>
+          <Chip
+            label="相似歌手"
+            onPress={() => similarArtistsModalRef.current?.show({ id: artist.id, name: artistName })}
+          />
         </View>
-      </ImageBackground>
+      )
+
+  return (
+    <>
+      <DetailHero
+        pageTitle={t('artist_detail')}
+        onBack={() => { void pop(componentId) }}
+        cover={artistPic}
+        coverShape="circle"
+        onCoverPress={artistPic ? () => setPreviewVisible(true) : undefined}
+        title={`${artistName}${artistAlias}`}
+        meta={meta}
+        desc={desc}
+        onDescPress={description.length > 75 ? () => setDescExpanded(v => !v) : undefined}
+        actions={actions}
+        footer={footer}
+        topInset={statusBarHeight}
+      />
       <ImagePreviewModal
         visible={isPreviewVisible}
         url={artistPic}
@@ -126,66 +150,13 @@ export default memo(({ artist, onFollow, componentId, source }: Props) => {
         onClose={() => setPreviewVisible(false)}
       />
       {isBili ? null : <SimilarArtistsModal ref={similarArtistsModalRef} componentId={componentId} />}
-    </View>
+    </>
   )
 })
 
 const styles = createStyle({
-  headerContainer: {
-    height: 200,
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)',
-  },
-  overlay: {
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    flex: 1,
-    flexDirection: 'row',
+  footer: {
+    paddingTop: 18,
     alignItems: 'center',
-    paddingHorizontal: 15,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  infoContainer: {
-    flex: 1,
-    marginLeft: 15,
-    flexDirection: 'column',
-    justifyContent: 'center',
-    height: '100%',
-    paddingTop: 10,
-    paddingBottom: 34,
-  },
-  name: {
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  descWrapper: {
-    flexShrink: 1,
-    maxHeight: 90,
-  },
-  followButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginLeft: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  similarButton: {
-    position: 'absolute',
-    right: 15,
-    bottom: 12,
-    minWidth: 82,
-    height: 30,
-    paddingHorizontal: 10,
-    borderRadius: 15,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
   },
 })

@@ -1,6 +1,7 @@
 import { memo } from 'react'
 
 import Section from '../../components/Section'
+import SubTitle from '../../components/SubTitle'
 import AddMusicLocationType from './AddMusicLocationType'
 import IsClickPlayList from './IsClickPlayList'
 import IsShowAlbumName from './IsShowAlbumName'
@@ -15,12 +16,16 @@ export default memo(() => {
   const t = useI18n()
 
   return (
-    <Section title={t('setting_list')}>
-      <IsClickPlayList />
-      <IsShowAlbumName />
-      <IsShowInterval />
-      <IsShowMyListSubMenu />
-      <IsAutoSaveDailyRec />
+    <Section title={t('setting_list')} description={t('setting_desc_list')}>
+      <SubTitle title={t('setting_group_list_display')}>
+        <IsShowAlbumName />
+        <IsShowInterval />
+        <IsShowMyListSubMenu />
+      </SubTitle>
+      <SubTitle title={t('setting_group_list_actions')}>
+        <IsClickPlayList />
+        <IsAutoSaveDailyRec />
+      </SubTitle>
       <AddMusicLocationType />
       <MenuSettings />
     </Section>

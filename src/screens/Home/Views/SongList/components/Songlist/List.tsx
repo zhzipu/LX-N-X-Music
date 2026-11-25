@@ -8,6 +8,7 @@ import { useLayout } from '@/utils/hooks'
 import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import { scaleSizeW } from '@/utils/pixelRatio'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
 import { createStyle } from '@/utils/tools'
 import Text from '@/components/common/Text'
 
@@ -154,6 +155,7 @@ export default forwardRef<ListType, ListProps>(({ onRefresh, onLoadMore, onOpenD
           key={String(rowInfo.num)}
           ref={flatListRef}
           style={styles.list}
+          contentContainerStyle={{ paddingBottom: HOME_BOTTOM_OVERLAY_HEIGHT }}
           columnWrapperStyle={{ justifyContent: 'space-evenly' }}
           numColumns={rowInfo.num}
           data={list}

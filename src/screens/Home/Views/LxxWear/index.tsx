@@ -6,6 +6,7 @@ import Input from '@/components/common/Input'
 import Checkbox from '@/components/common/CheckBox/Checkbox'
 import { SvgIcon } from '@/components/common/SvgIcon'
 import { useTheme } from '@/store/theme/hook'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
 import { createStyle, toast } from '@/utils/tools'
 import {
   clearPairing,
@@ -602,7 +603,7 @@ export default memo(() => {
   }, [runtime])
 
   return (
-    <View style={[styles.container, { backgroundColor: theme['c-content-background'] }]}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <SvgIcon name="watch" size={26} color={theme['c-primary-font']} />
@@ -966,7 +967,8 @@ const styles = createStyle({
   },
   content: {
     padding: 16,
-    paddingBottom: 40,
+    // Home 底部浮层（迷你播放条 + Tab 栏）不占布局，留出滚动空间
+    paddingBottom: 40 + HOME_BOTTOM_OVERLAY_HEIGHT,
   },
   header: {
     flexDirection: 'row',

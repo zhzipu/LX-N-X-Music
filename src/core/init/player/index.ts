@@ -12,7 +12,6 @@ import initMediaVolume from './mediaVolume'
 export default async (setting: LX.AppSetting) => {
   await initPlayer(setting)
   await initLyric(setting)
-  await initPlayInfo(setting)
   initPlayStatus()
   initPlayerEvent()
   initWatchList()
@@ -20,4 +19,6 @@ export default async (setting: LX.AppSetting) => {
   initPlayHistory()
   initPreloadNextMusic()
   initMediaVolume()
+  // Install playback listeners before restoring a track; a cached URL can start immediately.
+  await initPlayInfo(setting)
 }

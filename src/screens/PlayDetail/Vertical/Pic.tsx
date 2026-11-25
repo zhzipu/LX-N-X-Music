@@ -5,8 +5,9 @@ import { useWindowSize } from '@/utils/hooks';
 import { NAV_SHEAR_NATIVE_IDS } from '@/config/constant';
 import { HEADER_HEIGHT } from './components/Header';
 import Image from '@/components/common/Image';
+import idlePlayerCover from '@/resources/images/milky-music-icon.png'
 import { useStatusbarHeight } from '@/store/common/hook';
-import { useSettingValue } from '@/store/setting/hook';
+// 封面旋转设置项暂停使用（仿 Spotify 固定方形封面），见 isCoverSpin 定义处
 import { createStyle, toast, requestStoragePermission } from '@/utils/tools';
 import Menu, { type MenuType, type Menus } from '@/components/common/Menu';
 import { addTask } from '@/core/download';
@@ -14,19 +15,35 @@ import RNFetchBlob from 'rn-fetch-blob';
 import { getPicUrl } from '@/core/music/online';
 import { getFileExtensionFromUrl } from '@/screens/Home/Views/Mylist/MusicList/download/utils';
 import settingState from '@/store/setting/state';
+import { MS_MOTION } from '@/theme/myspotify/tokens';
+import { SP_RADIUS, SP_SPACING } from '@/theme/spotify/tokens';
 
-export default memo(({ componentId }: { componentId: string }) => {
+/** spoti.pw：封面左右各留 24，宽度 = 屏宽 − 48 */
+const COVER_INSET_H = SP_SPACING.xxl;
+/** 统计可用高时给底部控制区留的余量比例，保证小屏上封面不会把控制区挤出屏幕 */
+const COVER_MAX_HEIGHT_RATIO = 0.52;
+
+export default memo(({ componentId, maxWidth, maxHeight, topPadding = 0, onPress }: { componentId: string, maxWidth?: number, maxHeight?: number, topPadding?: number, onPress?: () => void }) => {
   const musicInfo = usePlayMusicInfo();
   const { width: winWidth, height: winHeight } = useWindowSize();
   const statusBarHeight = useStatusbarHeight();
   const isPlay = useIsPlay();
-  const isCoverSpin = useSettingValue('playDetail.isCoverSpin');
+  // 仿 Spotify / Chroma：封面固定为方形圆角。
+  // 转盘与目标布局冲突，且旧版本默认值为 true 已被持久化，这里直接固定关闭；
+  // 需要恢复时改回 useSettingValue('playDetail.isCoverSpin') 即可。
+  const isCoverSpin = false
   const spinValue = useRef(new Animated.Value(0)).current;
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const isAnimating = useRef(false);
   const menuRef = useRef<MenuType>(null);
   const coverRef = useRef<View>(null);
+  const longPressedRef = useRef(false);
   const [menuVisible, setMenuVisible] = useState(false);
+
+  // 进场动画：opacity 0→1、translateY 12→0，320ms
+  const enterAnim = useRef(new Animated.Value(0)).current;
+  // 切歌交叉淡入：400ms
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const createAnimation = useCallback((value: number) => {
     return Animated.timing(spinValue, {
@@ -75,27 +92,82 @@ export default memo(({ componentId }: { componentId: string }) => {
     }
   }, [musicInfo.musicInfo?.id, isCoverSpin, startAnimation, stopAnimation]);
 
+  // 进场（挂载时一次）
+  useEffect(() => {
+    const animation = Animated.timing(enterAnim, {
+      toValue: 1,
+      duration: MS_MOTION.enterDuration,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [enterAnim]);
+
+  // 切歌时封面交叉淡入
+  useEffect(() => {
+    if (!musicInfo.musicInfo?.id) return;
+    fadeAnim.setValue(0);
+    const animation = Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: MS_MOTION.crossFadeDuration,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [musicInfo.musicInfo?.id, fadeAnim]);
+
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
 
+  // spoti.pw：封面宽度 = 屏宽 − 48（左右各 24），高度只做兜底，避免小屏把控制区挤出去
+  const coverSize = useMemo(() => {
+    return Math.min(
+      winWidth - COVER_INSET_H * 2,
+      maxWidth == null ? Number.POSITIVE_INFINITY : maxWidth - COVER_INSET_H * 2,
+      maxHeight ?? Number.POSITIVE_INFINITY,
+      (winHeight - statusBarHeight - HEADER_HEIGHT) * COVER_MAX_HEIGHT_RATIO,
+    )
+  }, [maxWidth, maxHeight, statusBarHeight, winHeight, winWidth]);
+
   const imageContainerStyle = useMemo(() => {
-    const imgWidth = Math.min(winWidth * 0.85, (winHeight - statusBarHeight - HEADER_HEIGHT) * 0.5);
     return {
-      width: imgWidth,
-      height: imgWidth,
-      borderRadius: isCoverSpin ? imgWidth / 2 : 4,
-      elevation: 3,
-      opacity: 1, // 直接设置为1，让动画引擎控制可见性
+      width: coverSize,
+      height: coverSize,
+      borderRadius: isCoverSpin ? coverSize / 2 : SP_RADIUS.cover,
+      // 黑色 45%、radius 32、offset (0, 12)（Android 用 elevation 近似）
+      shadowColor: '#000000',
+      shadowOpacity: 0.45,
+      shadowRadius: 32,
+      shadowOffset: { width: 0, height: 12 },
+      elevation: 12,
     };
-  }, [statusBarHeight, winHeight, winWidth, isCoverSpin]);
+  }, [coverSize, isCoverSpin]);
 
   const imageStyle = useMemo(() => ({
     width: '100%',
     height: '100%',
     borderRadius: imageContainerStyle.borderRadius,
-  } as any), [imageContainerStyle.borderRadius]);
+  } as const), [imageContainerStyle.borderRadius]);
+
+  const contentStyle = useMemo(() => ({
+    width: coverSize,
+    height: coverSize,
+    borderRadius: imageContainerStyle.borderRadius,
+  }), [coverSize, imageContainerStyle.borderRadius]);
+
+  const animatedStyle = useMemo(() => ({
+    opacity: Animated.multiply(enterAnim, fadeAnim),
+    transform: [{
+      translateY: enterAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [MS_MOTION.enterTranslateY, 0],
+      }),
+    }],
+  }), [enterAnim, fadeAnim]);
 
   const menus = useMemo((): Menus => [
     { action: 'download_song', label: '下载歌曲' },
@@ -104,12 +176,21 @@ export default memo(({ componentId }: { componentId: string }) => {
 
   const handleLongPress = () => {
     if (!coverRef.current) return;
+    longPressedRef.current = true;
     coverRef.current.measure((x, y, w, h, px, py) => {
       setMenuVisible(true);
       requestAnimationFrame(() => {
         menuRef.current?.show({ x: px, y: py, w, h });
       });
     });
+  };
+
+  const handlePress = () => {
+    if (longPressedRef.current) {
+      longPressedRef.current = false;
+      return;
+    }
+    onPress?.();
   };
 
   const handleMenuPress = ({ action }: typeof menus[number]) => {
@@ -163,18 +244,20 @@ export default memo(({ componentId }: { componentId: string }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableWithoutFeedback onLongPress={handleLongPress}>
-        <View ref={coverRef} style={[styles.content, imageContainerStyle, { overflow: 'hidden' }]}>
-          <Animated.View style={{ width: '100%', height: '100%', transform: [{ rotate: spin }] }}>
-            <Image
-              url={(musicInfo.musicInfo as LX.Music.MusicInfo)?.meta?.picUrl} // 直接使用 store 中的数据
-              nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic}
-              style={imageStyle}
-            />
-          </Animated.View>
-        </View>
-      </TouchableWithoutFeedback>
+    <View style={[styles.container, { paddingTop: topPadding }]}>
+      <Animated.View style={[imageContainerStyle, animatedStyle]}>
+        <TouchableWithoutFeedback onPress={handlePress} onLongPress={handleLongPress}>
+          <View ref={coverRef} style={[styles.content, contentStyle]}>
+            <Animated.View style={[styles.coverInner, { transform: [{ rotate: spin }] }]}>
+              <Image
+                url={(musicInfo.musicInfo as LX.Music.MusicInfo)?.meta?.picUrl || idlePlayerCover}
+                nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic}
+                style={imageStyle}
+              />
+            </Animated.View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Animated.View>
       {menuVisible && <Menu ref={menuRef} menus={menus} onPress={handleMenuPress} onHide={() => setMenuVisible(false)} />}
     </View>
   );
@@ -190,5 +273,11 @@ const styles = createStyle({
   },
   content: {
     backgroundColor: 'rgba(0,0,0,0)',
+    // 裁掉旋转的封面，阴影交给外层 wrapper（Android 上 elevation 与 overflow 冲突）
+    overflow: 'hidden',
+  },
+  coverInner: {
+    width: '100%',
+    height: '100%',
   },
 });

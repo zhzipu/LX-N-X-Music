@@ -1,5 +1,5 @@
 import { memo, useEffect, useState, useCallback, useRef } from 'react'
-import {View, FlatList, RefreshControl, BackHandler, StyleSheet, Keyboard} from 'react-native'
+import {View, FlatList, RefreshControl, BackHandler, StyleSheet, Keyboard, type NativeScrollEvent, type NativeSyntheticEvent} from 'react-native'
 import ListItem from './ListItem'
 import wyApi from '@/utils/musicSdk/wy/user'
 import wyDailyRecApi from '@/utils/musicSdk/wy/dailyRec'
@@ -10,9 +10,11 @@ import { updateSetting } from '@/core/common'
 import { useWySubscribedPlaylists, useWyUid } from '@/store/user/hook.ts'
 import userState from '@/store/user/state'
 import { useSettingValue } from '@/store/setting/hook'
-import { toast } from '@/utils/tools'
+import { createStyle, toast } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
 import Text from '@/components/common/Text'
+import { Icon } from '@/components/common/Icon'
 import SonglistDetail from '../../../SonglistDetail'
 import { type ListInfoItem } from '@/store/songlist/state'
 import commonState from '@/store/common/state'
@@ -20,7 +22,21 @@ import playerState from '@/store/player/state'
 import { LIST_IDS } from '@/config/constant'
 import listState from '@/store/list/state'
 import {setWySubscribedPlaylists} from "@/store/user/action.ts"
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
 import MusicInfoOnline = LX.Music.MusicInfoOnline;
+
+/** 空状态：居中次级色图标 + 17/600 主文案 + 15 次级说明 */
+const EmptyState = ({ icon, title, desc }: { icon: string, title: string, desc?: string }) => {
+  const theme = useTheme()
+  const sp = getSP(theme.isDark)
+  return (
+    <View style={styles.empty}>
+      <Icon name={icon} size={44} color={sp.colors.textTertiary} />
+      <Text size={17} style={[styles.emptyTitle, { color: sp.colors.text }]}>{title}</Text>
+      {desc ? <Text size={15} style={[styles.emptyDesc, { color: sp.colors.textSecondary }]}>{desc}</Text> : null}
+    </View>
+  )
+}
 
 export default memo(() => {
   const playlists = useWySubscribedPlaylists()
@@ -28,10 +44,12 @@ export default memo(() => {
   const [loading, setLoading] = useState(true)
   const cookie = useSettingValue('common.wy_cookie')
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
   const [selectedPlaylist, setSelectedPlaylist] = useState<ListInfoItem | null>(null)
   const [scrollToMusicInfo, setScrollToMusicInfo] = useState<MusicInfoOnline | null>(null)
   const selectedPlaylistRef = useRef(selectedPlaylist)
   selectedPlaylistRef.current = selectedPlaylist
+  const lastScrollOffset = useRef(0)
 
   useEffect(() => {
     const handleJumpPosition = () => {
@@ -110,6 +128,15 @@ export default memo(() => {
       })
   }, [cookie, uid])
 
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y
+    const deltaY = offsetY - lastScrollOffset.current
+    lastScrollOffset.current = offsetY
+    if (Math.abs(deltaY) >= 1) {
+      global.app_event.setBottomBarHidden(deltaY > 0)
+    }
+  }, [])
+
   // 处理物理返回键，仅在显示详情时触发
   useEffect(() => {
     const onBackPress = () => {
@@ -177,8 +204,12 @@ export default memo(() => {
 
   if (!cookie) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>请先设置网易云 Cookie</Text>
+      <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+        <EmptyState
+          icon="love"
+          title="请先设置网易云 Cookie"
+          desc="设置 → 基本设置 → 网易云音乐 Cookie"
+        />
       </View>
     )
   }
@@ -188,16 +219,28 @@ export default memo(() => {
     setScrollToMusicInfo(null)
   }, [])
   return (
-    <View style={{ flex: 1 }}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
       <View style={[{ flex: 1 }, selectedPlaylist ? { opacity: 0 } : null]} pointerEvents={selectedPlaylist ? 'none' : 'auto'}>
         <FlatList
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
           onScrollBeginDrag={Keyboard.dismiss}
           data={playlists}
           renderItem={({ item }) => <ListItem item={item} onPress={handleItemPress} onHeartbeatPress={handleHeartbeatPress} />}
           keyExtractor={item => String(item.id)}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={loading
+            ? null
+            : (
+                <EmptyState
+                  icon="album"
+                  title="还没有网易云歌单"
+                  desc="下拉刷新试试，或先去网易云收藏一些歌单"
+                />
+              )}
           refreshControl={
             <RefreshControl
-              colors={[theme['c-primary']]}
+              colors={[sp.colors.accent]}
               refreshing={loading}
               onRefresh={onRefresh}
             />
@@ -205,10 +248,39 @@ export default memo(() => {
         />
       </View>
       {selectedPlaylist && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme['c-content-background'] }]}>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'transparent' }]}>
           <SonglistDetail info={selectedPlaylist} onBack={handleBack} initialScrollToInfo={scrollToMusicInfo} />
         </View>
       )}
     </View>
   )
+})
+
+const styles = createStyle({
+  container: {
+    flex: 1,
+  },
+  listContent: {
+    flexGrow: 1,
+    paddingTop: 4,
+    // 底部浮层（迷你播放条 + Tab 栏）不占布局，用 padding 把最后一项顶到浮层上方
+    paddingBottom: 24 + HOME_BOTTOM_OVERLAY_HEIGHT,
+  },
+  empty: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingLeft: 32,
+    paddingRight: 32,
+    paddingBottom: 48,
+  },
+  emptyTitle: {
+    paddingTop: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  emptyDesc: {
+    paddingTop: 8,
+    textAlign: 'center',
+  },
 })

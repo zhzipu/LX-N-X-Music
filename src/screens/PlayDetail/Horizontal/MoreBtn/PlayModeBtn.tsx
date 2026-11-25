@@ -112,5 +112,5 @@ export default memo(() => {
     return playModeIcon
   }, [togglePlayMethod])
 
-  return <Btn icon={playModeIcon} onPress={toggleNextPlayMode} />
+  return <Btn glassTarget="modeFavorite" icon={playModeIcon} onPress={toggleNextPlayMode} />
 })

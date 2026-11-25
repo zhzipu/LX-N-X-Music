@@ -9,7 +9,7 @@ export default memo(() => {
   const t = useI18n()
 
   return (
-    <Section title={t('setting_backup')}>
+    <Section title={t('setting_backup')} description={t('setting_desc_backup')}>
       <Part />
       {/* <MaxCache /> */}
     </Section>

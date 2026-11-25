@@ -42,8 +42,11 @@ export const useComponentIds = () => {
 }
 
 const hasVisible = (visibleNames: COMPONENT_IDS[], ids: InitState['componentIds']) => {
-  const names = ids.map(item => item.name)
-  return names.length == visibleNames.length ? visibleNames.every((n) => names.includes(n)) : false
+  // A screen can receive more than one layout render while a foldable changes
+  // size. Treat duplicate component registrations as one screen; otherwise the
+  // mini-player mistakes the Home page for an obscured page and stops lyric updates.
+  const names = new Set(ids.map(item => item.name))
+  return names.size == visibleNames.length && visibleNames.every((n) => names.has(n))
 }
 export const usePageVisible = (
   visibleNames: COMPONENT_IDS[],
@@ -51,6 +54,7 @@ export const usePageVisible = (
 ) => {
   useEffect(() => {
     let visible = hasVisible(visibleNames, state.componentIds)
+    onChange(visible)
     const handlecheck = (ids: InitState['componentIds']) => {
       const res = hasVisible(visibleNames, ids)
       // console.log(visible, res, res == visible)

@@ -9,6 +9,7 @@ import { HEADER_HEIGHT } from './components/Header';
 import { BTN_WIDTH } from './MoreBtn/Btn';
 import { marginLeft } from './constant';
 import Image from '@/components/common/Image';
+import idlePlayerCover from '@/resources/images/milky-music-icon.png'
 import { useStatusbarHeight } from '@/store/common/hook';
 import { useSettingValue } from '@/store/setting/hook';
 
@@ -104,7 +105,7 @@ export default memo(({ componentId }: { componentId: string }) => {
       <View style={[styles.content, imageContainerStyle, { overflow: 'hidden' }]}>
         <Animated.View style={{ width: '100%', height: '100%', transform: [{ rotate: spin }] }}>
           <Image
-            url={musicInfo.pic} // 直接使用 store 中的数据
+            url={musicInfo.pic || idlePlayerCover}
             nativeID={NAV_SHEAR_NATIVE_IDS.playDetail_pic}
             style={imageStyle}
           />

@@ -8,6 +8,8 @@ import { useIsPlay } from '@/store/player/hook'
 import { useLayout } from '@/utils/hooks'
 import { marginLeft } from '../constant'
 import { BTN_WIDTH } from '../MoreBtn/Btn'
+import GlassOverlay from '@/components/spotify/GlassOverlay'
+import ConfiguredGlassSurface from '@/components/spotify/ConfiguredGlassSurface'
 
 // const WIDTH = scaleSizeW(48)
 
@@ -17,13 +19,16 @@ const PrevBtn = ({ size }: { size: number }) => {
     void playPrev()
   }
   return (
+    <GlassOverlay>
     <TouchableOpacity
       style={{ ...styles.cotrolBtn, width: size, height: size }}
       activeOpacity={0.5}
       onPress={handlePlayPrev}
     >
+      <ConfiguredGlassSurface target="skip" capsuleRadius={size / 2} style={StyleSheet.absoluteFill} pointerEvents="none" />
       <Icon name="prevMusic" color={theme['c-button-font']} rawSize={size * 0.7} />
     </TouchableOpacity>
+    </GlassOverlay>
   )
 }
 const NextBtn = ({ size }: { size: number }) => {
@@ -32,13 +37,16 @@ const NextBtn = ({ size }: { size: number }) => {
     void playNext()
   }
   return (
+    <GlassOverlay>
     <TouchableOpacity
       style={{ ...styles.cotrolBtn, width: size, height: size }}
       activeOpacity={0.5}
       onPress={handlePlayNext}
     >
+      <ConfiguredGlassSurface target="skip" capsuleRadius={size / 2} style={StyleSheet.absoluteFill} pointerEvents="none" />
       <Icon name="nextMusic" color={theme['c-button-font']} rawSize={size * 0.7} />
     </TouchableOpacity>
+    </GlassOverlay>
   )
 }
 

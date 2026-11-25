@@ -1,8 +1,11 @@
 import { useEffect, useRef } from 'react'
+import { View } from 'react-native'
 import settingState from '@/store/setting/state'
 import MusicList from './MusicList'
 import MyList from './MyList'
 import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
+import { createStyle } from '@/utils/tools'
 import DrawerLayoutFixed, {
   type DrawerLayoutFixedType,
 } from '@/components/common/DrawerLayoutFixed'
@@ -15,11 +18,12 @@ const MAX_WIDTH = scaleSizeW(400)
 export default () => {
   const drawer = useRef<DrawerLayoutFixedType>(null)
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
   // const [width, setWidth] = useState(0)
 
   useEffect(() => {
     const handleFixDrawer = (id: CommonState['navActiveId']) => {
-      if (id == 'nav_love') drawer.current?.fixWidth()
+      if (id == 'nav_my_playlist') drawer.current?.fixWidth()
     }
     const changeVisible = (visible: boolean) => {
       if (visible) {
@@ -63,10 +67,18 @@ export default () => {
       widthPercentageMax={MAX_WIDTH}
       drawerPosition={settingState.setting['common.drawerLayoutPosition']}
       renderNavigationView={navigationView}
-      drawerBackgroundColor={theme['c-content-background']}
+      drawerBackgroundColor={sp.colors.bg}
       style={{ elevation: 1 }}
     >
-      <MusicList />
+      <View style={styles.content}>
+        <MusicList />
+      </View>
     </DrawerLayoutFixed>
   )
 }
+
+const styles = createStyle({
+  content: {
+    flex: 1,
+  },
+})

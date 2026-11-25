@@ -1,7 +1,7 @@
 {
-  "name": "LX-N-X-Music",
-  "version": "1.2.0",
-  "versionCode": 75,
+  "name": "milky-music",
+  "version": "1.0.0",
+  "versionCode": 1,
   "private": true,
   "scripts": {
     "dev": "react-native run-android --active-arch-only",
@@ -18,7 +18,8 @@
     "clear:full": "git clean -fdx -e android/keystore.properties -e android/app/*.keystore",
     "build:theme": "node src/theme/themes/createThemes.js",
     "publish": "node publish",
-    "postinstall": "node patchMediaLayout.js"
+    "postinstall": "node patchMediaLayout.js && node patchRnGradlePlugin.js && node patch16kbAlignment.js && node tools/audio-spectrum/patch-player.js",
+    "test:audio-spectrum": "node tools/audio-spectrum/test.js"
   },
   "engines": {
     "node": ">= 18",
@@ -26,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zhzipu/LX-N-X-Music.git"
+    "url": "git+https://github.com/zhzipu/milky-music.git"
   },
   "keywords": [
     "music-player",
@@ -37,9 +38,9 @@
   },
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/zhzipu/LX-N-X-Music/issues"
+    "url": "https://github.com/zhzipu/milky-music/issues"
   },
-  "homepage": "https://github.com/zhzipu/LX-N-X-Music#readme",
+  "homepage": "https://github.com/zhzipu/milky-music#readme",
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.0.5",
     "@d11/react-native-fast-image": "^8.13.0",

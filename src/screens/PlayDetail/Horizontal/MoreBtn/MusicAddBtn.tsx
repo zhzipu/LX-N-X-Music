@@ -18,7 +18,7 @@ export default () => {
 
   return (
     <>
-      <Btn icon="add-music" onPress={handleShowMusicAddModal} />
+      <Btn glassTarget="modeFavorite" icon="add-music" onPress={handleShowMusicAddModal} />
       <MusicAddModal ref={musicAddModalRef} />
     </>
   )

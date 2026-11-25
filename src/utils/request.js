@@ -111,7 +111,8 @@ const handleRequestData = async (
     },
     headers
   )
-  if (url.includes('music.163.com')) {
+  if (/^https?:\/\/(?:[^/]+\.)?music\.163\.com(?:\/|$)/i.test(url) &&
+      !Object.keys(headers).some(key => key.toLowerCase() === 'cookie')) {
     headers.cookie = settingState.setting['common.wy_cookie']
   }
   options.cache = cache

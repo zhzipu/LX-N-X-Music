@@ -24,3 +24,6 @@
   **[] $VALUES;
   public *;
 }
+
+# 液态玻璃的 AGSL 着色器字符串已复制进项目（glass/GlassShaderLib.kt），
+# 不再依赖 io.github.kyant0:backdrop，也不需要为它保留任何类或忽略 Compose 缺失。

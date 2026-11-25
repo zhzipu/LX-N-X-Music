@@ -1,15 +1,17 @@
 import {useCallback, useEffect, useRef} from 'react'
-import { useHorizontalMode } from '@/utils/hooks'
+import { useWideLayout } from '@/utils/hooks'
 import PageContent from '@/components/PageContent'
 import {setComponentId, setNavActiveId} from '@/core/common'
 import { COMPONENT_IDS } from '@/config/constant'
 import Vertical from './Vertical'
-import Horizontal from './Horizontal'
+import WideHome from './WideHome'
 import { navigations } from '@/navigation'
+import { foldPage } from '@/navigation/foldPage'
 import ArtistSelectorManager from '@/components/ArtistSelectorManager'
 import settingState from '@/store/setting/state'
 import {useI18n} from "@/lang";
-import {BackHandler} from "react-native";
+import {BackHandler, View} from "react-native";
+import { clearSearchHighlight } from './Views/Music/searchInteraction'
 import {toast} from "@/utils/tools.ts";
 import commonState from '@/store/common/state'
 import {useBackHandler} from "@/utils/hooks/useBackHandler.ts";
@@ -24,14 +26,29 @@ interface Props {
 }
 
 export default ({ componentId }: Props) => {
-  const isHorizontalMode = useHorizontalMode()
+  const isWideLayout = useWideLayout()
   const t = useI18n() // 新增
   const lastBackPressed = useRef(0)
+  const startupPushHandled = useRef(false)
+  const wasWide = useRef(isWideLayout)
+
+  // Window-size changes switch between phone and wide layouts without
+  // remounting the navigation screen. Register its id only once per component;
+  // otherwise usePageVisible sees duplicate Home entries and disables lyric updates.
   useEffect(() => {
     setComponentId(COMPONENT_IDS.home, componentId)
+  }, [componentId])
 
-    if (settingState.setting['player.startupPushPlayDetailScreen']) {
-      navigations.pushPlayDetailScreen(componentId, true)
+  useEffect(() => {
+    if (wasWide.current && !isWideLayout && foldPage.current !== 'home') {
+      navigations.pushPlayDetailScreen(componentId, true, foldPage.current === 'lyrics' ? 1 : 0)
+    }
+    wasWide.current = isWideLayout
+    if (!startupPushHandled.current) {
+      startupPushHandled.current = true
+      if (!isWideLayout && settingState.setting['player.startupPushPlayDetailScreen']) {
+        navigations.pushPlayDetailScreen(componentId, true)
+      }
     }
 
     const handleGlobalSearch = (text: string) => {
@@ -45,11 +62,12 @@ export default ({ componentId }: Props) => {
       global.app_event.off('triggerSearch', handleGlobalSearch)
     }
 
-  }, [componentId])
+  }, [componentId, isWideLayout])
 
   useBackHandler(
     useCallback(() => {
-      if (commonState.componentIds.length > 1) {
+      const topScreen = commonState.componentIds[commonState.componentIds.length - 1]
+      if (topScreen && topScreen.id !== componentId) {
         return false;
       }
 
@@ -72,12 +90,12 @@ export default ({ componentId }: Props) => {
       lastBackPressed.current = now
       toast(t('exit_app_tip_double_press'))
       return true
-    }, [t])
+    }, [componentId, t])
   )
 
   return (
     <>
-      <PageContent>{isHorizontalMode ? <Horizontal componentId={componentId} /> : <Vertical componentId={componentId} />}</PageContent>
+      <PageContent><View style={{ flex: 1 }} onTouchStart={clearSearchHighlight}>{isWideLayout ? <WideHome componentId={componentId} /> : <Vertical componentId={componentId} />}</View></PageContent>
       <ArtistSelectorManager />
       <WebLoginManager />
       {/*<YouTubeLoginManager />*/}

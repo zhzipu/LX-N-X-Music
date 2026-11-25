@@ -1,29 +1,51 @@
-import {memo, useCallback, useMemo, useRef} from 'react'
-import { PanResponder, View, TouchableOpacity } from 'react-native'
+import { TrackSelectionAnchor } from '@/components/TrackSelection'
+import { memo, useCallback, useMemo, useRef, useState } from 'react'
+import { PanResponder, StyleSheet, View, TouchableOpacity, Animated, type LayoutChangeEvent } from 'react-native'
 import { useKeyboard } from '@/utils/hooks'
 import Pic from './components/Pic'
 import Title from './components/Title'
 import PlayInfo from './components/PlayInfo'
 import ControlBtn from './components/ControlBtn'
-import { createStyle } from '@/utils/tools'
+import { createStyle, toast } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
-import { useSettingValue } from '@/store/setting/hook'
 import { Icon } from '@/components/common/Icon'
 import { navigations } from '@/navigation'
 import commonState from '@/store/common/state'
-import { usePlayerMusicInfo } from '@/store/player/hook'
 import PlayerPlaylist, { PlayerPlaylistType } from '@/components/player/PlayerPlaylist.tsx'
-import MiniProgressBar from "@/components/player/PlayerBar/components/MiniProgressBar.tsx"
 import playerState from '@/store/player/state'
 import { LIST_IDS } from '@/config/constant'
+import PressScale from '@/components/myspotify/PressScale'
+import { MS_SIZE } from '@/theme/myspotify/tokens'
+import { getSP, SP_SIZE, SP_SPACING } from '@/theme/spotify/tokens'
+import ConfiguredGlassSurface from '@/components/spotify/ConfiguredGlassSurface'
+import GlassOverlay from '@/components/spotify/GlassOverlay'
+import MiniProgressBar from './components/MiniProgressBar'
+import PlayModeButton from '@/components/player/PlayModeButton'
+import AudioWave from '@/components/player/AudioWave'
+import { useBottomBarMotion, DETAIL_PLAYER_BAR_HIDE_OFFSET } from '@/utils/hooks'
+import { setCurrentMusicCollected } from './collection'
 
-export default memo(({ componentId, isHome = false }: { isHome?: boolean }) => {
+/** 迷你条的胶囊圆角：高 56 → 半径 24（spoti.pw 的 56 高 / r24 卡片） */
+const MINI_PLAYER_RADIUS = 24
+
+/** 列表按钮命中区域：与播放键一致的 46 */
+const MENU_TAP_AREA = MS_SIZE.playerBarIconLarge + MS_SIZE.playerBarIconGap
+
+export default memo(({ componentId, isHome = false, hideAudioWave = false, autoHideOnScroll = false }: { componentId: string, isHome?: boolean, hideAudioWave?: boolean, autoHideOnScroll?: boolean }) => {
   const { keyboardShown } = useKeyboard()
   const theme = useTheme()
-  const musicInfo = usePlayerMusicInfo()
   const longPressedRef = useRef(false)
   const playlistRef = useRef<PlayerPlaylistType>(null)
-  const drawerLayoutPosition = useSettingValue('common.drawerLayoutPosition')
+  const [titleBottom, setTitleBottom] = useState<number | null>(null)
+  const [track, setTrack] = useState<{ x: number, y: number, width: number } | null>(null)
+  const bottomMotion = useBottomBarMotion({ listen: autoHideOnScroll, offset: DETAIL_PLAYER_BAR_HIDE_OFFSET })
+  // Both containers around Title span the full capsule height and start at its top.
+  const onTitleLayout = useCallback(({ nativeEvent: { layout } }: LayoutChangeEvent) => {
+    setTitleBottom(layout.y + layout.height)
+  }, [])
+  const onTrackLayout = useCallback(({ nativeEvent: { layout: { x, y, width } } }: LayoutChangeEvent) => {
+    setTrack(prev => prev?.x === x && prev.y === y && prev.width === width ? prev : { x, y, width })
+  }, [])
 
   const handleLongPress = useCallback(() => {
     longPressedRef.current = true
@@ -37,78 +59,105 @@ export default memo(({ componentId, isHome = false }: { isHome?: boolean }) => {
       longPressedRef.current = false
       return
     }
-    if (!musicInfo.id) return
     const currentComponentId = commonState.componentIds[commonState.componentIds.length - 1]?.id!
     navigations.pushPlayDetailScreen(currentComponentId)
   }
 
-  const handleShowPlaylist = () => {
+  const handleShowPlaylist = useCallback(() => {
     playlistRef.current?.show()
-  }
+  }, [])
 
-  const gestureAction = useRef<'drawer' | 'playlist' | null>(null)
   const panResponder = useRef(
     PanResponder.create({
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        const { dx, dy } = gestureState
-        if (Math.abs(dx) > Math.abs(dy) * 1.5) { // 水平滑动为主
-          if (drawerLayoutPosition === 'left' && dx > 10) {
-            gestureAction.current = 'drawer'
-            return true
-          }
-          if (drawerLayoutPosition === 'right' && dx < -10) {
-            gestureAction.current = 'drawer'
-            return true
-          }
-        } else if (Math.abs(dy) > Math.abs(dx) * 1.5) { // 垂直滑动为主
-          if (dy < -10) {
-            gestureAction.current = 'playlist'
-            return true
-          }
-        }
-        return false
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        const { dx, dy } = gestureState
-        if (gestureAction.current === 'drawer') {
-          if (drawerLayoutPosition === 'left' && dx > 50) {
-            global.app_event.changeMenuVisible(true)
-          } else if (drawerLayoutPosition === 'right' && dx < -50) {
-            global.app_event.changeMenuVisible(true)
-          }
-        } else if (gestureAction.current === 'playlist' && dy < -50) {
-          handleShowPlaylist()
-        }
-        gestureAction.current = null
-      },
-      onPanResponderTerminate: (evt, gestureState) => {
-        gestureAction.current = null
+      onMoveShouldSetPanResponder: (_, { dx, dy, numberActiveTouches }) => (
+        numberActiveTouches === 1 && Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx) * 1.5
+      ),
+      onPanResponderRelease: (_, { dx, dy }) => {
+        if (Math.abs(dy) < 50 || Math.abs(dy) <= Math.abs(dx) * 1.5) return
+        void setCurrentMusicCollected(dy > 0).catch(() => { toast('收藏操作失败，请重试') })
       },
     }),
   ).current
 
+  const containerStyle = useMemo(() => {
+    return styles.container
+  }, [])
+
+  /**
+   * 按压反馈：与底部 Tab 栏的气泡同一套手感 —— 按下胶囊轻微鼓起、叠一层外扩光晕，
+   * 松手 spring 弹回。触摸事件挂在容器上，不抢 panResponder 的滑动判定。
+   */
+  const press = useRef(new Animated.Value(0)).current
+  const springPress = useCallback((to: number) => {
+    Animated.spring(press, {
+      toValue: to,
+      friction: 7,
+      tension: 220,
+      useNativeDriver: true,
+    }).start()
+  }, [press])
+  const pressScaleStyle = useMemo(() => ({
+    transform: [{ scale: press.interpolate({ inputRange: [0, 1], outputRange: [1, 1.03] }) }],
+  }), [press])
+  const glowStyle = useMemo(() => ({
+    opacity: press.interpolate({ inputRange: [0, 1], outputRange: [0, 0.35] }),
+    transform: [{ scale: press.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) }],
+  }), [press])
+
   const playerComponent = useMemo(
     () => (
-      <View style={{ ...styles.container, backgroundColor: theme['c-content-background'] }}
-            {...panResponder.panHandlers}>
-        <MiniProgressBar />
+      <Animated.View style={autoHideOnScroll ? { transform: [{ translateY: bottomMotion.translateY }] } : undefined}>
+        <TrackSelectionAnchor />
+        <GlassOverlay>
+          <Animated.View
+          style={[containerStyle, pressScaleStyle]}
+          {...panResponder.panHandlers}
+          onTouchStart={() => { springPress(1) }}
+          onTouchEnd={() => { springPress(0) }}
+          onTouchCancel={() => { springPress(0) }}
+        >
+          <ConfiguredGlassSurface
+            target="miniPlayer"
+            capsuleRadius={999}
+            pointerEvents="none"
+            style={StyleSheet.absoluteFill}
+          />
+          {/* 按压光晕：与 Tab 气泡同款，按下时向外扩一圈淡白光 */}
+          <Animated.View pointerEvents="none" style={[styles.pressGlow, glowStyle]} />
+          {!hideAudioWave && track && titleBottom !== null && track.y > titleBottom && (
+            <View pointerEvents="none" accessible={false} style={{
+              position: 'absolute', left: track.x, width: track.width, top: titleBottom,
+              height: track.y - titleBottom, overflow: 'hidden',
+            }}>
+              <AudioWave miniScreenId={componentId} height={track.y - titleBottom} />
+            </View>
+          )}
 
-        <TouchableOpacity style={styles.left} onPress={handleNavigate} onLongPress={handleLongPress} activeOpacity={0.8}>
-          <Pic isHome={isHome} />
-          <View style={styles.center}>
-            <Title isHome={isHome} />
-            <PlayInfo isHome={isHome} />
-          </View>
-        </TouchableOpacity>
-        <View style={styles.right}>
-          <ControlBtn />
-          <TouchableOpacity style={styles.menuBtn} onPress={handleShowPlaylist}>
-            <Icon name="menu" color={theme['c-button-font']} size={22} />
+          <TouchableOpacity style={styles.left} onPress={handleNavigate} onLongPress={handleLongPress} activeOpacity={0.7}>
+            <Pic isHome={isHome} />
+            <View style={styles.center}>
+              <Title isHome={isHome} onLayout={onTitleLayout} />
+              <PlayInfo isHome={isHome} />
+            </View>
           </TouchableOpacity>
-        </View>
-      </View>
+          <View style={styles.right}>
+            <ControlBtn />
+            {/* 最右侧改为播放模式切换；长按仍可打开播放队列 */}
+            <PlayModeButton
+              style={styles.menuBtn}
+              size={MS_SIZE.playerBarIcon}
+              color={getSP(theme.isDark).colors.text}
+              onLongPress={handleShowPlaylist}
+            />
+          </View>
+          {/* 进度线贴胶囊底部内侧（左右缩 24、圆头），不再是一条通栏分割线 */}
+          <MiniProgressBar onLayout={onTrackLayout} />
+          </Animated.View>
+        </GlassOverlay>
+      </Animated.View>
     ),
-    [theme, isHome, handleShowPlaylist, panResponder.panHandlers, drawerLayoutPosition],
+    [containerStyle, pressScaleStyle, glowStyle, springPress, theme, isHome, handleShowPlaylist, panResponder.panHandlers,
+      componentId, track, titleBottom, onTitleLayout, onTrackLayout, hideAudioWave, autoHideOnScroll, bottomMotion.translateY],
   )
 
   return (
@@ -121,55 +170,51 @@ export default memo(({ componentId, isHome = false }: { isHome?: boolean }) => {
 
 const styles = createStyle({
   container: {
-    width: '100%',
-    // height: 100,
-    // paddingTop: progressContentPadding,
-    // marginTop: -progressContentPadding,
-    // backgroundColor: 'rgba(0, 0, 0, .1)',
-    // borderTopWidth: BorderWidths.normal2,
-    paddingVertical: 5,
-    paddingLeft: 5,
-    // backgroundColor: AppColors.primary,
-    // backgroundColor: 'red',
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
+    height: SP_SIZE.playerBarHeight,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 10,
+    // spoti.pw 的迷你条：左右 16、离 Tab 栏 8、r=24 的悬浮玻璃胶囊
+    marginHorizontal: SP_SIZE.pagePaddingH,
+    marginBottom: SP_SPACING.sm,
+    borderRadius: MINI_PLAYER_RADIUS,
+    paddingLeft: SP_SPACING.md,
+    paddingRight: SP_SPACING.xs,
   },
   left: {
     flexGrow: 1,
     flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    height: '100%',
   },
   center: {
     flexDirection: 'column',
+    justifyContent: 'center',
     flexGrow: 1,
     flexShrink: 1,
-    paddingLeft: 5,
+    paddingLeft: SP_SPACING.md,
     height: '100%',
-    // justifyContent: 'space-evenly',
-    // height: 48,
-    // backgroundColor: 'rgba(0, 0, 0, .1)',
   },
   right: {
     flexDirection: 'row',
     alignItems: 'center',
     flexGrow: 0,
     flexShrink: 0,
-    paddingLeft: 5,
-    paddingRight: 5,
+    paddingLeft: SP_SPACING.xxs,
   },
   menuBtn: {
-    width: 46,
-    height: 46,
+    width: MENU_TAP_AREA,
+    height: MENU_TAP_AREA,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // row: {
-  //   flexDirection: 'row',
-  //   flexGrow: 0,
-  //   flexShrink: 0,
-  // },
+  pressGlow: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderRadius: MINI_PLAYER_RADIUS,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+  },
 })

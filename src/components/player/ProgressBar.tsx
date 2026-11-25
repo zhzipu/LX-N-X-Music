@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { View, PanResponder } from 'react-native'
+import { View, PanResponder, type StyleProp, type TextStyle } from 'react-native'
 import { createStyle } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import { scaleSizeW, scaleSizeH } from '@/utils/pixelRatio'
@@ -7,14 +7,34 @@ import { useDrag } from '@/utils/hooks'
 import { Icon } from '@/components/common/Icon'
 // import { AppColors } from '@/theme'
 
-const DefaultBar = memo(() => {
+/**
+ * 进度条。
+ *
+ * 默认外观完全沿用主题派生色（下载管理器、横屏播放页等既有调用方不传新 props 时行为不变）；
+ * Myspotify 皮肤（播放详情竖屏）通过 color 类 props 覆盖成「白色细线 + 10px 白色圆点」。
+ */
+export interface ProgressBarProps {
+  progress: number
+  duration: number
+  buffered: number
+  /** 轨道底色，默认取主题 c-primary-light-300-alpha-800 */
+  trackColor?: string
+  /** 缓冲进度色，默认取主题 c-primary-light-400-alpha-700 */
+  bufferedColor?: string
+  /** 已播放进度与拖拽点颜色，默认暗色主题取 c-font、亮色取 c-primary */
+  barColor?: string
+  /** 拖拽点直径（dp），不传则按内容高度推导 */
+  thumbSize?: number
+}
+
+const DefaultBar = memo(({ color }: { color?: string }) => {
   const theme = useTheme()
 
   return (
     <View
       style={{
         ...styles.progressBar,
-        backgroundColor: theme['c-primary-light-300-alpha-800'],
+        backgroundColor: color ?? theme['c-primary-light-300-alpha-800'],
         position: 'absolute',
         width: '100%',
         left: 0,
@@ -24,14 +44,14 @@ const DefaultBar = memo(() => {
   )
 })
 
-const BufferedBar = memo(({ progress }: { progress: number }) => {
+const BufferedBar = memo(({ progress, color }: { progress: number, color?: string }) => {
   // console.log(bufferedProgress)
   const theme = useTheme()
   return (
     <View
       style={{
         ...styles.progressBar,
-        backgroundColor: theme['c-primary-light-400-alpha-700'],
+        backgroundColor: color ?? theme['c-primary-light-400-alpha-700'],
         position: 'absolute',
         width: `${progress * 100}%`,
         left: 0,
@@ -90,11 +110,11 @@ const Progress = ({
   progress,
   duration,
   buffered,
-}: {
-  progress: number
-  duration: number
-  buffered: number
-}) => {
+  trackColor,
+  bufferedColor,
+  barColor,
+  thumbSize,
+}: ProgressBarProps) => {
   // const { progress: bufferProgress } = usePlayTimeBuffer()
   const theme = useTheme()
   const [draging, setDraging] = useState(false)
@@ -102,14 +122,20 @@ const Progress = ({
   // console.log(progress)
   const progressStr: `${number}%` = `${progress * 100}%`
 
-  const progressDotStyle = useMemo(() => {
+  const activeColor = barColor ?? (theme.isDark ? theme['c-font'] : theme['c-primary'])
+  const dotSize = thumbSize != null ? scaleSizeW(thumbSize) : progressDotSize
+
+  const progressDotStyle = useMemo<StyleProp<TextStyle>>(() => {
     return {
-      width: progressDotSize,
+      width: dotSize,
       position: 'absolute',
-      right: -progressDotSize / 2,
-      top: -(progressDotSize - progressHeightSize) / 2,
-    } as const
-  }, [])
+      right: -dotSize / 2,
+      top: -(dotSize - progressHeightSize) / 2,
+      textShadowColor: 'rgba(0, 0, 0, 0.35)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    }
+  }, [dotSize])
 
   const durationRef = useRef(duration)
   useEffect(() => {
@@ -118,12 +144,11 @@ const Progress = ({
   const onSetProgress = useCallback((progress: number) => {
     global.app_event.setProgress(progress * durationRef.current)
   }, [])
-  const activeColor = theme.isDark ? theme['c-font'] : theme['c-primary'];
   return (
     <View style={styles.progress}>
       <View>
-        <DefaultBar />
-        <BufferedBar progress={buffered} />
+        <DefaultBar color={trackColor} />
+        <BufferedBar progress={buffered} color={bufferedColor} />
         {draging ? (
           <>
             <View
@@ -149,7 +174,7 @@ const Progress = ({
               <Icon
                 name="full_stop"
                 color={activeColor}
-                rawSize={progressDotSize}
+                rawSize={dotSize}
                 style={progressDotStyle}
               />
             </View>
@@ -168,7 +193,7 @@ const Progress = ({
             <Icon
               name="full_stop"
               color={activeColor}
-              rawSize={progressDotSize}
+              rawSize={dotSize}
               style={progressDotStyle}
             />
           </View>

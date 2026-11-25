@@ -1,15 +1,15 @@
 import { memo, useEffect, useRef, useCallback, useState } from 'react'
-import { TouchableOpacity, View } from 'react-native'
-import Text from '@/components/common/Text'
+import { View } from 'react-native'
 import OnlineList, { type OnlineListType } from '@/components/OnlineList'
 import wyApi from '@/utils/musicSdk/wy'
 import musicDetailApi from '@/utils/musicSdk/wy/musicDetail'
 import { useSettingValue } from '@/store/setting/hook'
-import { toast } from '@/utils/tools'
+import { createStyle, toast } from '@/utils/tools'
+import SectionTitle from '@/components/spotify/SectionTitle'
+import PlayPill from '@/components/spotify/PlayPill'
 import { useI18n } from '@/lang'
 import { autoSaveDailyPlaylist, handlePlay } from './listAction'
 import { usePlayerMusicInfo } from '@/store/player/hook'
-import { useTheme } from '@/store/theme/hook'
 import { navigations } from '@/navigation'
 import commonState from '@/store/common/state'
 import {
@@ -43,7 +43,6 @@ export default memo(({ isStylized, stylizedSelection }: RecSongsProps) => {
   const t = useI18n()
   const cookie = useSettingValue('common.wy_cookie')
   const playerMusicInfo = usePlayerMusicInfo()
-  const theme = useTheme()
   const [isAllSimilarSongsFetched, setIsAllSimilarSongsFetched] = useState(false)
 
   useEffect(() => {
@@ -300,21 +299,27 @@ export default memo(({ isStylized, stylizedSelection }: RecSongsProps) => {
   const ListFooter = () => {
     if (isStylized || isLoading || !isAllSimilarSongsFetched) return null
     return (
-      <View style={{ alignItems: 'center', padding: 20 }}>
-        <TouchableOpacity onPress={handleFindMore}>
-          <Text color={theme['c-font']} size={14}>更多相似歌曲</Text>
-        </TouchableOpacity>
+      <View style={styles.footer}>
+        {/* 底部操作按钮统一用 spoti.pw 的玻璃胶囊（高 48，命中区充足） */}
+        <PlayPill
+          label="更多相似歌曲"
+          icon="music_time"
+          variant="glass"
+          onPress={handleFindMore}
+          accessibilityLabel="更多相似歌曲"
+        />
       </View>
     )
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <OnlineList
         ref={listRef}
         listId="dailyrec_wy"
         forcePlayList={true}
         playingId={playerMusicInfo.id}
+        ListHeaderComponent={<SectionTitle title={isStylized ? '风格化推荐' : '推荐歌曲'} />}
         onPlayList={(index) => {
           const list = listRef.current?.getList()
           if (!list) return
@@ -327,4 +332,16 @@ export default memo(({ isStylized, stylizedSelection }: RecSongsProps) => {
       />
     </View>
   )
+})
+
+const styles = createStyle({
+  container: {
+    flex: 1,
+  },
+  footer: {
+    alignItems: 'center',
+    paddingTop: 20,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
+  },
 })

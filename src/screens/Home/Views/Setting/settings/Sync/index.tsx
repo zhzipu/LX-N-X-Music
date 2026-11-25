@@ -121,7 +121,7 @@ export default memo(() => {
   };
 
   return (
-    <Section title={t('setting_sync')}>
+    <Section title={t('setting_sync')} description={t('setting_desc_sync')}>
       {/* WebDAV 设置部分 */}
       <SubTitle title="WebDAV 同步">
         <CheckBoxItem
@@ -203,8 +203,10 @@ export default memo(() => {
       </SubTitle>
 
       {/* 原有的同步功能 */}
-      <IsEnable host={host} setHost={setHost} />
-      <History setHost={setHost} />
+      <SubTitle title={t('setting_group_device_sync')}>
+        <IsEnable host={host} setHost={setHost} />
+        <History setHost={setHost} />
+      </SubTitle>
     </Section>
   );
 });
@@ -212,12 +214,11 @@ export default memo(() => {
 const styles = createStyle({
   btnRow: {
     flexDirection: 'row',
-    paddingLeft: 25,
+    flexWrap: 'wrap',
     marginTop: 5,
     marginBottom: 10,
   },
   lastSyncText: {
-    paddingLeft: 25,
     marginTop: 5,
   },
 });

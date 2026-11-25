@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.lxnx.music.cache.CachePackage;
 import com.lxnx.music.crypto.CryptoPackage;
+import com.lxnx.music.glass.LiquidGlassViewPackage;
 import com.lxnx.music.lanserver.LanServerPackage;
 import com.lxnx.music.lyric.LyricPackage;
 import com.lxnx.music.qr.QrScanPackage;
@@ -43,6 +44,7 @@ public class MainApplication extends NavigationApplication {
           packages.add(new WidgetPackage());
           packages.add(new QrScanPackage());
           packages.add(new LanServerPackage());
+          packages.add(new LiquidGlassViewPackage());
           return packages;
         }
 

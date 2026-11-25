@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 透明样式：背景完全透明（没有任何底色/描边/高光），文字与图标纯白。
+     直接叠在壁纸上，适合喜欢极简或配合桌面壁纸/第三方组件的用户。
+     文字带一层淡淡的暗色阴影，仅用于浅色壁纸下不糊成一片，不构成可见背景。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp"
+    android:background="@android:color/transparent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
+
+    <!-- Left: Album art（无封面时由代码替换为白音符图标，底衬保持透明） -->
+    <ImageView
+        android:id="@+id/widget_album_art"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/widget_ic_note"
+        android:contentDescription="Album Art"
+        android:clipToOutline="true"
+        android:background="@drawable/widget_album_bg_transparent" />
+
+    <!-- Right: Combined Info and Controls -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:gravity="center">
+
+        <!-- Top: Song info -->
+        <LinearLayout
+            android:id="@+id/widget_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/widget_song_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LX-N-X Music"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:shadowColor="#99000000"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="4"
+                android:maxLines="1"
+                android:ellipsize="marquee"
+                android:singleLine="true" />
+
+            <!-- 歌词显示区：单 TextView，长歌词横向跑马灯滚动（widget 原生支持） -->
+            <TextView
+                android:id="@+id/widget_lyric_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="未在播放"
+                android:textColor="#E6FFFFFF"
+                android:textSize="12sp"
+                android:shadowColor="#99000000"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="4"
+                android:maxLines="1"
+                android:ellipsize="marquee"
+                android:singleLine="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:scrollHorizontally="true"
+                android:gravity="center_horizontal" />
+        </LinearLayout>
+
+        <!-- Bottom: Control buttons -->
+        <LinearLayout
+            android:id="@+id/widget_controls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="4dp">
+
+            <ImageButton
+                android:id="@+id/widget_btn_prev"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/widget_ic_prev"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:scaleType="centerInside"
+                android:contentDescription="Previous" />
+
+            <ImageButton
+                android:id="@+id/widget_btn_play"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:src="@drawable/widget_ic_play"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:scaleType="centerInside"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:contentDescription="Play/Pause" />
+
+            <ImageButton
+                android:id="@+id/widget_btn_next"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/widget_ic_next"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:scaleType="centerInside"
+                android:contentDescription="Next" />
+        </LinearLayout>
+
+        <!-- 底部进度条：只显示播放进度，不触控 -->
+        <ProgressBar
+            android:id="@+id/widget_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_marginTop="4dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#FFFFFF"
+            android:progressBackgroundTint="#4DFFFFFF"
+            android:indeterminate="false" />
+    </LinearLayout>
+
+</LinearLayout>

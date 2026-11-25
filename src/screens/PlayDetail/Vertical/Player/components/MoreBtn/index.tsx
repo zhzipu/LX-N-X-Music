@@ -1,6 +1,5 @@
 import {createStyle, toast} from '@/utils/tools'
 import { View, TouchableOpacity } from 'react-native'
-import PlayModeBtn from './PlayModeBtn'
 import MusicAddBtn from './MusicAddBtn'
 import DesktopLyricBtn from './DesktopLyricBtn'
 import CommentBtn from './CommentBtn'
@@ -122,7 +121,7 @@ export default memo(({ componentId }: { componentId: string }) => {
       <View style={styles.container}>
         <DesktopLyricBtn />
         <MusicAddBtn />
-        <PlayModeBtn />
+        {/* 播放模式按钮已移到信息区右侧（Player/index.tsx 的 PlayerInfo），避免同页重复出现 */}
         {isOneDrive ? null : <CommentBtn />}
         <Btn icon="dots-vertical" onPress={handleShowMenu} ref={moreBtnRef} />
       </View>

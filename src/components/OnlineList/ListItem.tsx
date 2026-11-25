@@ -13,6 +13,7 @@ import PlayingIcon from '@/components/common/PlayingIcon'
 import { useIsBiliLiked, useIsWyLiked } from '@/store/user/hook'
 import { handleLikeMusic } from './listAction'
 import { toggleBiliSongFavorite } from '@/core/bilibili/favorite'
+import { getSP } from '@/theme/spotify/tokens'
 
 export const ITEM_HEIGHT = scaleSizeH(LIST_ITEM_HEIGHT)
 
@@ -82,15 +83,15 @@ export default memo(
     hideMenu?: boolean
   }) => {
     const theme = useTheme()
+    const sp = getSP(theme.isDark)
     const isPlaying = playingId === item.id;
     const isSelected = selectedList.includes(item)
     // 网易云「喜欢」与 bili 本地收藏是两套存储，按音源二选一
     const isWyLiked = useIsWyLiked(item.meta.songId)
     const isBiliLiked = useIsBiliLiked(item.source === 'bili' ? item.meta.songId : undefined)
     const isLiked = item.source === 'bili' ? isBiliLiked : isWyLiked
-    const selectedBackground = theme.isDark
-      ? theme['c-primary-alpha-600']
-      : theme['c-primary-background-active']
+    // spoti.pw 的行不铺卡片底：选中/播放用白色低透明度填充表达，其它透明
+    const selectedBackground = sp.colors.interactivePressed
 
     const moreButtonRef = useRef<TouchableOpacity>(null)
     const handleShowMenu = () => {
@@ -130,13 +131,14 @@ export default memo(
           backgroundColor: isSelected
             ? selectedBackground
             : isPlaying
-              ? theme['c-primary-background-hover']
+              ? sp.colors.interactive
               : 'rgba(0,0,0,0)',
         }}
       >
         <TouchableOpacity
           style={styles.listItemLeft}
           onPress={() => onPress(item, index)}
+          delayLongPress={300}
           onLongPress={() => onLongPress(item, index)}
         >
 
@@ -145,17 +147,17 @@ export default memo(
             {showCover ? (
               <Image url={item.meta.picUrl} style={styles.albumArt} />
             ) : isPlaying ? (
-              <PlayingIcon />
+              <PlayingIcon color={sp.colors.text} />
             ) : (
-              <Text color={theme['c-font']} size={12}>
+              <Text color={sp.colors.textSecondary} size={12}>
                 {index + 1}
               </Text>
             )}
           </View>
           <View style={styles.itemInfo}>
-            <Text numberOfLines={1} color={isPlaying ? theme['c-primary-font'] : theme['c-font']}>
+            <Text numberOfLines={1} size={15} style={{ fontWeight: '500' }} color={sp.colors.text}>
               {item.name}
-              {item.alias ? <Text color={theme['c-font-label']}> ({item.alias})</Text> : null}
+              {item.alias ? <Text color={sp.colors.textTertiary}> ({item.alias})</Text> : null}
             </Text>
             <View style={styles.listItemSingle}>
               {showSource ? <Badge type="tertiary">{item.source.toUpperCase()}</Badge> : null}
@@ -165,8 +167,8 @@ export default memo(
               {historySource ? <Badge type="normal">{historySource}</Badge> : null}
               <Text
                 style={styles.listItemSingleText}
-                size={11}
-                color={isPlaying ? theme['c-primary-alpha-200'] : theme['c-500']}
+                size={12}
+                color={sp.colors.textSecondary}
                 numberOfLines={1}
               >
                 {singer}
@@ -174,7 +176,7 @@ export default memo(
             </View>
           </View>
           {isShowInterval ? (
-            <Text size={11} color={isPlaying ? theme['c-primary-alpha-200'] : theme['c-500']} numberOfLines={1}>
+            <Text size={12} color={sp.colors.textSecondary} numberOfLines={1}>
               {item.interval}
             </Text>
           ) : null}
@@ -182,13 +184,13 @@ export default memo(
 
         {showLikeButton ? (
           <TouchableOpacity onPress={handleLike} style={styles.likeButton}>
-            <Icon name={isLiked ? "love-filled" : "love"} size={16} color={isLiked ? theme['c-liked'] : theme['c-350']} />
+            <Icon name={isLiked ? "love-filled" : "love"} size={16} color={isLiked ? sp.colors.accent : sp.colors.textTertiary} />
           </TouchableOpacity>
         ) : null}
 
         {hideMenu ? null : (
           <TouchableOpacity onPress={handleShowMenu} ref={moreButtonRef} style={styles.moreButton}>
-            <Icon name="dots-vertical" style={{ color: theme['c-350'] }} size={12} />
+            <Icon name="dots-vertical" style={{ color: sp.colors.textTertiary }} size={12} />
           </TouchableOpacity>
         )}
       </View>
@@ -196,6 +198,10 @@ export default memo(
   },
   (prevProps, nextProps) => {
     return !!(
+      prevProps.onPress === nextProps.onPress &&
+      prevProps.onLongPress === nextProps.onLongPress &&
+      prevProps.onShowMenu === nextProps.onShowMenu &&
+      prevProps.rowInfo === nextProps.rowInfo &&
       prevProps.item === nextProps.item &&
       prevProps.index === nextProps.index &&
       prevProps.showSource === nextProps.showSource &&
@@ -216,7 +222,9 @@ const styles = createStyle({
   listItem: {
     flexDirection: 'row',
     flexWrap: 'nowrap',
-    paddingRight: 2,
+    // spoti.pw 的行：左边距 16，行内不再叠卡片底
+    paddingLeft: 16,
+    paddingRight: 4,
     alignItems: 'center',
   },
   listItemLeft: {
@@ -227,11 +235,10 @@ const styles = createStyle({
     alignItems: 'center',
   },
   sn: {
-    width: 70,
+    // 封面 48 + 与文字的 12 间距，居中对齐
+    width: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingLeft: 5,
-    paddingRight: 5,
   },
   snIndex: {
     width: 40,
@@ -241,14 +248,14 @@ const styles = createStyle({
     paddingRight: 5,
   },
   albumArt: {
-    width: 52,
-    height: 52,
-    borderRadius: 4,
+    width: 48,
+    height: 48,
+    borderRadius: 6,
   },
   itemInfo: {
     flexGrow: 1,
     flexShrink: 1,
-    paddingLeft: 2,
+    paddingLeft: 12,
     paddingRight: 2,
   },
   listItemSingle: {

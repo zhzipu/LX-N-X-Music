@@ -1,34 +1,24 @@
 import { memo, useRef } from 'react'
-import { View, TouchableOpacity } from 'react-native'
-import { LIST_ITEM_HEIGHT } from '@/config/constant'
+import { Pressable, View } from 'react-native'
 import { Icon } from '@/components/common/Icon'
-import { createStyle, type RowInfo } from '@/utils/tools'
-import { useTheme } from '@/store/theme/hook'
-import { useAssertApiSupport } from '@/store/common/hook'
-import { scaleSizeH } from '@/utils/pixelRatio'
 import Text from '@/components/common/Text'
-import Badge, { type BadgeType } from '@/components/common/Badge'
-import Image from '@/components/common/Image'
-import PlayingIcon from '@/components/common/PlayingIcon'
-import { useI18n } from '@/lang'
+import ListRow from '@/components/spotify/ListRow'
+import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
+import { createStyle, type RowInfo } from '@/utils/tools'
+import { useAssertApiSupport } from '@/store/common/hook'
+import { useIsBiliLiked, useIsWyLiked } from '@/store/user/hook'
+import { handleLikeMusic } from '@/components/OnlineList/listAction'
+import { toggleBiliSongFavorite } from '@/core/bilibili/favorite'
 
-export const ITEM_HEIGHT = scaleSizeH(LIST_ITEM_HEIGHT)
-
-const useQualityTag = (musicInfo: LX.Music.MusicInfoOnline) => {
-  const t = useI18n()
-  let info: { type: BadgeType | null; text: string } = { type: null, text: '' }
-  if (musicInfo.meta._qualitys.hires) {
-    info.type = 'secondary'
-    info.text = t('quality_lossless_24bit')
-  } else if (musicInfo.meta._qualitys.flac) {
-    info.type = 'sq'
-    info.text = t('quality_lossless')
-  } else if (musicInfo.meta._qualitys['320k']) {
-    info.type = 'hq'
-    info.text = t('quality_high_quality')
-  }
-  return info
-}
+/**
+ * 本地列表的歌曲行（spoti.pw 的 playlist 行）。
+ *
+ * 高度与 `ListRow` 的 playlist 变体一致（64），序号 / 封面 / 标题层级都由 ListRow 处理，
+ * 这里只负责把菜单按钮和选中态接上。注意 ListRow 内部的尺寸是原始 dp（不走像素换算），
+ * 所以 ITEM_HEIGHT 也必须是原始 dp，才能和 FlatList 的 getItemLayout 对上。
+ */
+export const ITEM_HEIGHT = 64
 
 export default memo(
   ({
@@ -42,6 +32,7 @@ export default memo(
     rowInfo,
     isShowAlbumName,
     isShowInterval,
+    isShowSource,
     showCover,
   }: {
     item: LX.Music.MusicInfo
@@ -58,113 +49,113 @@ export default memo(
     rowInfo: RowInfo
     isShowAlbumName: boolean
     isShowInterval: boolean
+    isShowSource: boolean
     showCover: boolean
   }) => {
     const theme = useTheme()
+    const sp = getSP(theme.isDark)
     const isSelected = selectedList.includes(item)
-    const selectedBackground = theme.isDark
-      ? theme['c-primary-alpha-600']
-      : theme['c-primary-background-active']
     const isSupported = useAssertApiSupport(item.source)
-    const moreButtonRef = useRef<TouchableOpacity>(null)
+    const moreButtonRef = useRef<View>(null)
+    // 网易云「喜欢」与 bili 本地收藏是两套存储，按音源二选一
+    const isWyLiked = useIsWyLiked(item.source === 'wy' ? ((item.meta as any).songId ?? '') : '')
+    const isBiliLiked = useIsBiliLiked(item.source === 'bili' ? (item.meta as any).songId : undefined)
+    const isLiked = item.source === 'bili' ? isBiliLiked : isWyLiked
+    const showLikeButton = item.source === 'wy' || item.source === 'bili'
 
-    const tagInfo = item.source === 'local' ? { type: null, text: '' } : useQualityTag(item as LX.Music.MusicInfoOnline)
+    const handleLike = () => {
+      if (item.source === 'bili') {
+        void toggleBiliSongFavorite(item as LX.Music.MusicInfoOnline, !isBiliLiked)
+        return
+      }
+      void handleLikeMusic(item as LX.Music.MusicInfoOnline)
+    }
 
     const handleShowMenu = () => {
-      if (moreButtonRef.current?.measure) {
-        moreButtonRef.current.measure((fx, fy, width, height, px, py) => {
-          onShowMenu(item, index, {
-            x: Math.ceil(px),
-            y: Math.ceil(py),
-            w: Math.ceil(width),
-            h: Math.ceil(height),
-          })
+      moreButtonRef.current?.measure((fx, fy, width, height, px, py) => {
+        onShowMenu(item, index, {
+          x: Math.ceil(px),
+          y: Math.ceil(py),
+          w: Math.ceil(width),
+          h: Math.ceil(height),
         })
-      }
+      })
     }
 
     const active = activeIndex == index
-    const singer = `${item.singer}${isShowAlbumName && item.meta.albumName ? `·${item.meta.albumName}` : ''}`
+    const singer = `${item.singer}${isShowAlbumName && item.meta.albumName ? ` · ${item.meta.albumName}` : ''}${isShowSource ? ` · ${item.source.toUpperCase()}` : ''}`
+    const title = item.alias ? `${item.name} (${item.alias})` : item.name
 
     return (
-      <View
+      <ListRow
+        variant="playlist"
+        title={title}
+        subtitle={singer}
+        cover={showCover ? item.meta.picUrl ?? undefined : undefined}
+        indexText={showCover ? undefined : String(index + 1)}
+        active={active}
+        onPress={() => { onPress(item, index) }}
+        delayLongPress={300}
+          onLongPress={() => { onLongPress(item, index) }}
         style={{
-          ...styles.listItem,
-          width: rowInfo.rowWidth,
-          height: ITEM_HEIGHT,
-          backgroundColor: isSelected ? selectedBackground : 'rgba(0,0,0,0)',
           opacity: isSupported ? 1 : 0.5,
+          backgroundColor: isSelected ? sp.colors.interactive : 'transparent',
         }}
-      >
-        <TouchableOpacity
-          style={styles.listItemLeft}
-          onPress={() => {
-            onPress(item, index)
-          }}
-          onLongPress={() => {
-            onLongPress(item, index)
-          }}
-        >
-
-
-
-          <View style={showCover ? styles.sn : styles.snIndex}>
-            {showCover ? (
-              <Image url={item.meta.picUrl} style={styles.albumArt} />
-            ) : active ? (
-              <PlayingIcon />
-            ) : (
-              <Text color={theme['c-font']} size={12}>
-                {index + 1}
-              </Text>
-            )}
-          </View>
-          <View style={styles.itemInfo}>
-            {/* <View style={styles.listItemTitle}> */}
-            <Text color={active ? theme['c-primary-font'] : theme['c-font']} numberOfLines={1}>
-              {item.name}
-              {item.alias ? <Text color={theme['c-font-label']}> ({item.alias})</Text> : null}
-            </Text>
-            {/* </View> */}
-            <View style={styles.listItemSingle}>
-              <Badge>{item.source.toUpperCase()}</Badge>
-              {tagInfo.type ? <Badge type={tagInfo.type}>{tagInfo.text}</Badge> : null}
-              {item.source !== 'local' && (item as LX.Music.MusicInfoOnline).meta.fee === 1 ? <Badge type="vip">VIP</Badge> : null}
-              {item.source === 'wy' && (item as LX.Music.MusicInfoOnline).meta.originCoverType === 2 ? <Badge type="normal">cover</Badge> : null}
-              <Text
-                style={styles.listItemSingleText}
-                size={11}
-                color={active ? theme['c-primary-alpha-200'] : theme['c-500']}
-                numberOfLines={1}
+        right={(
+          <View style={styles.right}>
+            {isShowInterval
+              ? (
+                  <Text
+                    size={sp.font.rowSubtitle}
+                    numberOfLines={1}
+                    style={{ color: sp.colors.textSecondary }}
+                  >
+                    {item.interval}
+                  </Text>
+                )
+              : null}
+            {showLikeButton
+              ? (
+                  <Pressable
+                    onPress={handleLike}
+                    hitSlop={6}
+                    style={styles.moreButton}
+                    accessibilityRole="button"
+                  >
+                    <Icon
+                      name={isLiked ? 'love-filled' : 'love'}
+                      size={16}
+                      color={isLiked ? sp.colors.accent : sp.colors.textTertiary}
+                    />
+                  </Pressable>
+                )
+              : null}
+            <View ref={moreButtonRef} collapsable={false}>
+              <Pressable
+                onPress={handleShowMenu}
+                hitSlop={8}
+                style={styles.moreButton}
+                accessibilityRole="button"
               >
-                {singer}
-              </Text>
+                <Icon name="dots-vertical" size={16} color={sp.colors.textTertiary} />
+              </Pressable>
             </View>
           </View>
-          {isShowInterval ? (
-            <Text
-              size={11}
-              color={active ? theme['c-primary-alpha-400'] : theme['c-250']}
-              numberOfLines={1}
-            >
-              {item.interval}
-            </Text>
-          ) : null}
-        </TouchableOpacity>
-        {/* <View style={styles.listItemRight}> */}
-        <TouchableOpacity onPress={handleShowMenu} ref={moreButtonRef} style={styles.moreButton}>
-          <Icon name="dots-vertical" style={{ color: theme['c-350'] }} size={12} />
-        </TouchableOpacity>
-        {/* </View> */}
-      </View>
+        )}
+      />
     )
   },
   (prevProps, nextProps) => {
     return !!(
+      prevProps.onPress === nextProps.onPress &&
+      prevProps.onLongPress === nextProps.onLongPress &&
+      prevProps.onShowMenu === nextProps.onShowMenu &&
+      prevProps.rowInfo === nextProps.rowInfo &&
       prevProps.item === nextProps.item &&
       prevProps.index === nextProps.index &&
       prevProps.isShowAlbumName === nextProps.isShowAlbumName &&
       prevProps.isShowInterval === nextProps.isShowInterval &&
+      prevProps.isShowSource === nextProps.isShowSource &&
       prevProps.activeIndex != nextProps.index &&
       nextProps.activeIndex != nextProps.index &&
       nextProps.selectedList.includes(nextProps.item) ==
@@ -175,84 +166,15 @@ export default memo(
 )
 
 const styles = createStyle({
-  listItem: {
-    // width: '50%',
-    flexDirection: 'row',
-    flexWrap: 'nowrap',
-    // paddingLeft: 10,
-    paddingRight: 2,
-    alignItems: 'center',
-    // borderBottomWidth: BorderWidths.normal,
-  },
-  listItemLeft: {
-    flex: 1,
-    flexGrow: 1,
-    flexShrink: 1,
+  right: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  sn: {
-    width: 70,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  snIndex: {
-    width: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingLeft: 5,
-    paddingRight: 5,
-  },
-  albumArt: {
-    width: 52,
-    height: 52,
-    borderRadius: 4,
-  },
-  itemInfo: {
-    flexGrow: 1,
-    flexShrink: 1,
-    // paddingTop: 10,
-    // paddingBottom: 10,
-    paddingRight: 2,
-  },
-  // listItemTitle: {
-  //   flexGrow: 0,
-  //   flexShrink: 1,
-  // },
-  listItemSingle: {
-    paddingTop: 3,
-    flexDirection: 'row',
-    // alignItems: 'flex-end',
-  },
-  listItemSingleText: {
-    // backgroundColor: 'rgba(0,0,0,0.2)',
-    flexGrow: 0,
-    flexShrink: 1,
-    fontWeight: '300',
-    // fontSize: 15,
-  },
-  // listItemBadge: {
-  //   // fontSize: 10,
-  //   paddingLeft: 5,
-  //   paddingTop: 2,
-  //   alignSelf: 'flex-start',
-  // },
-  listItemRight: {
-    flexGrow: 0,
-    flexShrink: 0,
-    flexBasis: 'auto',
-    justifyContent: 'center',
-  },
-
   moreButton: {
-    height: '80%',
-    paddingLeft: 10,
-    paddingRight: 16,
-    // paddingTop: 10,
-    // paddingBottom: 10,
-    // backgroundColor: 'rgba(0,0,0,0.2)',
+    width: 32,
+    height: 44,
+    alignItems: 'center',
     justifyContent: 'center',
   },
 })

@@ -1,4 +1,5 @@
 import * as webdav from '@/utils/webdav';
+import { safeJsonParse } from '@/utils/safeJson'
 import { overwriteListFull } from '@/core/list';
 import { filterSensitiveSettingsForSync, getAllDataForSync } from './syncHelpers';
 import { confirmDialog, toast } from '@/utils/tools';
@@ -41,9 +42,14 @@ const debouncedSync = debounce(() => {
   if (!settingState.setting['sync.webdav.enable'] || !settingState.setting['sync.webdav.syncLists']) return;
   // 自动同步只处理列表
   if (listsChanged) {
-    void triggerWebDAVSync(false).finally(() => {
-      listsChanged = false;
-    });
+    // 同上：这里原先只有 finally，rejection 会逃成全局未捕获异常
+    void triggerWebDAVSync(false)
+      .catch((err: unknown) => {
+        log.error('[WebDAV] 自动同步失败', err as Error)
+      })
+      .finally(() => {
+        listsChanged = false
+      });
   }
 }, 3000);
 
@@ -276,7 +282,8 @@ export async function manualDownloadSettingsAndApis() {
     // 下载并应用设置
     const remoteSettingsContent = await webdav.downloadFile(remoteSettingsPath);
     if (remoteSettingsContent) {
-      const remoteSettingsData = JSON.parse(remoteSettingsContent);
+      const remoteSettingsData = safeJsonParse<{ data: any }>(remoteSettingsContent, 'webdav.settings');
+      if (!remoteSettingsData) { toast('云端设置文件内容不是合法 JSON，已跳过'); return }
       updateSetting(filterSensitiveSettingsForSync(remoteSettingsData.data));
     } else {
       toast('云端未找到设置文件，跳过设置同步');
@@ -285,7 +292,8 @@ export async function manualDownloadSettingsAndApis() {
     // 下载并应用自定义音源
     const remoteUserApisContent = await webdav.downloadFile(remoteUserApisPath);
     if (remoteUserApisContent) {
-      const remoteApisData = JSON.parse(remoteUserApisContent);
+      const remoteApisData = safeJsonParse<{ data: any }>(remoteUserApisContent, 'webdav.apis');
+      if (!remoteApisData) { toast('云端音源文件内容不是合法 JSON，已跳过'); return }
       await overwriteUserApis(remoteApisData.data);
     } else {
       toast('云端未找到自定义音源文件，跳过音源同步');
@@ -356,7 +364,9 @@ export async function manualDownloadLists() {
     const remoteListsPath = getRemoteListsFilePath();
     const remoteListsContent = await webdav.downloadFile(remoteListsPath);
     if (remoteListsContent) {
-      const remoteData = normalizeRemoteListsData(JSON.parse(remoteListsContent));
+      const parsedLists = safeJsonParse(remoteListsContent, 'webdav.lists')
+      if (parsedLists === undefined) { toast('云端歌单文件内容不是合法 JSON，已跳过'); return }
+      const remoteData = normalizeRemoteListsData(parsedLists);
       await overwriteListFull(remoteData.data);
       await applySyncedExtraData(remoteData);
       await clearOperationQueue();
@@ -399,7 +409,12 @@ export async function triggerWebDAVSync(isManual = false) {
       await clearOperationQueue();
       if (isManual) toast('歌单上传成功！');
     } else {
-      const remoteData = normalizeRemoteListsData(JSON.parse(remoteListsContent));
+      const parsedRemoteLists = safeJsonParse(remoteListsContent, 'webdav.lists.sync')
+      if (parsedRemoteLists === undefined) {
+        log.warn('[WebDAV Sync] 云端歌单文件不是合法 JSON，跳过本次同步')
+        return
+      }
+      const remoteData = normalizeRemoteListsData(parsedRemoteLists);
       const remoteTimestamp = remoteData.lastModified;
       const localTimestamp = settingState.setting['sync.webdav.lastSyncTimeLists'] ?? 0;
 

@@ -1,5 +1,5 @@
 import {useMemo, useRef, useState, forwardRef, useImperativeHandle, useEffect} from 'react'
-import {FlatList, type FlatListProps, Keyboard, RefreshControl, View} from 'react-native'
+import {FlatList, type FlatListProps, Keyboard, RefreshControl, View, type NativeScrollEvent, type NativeSyntheticEvent} from 'react-native'
 import ListItem, { ITEM_HEIGHT } from './ListItem'
 import { createStyle, getRowInfo, type RowInfoType } from '@/utils/tools'
 import type { Position } from './ListMenu'
@@ -11,6 +11,9 @@ import { useI18n } from '@/lang'
 import Text from '@/components/common/Text'
 import { handlePlay } from './listAction'
 import { useSettingValue } from '@/store/setting/hook'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
+import EmptyState from '@/components/spotify/EmptyState'
+import { useTrackSelection } from '@/components/TrackSelection'
 
 const wait = async (time = 50) => new Promise((resolve) => setTimeout(resolve, time))
 type FlatListType = FlatListProps<LX.Music.MusicInfoOnline>
@@ -34,6 +37,7 @@ export interface ListProps {
   onListUpdate?: (list: LX.Music.MusicInfoOnline[]) => void
   /** 是否移除离屏子视图。默认 true；在 PagerView 翻页场景下可传 false 避免离屏裁切导致无法滚动。 */
   removeClippedSubviews?: boolean
+  onRemoveSelected?: (songs: LX.Music.MusicInfo[]) => Promise<void>
 }
 
 export interface ListType {
@@ -68,10 +72,12 @@ const List = forwardRef<ListType, ListProps>(
       playingId,
       onListUpdate,
       removeClippedSubviews = true,
+      onRemoveSelected,
     },
     ref,
   ) => {
     const theme = useTheme()
+    const t = useI18n()
     const flatListRef = useRef<FlatList>(null)
     const [currentList, setList] = useState<LX.Music.MusicInfoOnline[]>([])
     const [showSource, setShowSource] = useState(false)
@@ -82,9 +88,11 @@ const List = forwardRef<ListType, ListProps>(
     const selectedListRef = useRef<LX.Music.MusicInfoOnline[]>([])
     const [visibleMultiSelect, setVisibleMultiSelect] = useState(false)
     const [status, setStatus] = useState<Status>('idle')
+    const lastScrollOffset = useRef(0)
     const rowInfo = useRef(getRowInfo(rowType))
     const isShowAlbumName = useSettingValue('list.isShowAlbumName')
     const isShowInterval = useSettingValue('list.isShowInterval')
+    const trackSelection = useTrackSelection(currentList, { listId, onRemove: onRemoveSelected })
 
     useImperativeHandle(ref, () => ({
       setList(list, isAppend, showSource) {
@@ -195,25 +203,24 @@ const List = forwardRef<ListType, ListProps>(
     }
 
     const handlePress = (item: LX.Music.MusicInfoOnline, index: number) => {
-      requestAnimationFrame(() => {
-        if (checkHomePagerIdle && !global.lx.homePagerIdle) return
-        if (isMultiSelectModeRef.current) {
-          handleSelect(item, index)
-        } else {
-          if ((forcePlayList || settingState.setting['list.isClickPlayList']) && onPlayList != null) {
-            onPlayList(index)
+      trackSelection.press(item, () => {
+        requestAnimationFrame(() => {
+          if (checkHomePagerIdle && !global.lx.homePagerIdle) return
+          if (isMultiSelectModeRef.current) {
+            handleSelect(item, index)
           } else {
-            handlePlay(currentList[index])
+            if ((forcePlayList || settingState.setting['list.isClickPlayList']) && onPlayList != null) {
+              onPlayList(index)
+            } else {
+              handlePlay(currentList[index])
+            }
           }
-        }
+        })
       })
     }
 
-    const handleLongPress = (item: LX.Music.MusicInfoOnline, index: number) => {
-      if (isMultiSelectModeRef.current) return
-      prevSelectIndexRef.current = index
-      handleUpdateSelectedList([item])
-      onMuiltSelectMode()
+    const handleLongPress = (item: LX.Music.MusicInfoOnline) => {
+      trackSelection.start(item)
     }
 
     const handleLoadMore = () => {
@@ -230,7 +237,7 @@ const List = forwardRef<ListType, ListProps>(
         onPress={handlePress}
         onLongPress={handleLongPress}
         onShowMenu={onShowMenu}
-        selectedList={selectedList}
+        selectedList={trackSelection.active ? trackSelection.selectedList : selectedList}
         playingId={playingId}
         rowInfo={rowInfo.current}
         isShowAlbumName={isShowAlbumName}
@@ -285,10 +292,20 @@ const List = forwardRef<ListType, ListProps>(
       if (listId !== 'search') Keyboard.dismiss()
     }
 
+    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = event.nativeEvent.contentOffset.y
+      const deltaY = offsetY - lastScrollOffset.current
+      lastScrollOffset.current = offsetY
+      if (Math.abs(deltaY) < 1) return
+      global.app_event.setBottomBarHidden(deltaY > 0)
+    }
+
     return (
       <FlatList
         ref={flatListRef}
         style={styles.list}
+        // Home 里的列表要给底部浮层（迷你播放条 + Tab 栏）留出空间，最后一项才能滚到浮层上方
+        contentContainerStyle={checkHomePagerIdle ? styles.homeContent : undefined}
         data={currentList}
         numColumns={rowInfo.current.rowNum}
         horizontal={false}
@@ -301,6 +318,8 @@ const List = forwardRef<ListType, ListProps>(
         keyExtractor={getkey}
         getItemLayout={getItemLayout}
         onScrollBeginDrag={handleScrollBeginDrag}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         // onRefresh={onRefresh}
         // refreshing={refreshing}
         onEndReachedThreshold={0.5}
@@ -308,6 +327,12 @@ const List = forwardRef<ListType, ListProps>(
         progressViewOffset={progressViewOffset}
         ListHeaderComponent={ListHeaderComponent}
         refreshControl={refreshControl}
+        // 空列表：加载/刷新中不显示，其余状态给一个居中空状态（spoti.pw 风格）
+        ListEmptyComponent={
+          status === 'loading' || status == 'refreshing'
+            ? null
+            : <EmptyState title={t('list_empty')} />
+        }
         ListFooterComponent={footerComponent}
       />
     )
@@ -337,6 +362,10 @@ const styles = createStyle({
   list: {
     flexGrow: 1,
     flexShrink: 1,
+  },
+  /** Home 列表底部留白：避开迷你播放条 + Tab 栏浮层 */
+  homeContent: {
+    paddingBottom: HOME_BOTTOM_OVERLAY_HEIGHT,
   },
   footer: {
     textAlign: 'center',

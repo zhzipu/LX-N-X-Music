@@ -1,26 +1,35 @@
-import { memo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import Image from '@/components/common/Image';
 import ImagePreviewModal from '@/components/common/ImagePreviewModal';
 import Text from '@/components/common/Text';
 import { useTheme } from '@/store/theme/hook';
-import { createStyle, toast } from '@/utils/tools';
+import { getSP } from '@/theme/spotify/tokens';
+import { toast, createStyle } from '@/utils/tools';
 import { dateFormat } from '@/utils/common';
 import { useStatusbarHeight } from '@/store/common/hook';
-import { Icon } from '@/components/common/Icon';
-import { navigations } from '@/navigation';
+import { pop, navigations } from '@/navigation';
 import { useIsWyAlbumSubscribed } from '@/store/user/hook';
 import wyApi from '@/utils/musicSdk/wy/user';
 import { addWySubscribedAlbum, removeWySubscribedAlbum } from '@/store/user/action';
 import { type SubscribedAlbumInfo } from '@/store/user/state';
+import { useI18n } from '@/lang';
+import GlassIconButton from '@/components/spotify/GlassIconButton';
+import PlayPill from '@/components/spotify/PlayPill';
+import DetailHero, { DETAIL_AUTHOR_SIZE } from '@/screens/SonglistDetail/DetailHero';
 
 interface Props {
   albumInfo: any
   componentId: string
+  /** 播放整张专辑（沿用列表的播放逻辑） */
+  onPlayAll?: () => void
+  /** 随机播放整张专辑 */
+  onShuffle?: () => void
 }
 
-export default memo(({ albumInfo, componentId }: Props) => {
+export default memo(({ albumInfo, componentId, onPlayAll, onShuffle }: Props) => {
   const theme = useTheme();
+  const sp = getSP(theme.isDark);
+  const t = useI18n();
   const statusBarHeight = useStatusbarHeight();
   const isSubscribed = useIsWyAlbumSubscribed(albumInfo.id);
   const [isPreviewVisible, setPreviewVisible] = useState(false);
@@ -57,84 +66,93 @@ export default memo(({ albumInfo, componentId }: Props) => {
     });
   };
 
+  const authorNode = useMemo(() => {
+    if (!albumInfo.artists?.length) {
+      return albumInfo.author
+        ? (
+            <Text size={DETAIL_AUTHOR_SIZE} numberOfLines={1} style={{ color: sp.colors.text }}>
+              {albumInfo.author}
+            </Text>
+          )
+        : undefined;
+    }
+    return (
+      <View style={styles.artists}>
+        {albumInfo.artists.map((artist: any, index: number) => (
+          <TouchableOpacity
+            key={artist.id || `${artist.name}_${index}`}
+            onPress={() => { handleArtistPress(artist) }}
+            disabled={!artist.id}
+            hitSlop={6}
+          >
+            <Text size={DETAIL_AUTHOR_SIZE} numberOfLines={1} style={{ color: sp.colors.text }}>
+              {artist.name}{index < albumInfo.artists.length - 1 ? ' / ' : ''}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  }, [albumInfo.artists, albumInfo.author, sp.colors.text]);
 
-  const artists = albumInfo.artists?.map((artist: any, index: number) => (
-      <TouchableOpacity key={artist.id || `${artist.name}_${index}`} onPress={() => handleArtistPress(artist)}>
-        <Text style={styles.artistName} size={14} color="rgba(255,255,255,0.9)">
-          {artist.name}{index < albumInfo.artists.length - 1 ? ' / ' : ''}
-        </Text>
-      </TouchableOpacity>
-  ))
+  const meta = useMemo(() => {
+    const parts: string[] = [];
+    if (albumInfo.publishTime) parts.push(dateFormat(albumInfo.publishTime, 'Y.M.D'));
+    const total = albumInfo.size ?? albumInfo.total;
+    if (total) parts.push(`${total} tracks`);
+    return parts.join(' · ');
+  }, [albumInfo.publishTime, albumInfo.size, albumInfo.total]);
+
+  const actions = useMemo(() => (
+    <>
+      <GlassIconButton
+        icon="list-random"
+        onPress={onShuffle}
+        accessibilityLabel={t('play_list_random')}
+      />
+      <PlayPill
+        label={t('play')}
+        onPress={onPlayAll}
+        accessibilityLabel={t('play_all')}
+      />
+      <GlassIconButton
+        icon={isSubscribed ? 'love-filled' : 'love'}
+        onPress={toggleSubscribe}
+        color={isSubscribed ? sp.colors.accent : undefined}
+        accessibilityLabel={t('collect')}
+      />
+    </>
+  ), [t, isSubscribed, sp.colors.accent, onPlayAll, onShuffle]);
 
   return (
-    <View style={{ paddingTop: statusBarHeight, backgroundColor: 'rgba(0,0,0,0.2)' }}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity activeOpacity={0.85} disabled={!albumPic} onPress={() => setPreviewVisible(true)}>
-          <Image url={albumPic} style={styles.albumArt} />
-        </TouchableOpacity>
-        <View style={styles.infoContainer}>
-          <Text style={styles.albumName} size={18} color="#FFF" numberOfLines={2}>{albumInfo.name}</Text>
-          <View style={styles.artistContainer}>{artists}</View>
-          <Text style={styles.metaInfo} size={12} color="rgba(255,255,255,0.8)">
-            {albumInfo.publishTime ? dateFormat(albumInfo.publishTime, 'Y.M.D') : ''} • {albumInfo.size || albumInfo.total} tracks
-          </Text>
-        </View>
-        <TouchableOpacity style={styles.followButton} onPress={toggleSubscribe}>
-          <Icon name={isSubscribed ? 'love-filled' : 'love'} color={isSubscribed ? theme['c-liked'] : '#fff'} size={18} />
-        </TouchableOpacity>
-      </View>
+    <>
+      <DetailHero
+        pageTitle={t('album_detail')}
+        onBack={() => { void pop(componentId) }}
+        topInset={statusBarHeight}
+        cover={albumPic}
+        onCoverPress={albumPic ? () => setPreviewVisible(true) : undefined}
+        title={albumInfo.name || ''}
+        authorNode={authorNode}
+        meta={meta}
+        desc={albumInfo.desc}
+        actions={actions}
+      />
       <ImagePreviewModal
         visible={isPreviewVisible}
         url={albumPic}
         name={albumInfo.name || 'album'}
         onClose={() => setPreviewVisible(false)}
       />
-    </View>
+    </>
   )
 })
 
 const styles = createStyle({
-  backBtn: {
-    position: 'absolute',
-    top: 35,
-    left: 10,
-    zIndex: 10,
-    padding: 5,
-  },
-  headerContainer: {
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  albumArt: {
-    width: 96,
-    height: 96,
-    borderRadius: 8,
-  },
-  infoContainer: {
-    flex: 1,
-    marginLeft: 20,
-    justifyContent: 'center',
-  },
-  albumName: {
-    fontWeight: 'bold',
-  },
-  artistContainer: {
+  artists: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 6,
   },
-  artistName: {
-    textDecorationLine: 'underline',
-  },
-  metaInfo: {
-    marginTop: 8,
-  },
-  followButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginLeft: 10,
-  },
-});
+})

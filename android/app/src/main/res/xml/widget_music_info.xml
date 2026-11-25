@@ -8,4 +8,5 @@
     android:updatePeriodMillis="0"
     android:previewImage="@mipmap/ic_launcher"
     android:widgetCategory="home_screen"
+    android:label="@string/widget_label"
     android:description="@string/widget_description" />

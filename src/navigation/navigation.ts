@@ -1,4 +1,5 @@
 import { Navigation } from 'react-native-navigation'
+import { Dimensions } from 'react-native'
 // import { InteractionManager } from 'react-native'
 
 import {
@@ -11,10 +12,12 @@ import {
 
 import themeState from '@/store/theme/state'
 import playerState from '@/store/player/state'
-import { NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
+import { COMPONENT_IDS, NAV_SHEAR_NATIVE_IDS } from '@/config/constant'
+import commonState from '@/store/common/state'
 import { getStatusBarStyle } from './utils'
 import { windowSizeTools } from '@/utils/windowSizeTools'
 import { type ListInfoItem } from '@/store/songlist/state'
+import { isWideWindow } from '@/utils/hooks/useWideLayout'
 
 // const store = getStore()
 // const getTheme = () => getter('common', 'theme')(store.getState())
@@ -88,7 +91,26 @@ export async function pushHomeScreen() {
     },
   })
 }
-export function pushPlayDetailScreen(componentId: string, skipAnimation = false) {
+let playDetailPushPending = false
+
+export function pushPlayDetailScreen(componentId: string, skipAnimation = false, initialPage: 0 | 1 = 0) {
+  const measuredSize = windowSizeTools.getSize()
+  // Dimensions is updated by React Native as soon as a fold/rotation changes
+  // the window. Prefer it for this branch so a stale windowSizeTools value
+  // cannot push a portrait detail screen during the unfold transition.
+  const currentWindow = Dimensions.get('window')
+  const windowSize = currentWindow.width && currentWindow.height
+    ? currentWindow
+    : measuredSize
+  if (isWideWindow(windowSize.width, windowSize.height)) {
+    global.app_event.setWidePlayerLyrics(true)
+    return
+  }
+  // Cover, title and capsule all share this entry point. Lock before scheduling
+  // the native push so two taps cannot open overlapping player screens.
+  if (!componentId || playDetailPushPending ||
+      commonState.componentIds.some(screen => screen.name === COMPONENT_IDS.playDetail)) return
+  playDetailPushPending = true
   /*
     Navigation.setDefaultOptions({
       topBar: {
@@ -128,6 +150,7 @@ export function pushPlayDetailScreen(componentId: string, skipAnimation = false)
     void Navigation.push(componentId, {
       component: {
         name: PLAY_DETAIL_SCREEN,
+        passProps: { initialPage },
         options: {
           topBar: {
             visible: false,
@@ -186,17 +209,37 @@ export function pushPlayDetailScreen(componentId: string, skipAnimation = false)
               : {
                 content: {
                   translationX: {
-                    from: windowSizeTools.getSize().width,
+                    from: windowSize.width,
                     to: 0,
                     duration: 300,
                   },
                 },
               },
-            pop: {
+            pop: hasPic ? {
+              sharedElementTransitions: [
+                {
+                  fromId: NAV_SHEAR_NATIVE_IDS.playDetail_pic,
+                  toId: NAV_SHEAR_NATIVE_IDS.playDetail_pic,
+                  interpolation: { type: 'spring' },
+                },
+              ],
+              elementTransitions: [
+                {
+                  id: NAV_SHEAR_NATIVE_IDS.playDetail_header,
+                  alpha: { to: 0, duration: 300 },
+                  translationY: { to: -32, duration: 300 },
+                },
+                {
+                  id: NAV_SHEAR_NATIVE_IDS.playDetail_player,
+                  alpha: { to: 0, duration: 300 },
+                  translationY: { to: 32, duration: 300 },
+                },
+              ],
+            } : {
               content: {
                 translationX: {
                   from: 0,
-                  to: windowSizeTools.getSize().width,
+                  to: windowSize.width,
                   duration: 300,
                 },
               },
@@ -204,6 +247,10 @@ export function pushPlayDetailScreen(componentId: string, skipAnimation = false)
           },
         },
       },
+    }).catch((error) => {
+      console.warn('打开播放器失败', error)
+    }).finally(() => {
+      playDetailPushPending = false
     })
   })
 }

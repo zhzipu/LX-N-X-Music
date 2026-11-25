@@ -4,13 +4,13 @@ import {
   FlatList,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
-  type FlatListProps, Keyboard,
+  type FlatListProps,
 } from 'react-native'
 
-import OnlineListItem from '@/components/OnlineList/ListItem';
 import listState from '@/store/list/state'
 import playerState from '@/store/player/state'
 import { getListPosition, getListPrevSelectId, saveListPosition } from '@/utils/data'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
 // import { useMusicList } from '@/store/list/hook'
 import { getListMusics, setActiveList } from '@/core/list'
 import ListItem, { ITEM_HEIGHT } from './ListItem'
@@ -20,6 +20,7 @@ import type { Position } from './ListMenu'
 import type { SelectMode } from './MultipleModeBar'
 import { useActiveListId } from '@/store/list/hook'
 import { useSettingValue } from '@/store/setting/hook'
+import { useTrackSelection } from '@/components/TrackSelection'
 
 type FlatListType = FlatListProps<LX.Music.MusicInfo>
 
@@ -56,6 +57,7 @@ const List = forwardRef<ListType, ListProps>(
     const flatListRef = useRef<FlatList>(null)
     const [currentList, setList] = useState<LX.List.ListMusics>([])
     const listFirstScrollRef = useRef(false)
+    const scrollOffsetRef = useRef(0)
     const isMultiSelectModeRef = useRef(false)
     const selectModeRef = useRef<SelectMode>('single')
     const prevSelectIndexRef = useRef(-1)
@@ -67,6 +69,7 @@ const List = forwardRef<ListType, ListProps>(
     const isShowAlbumName = useSettingValue('list.isShowAlbumName')
     const isShowInterval = useSettingValue('list.isShowInterval')
     const isShowSource = useSettingValue('list.isShowSource')
+    const trackSelection = useTrackSelection(currentList, { listId: listState.activeListId })
     // console.log('render music list')
 
     useImperativeHandle(ref, () => ({
@@ -243,73 +246,57 @@ const List = forwardRef<ListType, ListProps>(
     }
 
     const handlePress = (item: LX.Music.MusicInfo, index: number) => {
-      // console.log(global.lx.homePagerIdle)
-      requestAnimationFrame(() => {
-        // console.log(global.lx.homePagerIdle)
-        if (!global.lx.homePagerIdle) return
-        if (isMultiSelectModeRef.current) {
-          handleSelect(item, index)
-        } else {
-          handlePlay(index)
-        }
+      trackSelection.press(item, () => {
+        requestAnimationFrame(() => {
+          // console.log(global.lx.homePagerIdle)
+          if (!global.lx.homePagerIdle) return
+          if (isMultiSelectModeRef.current) {
+            handleSelect(item, index)
+          } else {
+            handlePlay(index)
+          }
+        })
       })
     }
 
-    const handleLongPress = (item: LX.Music.MusicInfo, index: number) => {
-      if (isMultiSelectModeRef.current) return
-      prevSelectIndexRef.current = index
-      handleUpdateSelectedList([item])
-      onMuiltSelectMode()
+    const handleLongPress = (item: LX.Music.MusicInfo) => {
+      trackSelection.start(item)
     }
 
     const handleScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = nativeEvent.contentOffset.y
+      const previousOffsetY = scrollOffsetRef.current
+      scrollOffsetRef.current = offsetY
+      const deltaY = offsetY - previousOffsetY
+      if (Math.abs(deltaY) >= 1) {
+        global.app_event.setBottomBarHidden(deltaY > 0)
+      }
       if (listFirstScrollRef.current) {
         listFirstScrollRef.current = false
         return
       }
-      void saveListPosition(listState.activeListId, nativeEvent.contentOffset.y)
+      void saveListPosition(listState.activeListId, offsetY)
     }
 
     const renderItem: FlatListType['renderItem'] = ({ item, index }) => {
-      // 判断歌曲来源
-      // wy / bili 都能收藏（wy 收藏到网易云「喜欢」、bili 收藏到 B 站「音乐」收藏夹），
-      // 统一走 OnlineList 的 ListItem，它自带右侧收藏心形按钮。
-      if (item.source === 'wy' || item.source === 'bili') {
-        return (
-          <OnlineListItem
-            item={item as LX.Music.MusicInfoOnline} // 类型断言为在线音乐
-            index={index}
-            onPress={handlePress}
-            onLongPress={handleLongPress}
-            onShowMenu={onShowMenu}
-            selectedList={selectedList as LX.Music.MusicInfoOnline[]}
-            playingId={playerState.playMusicInfo.musicInfo?.id ?? ''} // 传入当前播放ID
-            rowInfo={rowInfo.current}
-            isShowAlbumName={isShowAlbumName}
-            isShowInterval={isShowInterval}
-            listId={listState.activeListId} // 传入当前列表ID
-            showSource={isShowSource}
-            showCover={showCover}
-          />
-        );
-      } else {
-        return (
-          <ListItem
-            item={item}
-            index={index}
-            activeIndex={activeIndex}
-            onScrollBeginDrag={Keyboard.dismiss}
-            onPress={handlePress}
-            onLongPress={handleLongPress}
-            onShowMenu={onShowMenu}
-            selectedList={selectedList}
-            rowInfo={rowInfo.current}
-            isShowAlbumName={isShowAlbumName}
-            isShowInterval={isShowInterval}
-            showCover={showCover}
-          />
-        );
-      }
+      // 所有音源统一用 spoti.pw 的行（ListRow）：封面 / 标题 / 副标题 / 收藏 / 菜单
+      // 都由这一层提供，长按菜单与多选逻辑仍然走 List.tsx 原来的回调。
+      return (
+        <ListItem
+          item={item}
+          index={index}
+          activeIndex={activeIndex}
+          onPress={handlePress}
+          onLongPress={handleLongPress}
+          onShowMenu={onShowMenu}
+            selectedList={trackSelection.active ? trackSelection.selectedList : selectedList}
+          rowInfo={rowInfo.current}
+          isShowAlbumName={isShowAlbumName}
+          isShowInterval={isShowInterval}
+          isShowSource={isShowSource}
+          showCover={showCover}
+        />
+      );
     }
     const getkey: FlatListType['keyExtractor'] = (item) => item.id
     const getItemLayout: FlatListType['getItemLayout'] = (data, index) => {
@@ -321,6 +308,7 @@ const List = forwardRef<ListType, ListProps>(
         ref={flatListRef}
         onScroll={handleScroll}
         style={styles.list}
+        contentContainerStyle={{ paddingBottom: HOME_BOTTOM_OVERLAY_HEIGHT }}
         data={currentList}
         maxToRenderPerBatch={4}
         numColumns={rowInfo.current.rowNum}

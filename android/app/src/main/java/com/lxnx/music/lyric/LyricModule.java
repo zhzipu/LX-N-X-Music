@@ -84,6 +84,13 @@ public class LyricModule extends ReactContextBaseJavaModule {
     promise.resolve(null);
   }
 
+  @ReactMethod
+  public void setWidgetLyricEventsEnabled(boolean enabled, Promise promise) {
+    if (lyric == null) lyric = new Lyric(reactContext, isShowTranslation, isShowRoma, playbackRate);
+    lyric.setWidgetLyricEventsEnabled(enabled);
+    promise.resolve(null);
+  }
+
 
   @ReactMethod
   public void setLyric(String lyric, String translation, String romaLyric, Promise promise) {

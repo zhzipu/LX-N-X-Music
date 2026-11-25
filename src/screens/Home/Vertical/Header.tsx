@@ -13,14 +13,19 @@ import { useSettingValue } from '@/store/setting/hook'
 import { scaleSizeH } from '@/utils/pixelRatio'
 import { HEADER_HEIGHT } from '@/config/constant'
 import { type InitState as CommonState } from '@/store/common/state'
-import SearchTypeSelector from '@/screens/Home/Views/Search/SearchTypeSelector'
-import GlobalSearch from '@/components/GlobalSearch'
-import MusicRecognition from '@/components/MusicRecognition'
 import React, {useRef} from "react";
+import { MS_SIZE } from '@/theme/myspotify/tokens'
+import { SP_FONT } from '@/theme/spotify/tokens'
+import { useMusicDetailOpen } from '@/screens/Home/Views/Music/detailState'
+import HotSettingsButton from '../Views/Hot/SettingsButton'
 
-const headerComponents: Partial<Record<CommonState['navActiveId'], React.ReactNode>> = {
-  nav_search: <SearchTypeSelector />,
-}
+/** 菜单按钮的命中区域不小于 44 */
+const TAP_AREA = Math.max(HEADER_HEIGHT, MS_SIZE.tapArea)
+const HEADER_CONTENT_HEIGHT = Math.max(HEADER_HEIGHT, SP_FONT.pageTitle + 22)
+
+/** 搜索类型 chip 已移到搜索页自己的头下方（跟搜索框同一列），
+ *  否则会和 34pt 大标题抢宽度、把「搜索」压成省略号 */
+const headerComponents: Partial<Record<CommonState['navActiveId'], React.ReactNode>> = {}
 
 // const LeftTitle = () => {
 //   const id = useNavActiveId()
@@ -58,24 +63,24 @@ const LeftHeader = () => {
     <View
       style={{
         ...styles.container,
-        height: scaleSizeH(HEADER_HEIGHT) + statusBarHeight,
+        height: scaleSizeH(HEADER_CONTENT_HEIGHT) + statusBarHeight,
         paddingTop: statusBarHeight,
       }}
       {...panResponder.panHandlers}
     >
       <View style={styles.left}>
-        <TouchableOpacity style={styles.btn} onPress={openMenu}>
-          <Icon color={theme['c-font']} name="menu" size={18} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.titleBtn} onPress={openMenu}>
-          <Text style={styles.leftTitle} size={18}>
+        {/* 左上角的侧栏入口按钮已移除：底部 Tab 最右一格就是「菜单」页，
+            抽屉仍可通过左边缘右滑打开。标题也不再作为隐藏的抽屉入口。 */}
+        <View style={styles.titleBtn}>
+          <Text style={styles.leftTitle} size={SP_FONT.pageTitle} numberOfLines={1}>
             {t(id)}
           </Text>
-        </TouchableOpacity>
-        {/* 听歌识曲入口：放在「搜索」标题右侧 */}
-        {isSearchPage ? <MusicRecognition /> : null}
+        </View>
       </View>
-      {isSearchPage ? headerComponents[id] : <GlobalSearch />}
+      {id === 'nav_hot' ? <HotSettingsButton /> : null}
+      {/* 非搜索页不再挂全局搜索框：搜索已独立为底部 tab，
+          常驻搜索框既挤占标题宽度（导致「每日推...」截断），又与 Spotify 的顶栏结构不符 */}
+      {isSearchPage ? headerComponents[id] : null}
 
       {/* <TouchableOpacity style={styles.btn} onPress={openSetting}>
         <Icon style={{ ...styles.btnText, color: theme['c-font'] }} name="setting" size={styles.btnText.fontSize} />
@@ -119,24 +124,25 @@ const RightHeader = () => {
     <View
       style={{
         ...styles.container,
-        height: scaleSizeH(HEADER_HEIGHT) + statusBarHeight,
+        height: scaleSizeH(HEADER_CONTENT_HEIGHT) + statusBarHeight,
         paddingTop: statusBarHeight,
       }}
       {...panResponder.panHandlers}
     >
       <View style={styles.left}>
         <TouchableOpacity style={styles.titleBtn} onPress={openMenu}>
-          <Text style={styles.rightTitle} size={18}>
+          <Text style={styles.rightTitle} size={SP_FONT.pageTitle} numberOfLines={1}>
             {t(id)}
           </Text>
         </TouchableOpacity>
-        {/* 听歌识曲入口：放在「搜索」标题右侧 */}
-        {isSearchPage ? <MusicRecognition /> : null}
       </View>
 
-      {isSearchPage ? headerComponents[id] : <GlobalSearch />}
+      {/* 非搜索页不再挂全局搜索框：搜索已独立为底部 tab，
+          常驻搜索框既挤占标题宽度（导致「每日推...」截断），又与 Spotify 的顶栏结构不符 */}
+      {isSearchPage ? headerComponents[id] : null}
+      {id === 'nav_hot' ? <HotSettingsButton /> : null}
       <TouchableOpacity style={styles.btn} onPress={openMenu}>
-        <Icon color={theme['c-font']} name="menu" size={18} />
+        <Icon color={theme['c-font']} name="menu" size={MS_SIZE.playerBarIcon} />
       </TouchableOpacity>
       {/* <TouchableOpacity style={styles.btn} onPress={openSetting}>
         <Icon style={{ ...styles.btnText, color: theme['c-font'] }} name="setting" size={styles.btnText.fontSize} />
@@ -147,11 +153,13 @@ const RightHeader = () => {
 
 const Header = () => {
   const drawerLayoutPosition = useSettingValue('common.drawerLayoutPosition')
+  // 歌单详情页占满整屏：隐藏这里的大标题，详情页自己有返回钮
+  const detailOpen = useMusicDetailOpen()
 
   return (
     <>
       <StatusBar />
-      {drawerLayoutPosition == 'left' ? <LeftHeader /> : <RightHeader />}
+      {detailOpen ? null : (drawerLayoutPosition == 'left' ? <LeftHeader /> : <RightHeader />)}
     </>
   )
 }
@@ -174,9 +182,7 @@ const styles = createStyle({
     height: '100%',
   },
   btn: {
-    // flex: 1,
-    width: HEADER_HEIGHT,
-    // backgroundColor: 'rgba(0,0,0,0.1)',
+    width: TAP_AREA,
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
@@ -185,17 +191,21 @@ const styles = createStyle({
     // 让标题宽度贴合文字，右侧留给听歌识曲入口
     flexGrow: 0,
     flexShrink: 1,
-    // backgroundColor: 'rgba(0,0,0,0.1)',
     height: '100%',
     justifyContent: 'center',
   },
   leftTitle: {
-    paddingLeft: 14,
-    paddingRight: 16,
+    // 页面大标题：spoti.pw 的 LargeTitle 34 / 700 / letterSpacing -0.8
+    fontWeight: SP_FONT.pageTitleWeight,
+    letterSpacing: SP_FONT.pageTitleLetterSpacing,
+    paddingLeft: 6,
+    paddingRight: 12,
   },
   rightTitle: {
-    paddingLeft: 16,
-    paddingRight: 16,
+    fontWeight: SP_FONT.pageTitleWeight,
+    letterSpacing: SP_FONT.pageTitleLetterSpacing,
+    paddingLeft: 12,
+    paddingRight: 12,
   },
 })
 

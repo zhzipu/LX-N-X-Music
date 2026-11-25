@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import {
   View,
   TouchableOpacity,
@@ -9,9 +9,12 @@ import {
 } from 'react-native'
 
 import { Icon } from '@/components/common/Icon'
+import { HOME_BOTTOM_OVERLAY_HEIGHT } from '@/components/spotify/layout'
 
 import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
 import { useActiveListId, useListFetching, useMyList } from '@/store/list/hook'
+import { LIST_IDS } from '@/config/constant'
 import { createStyle } from '@/utils/tools'
 import { LIST_SCROLL_POSITION_KEY } from '@/config/constant'
 import { getListPosition, saveListPosition } from '@/utils/data'
@@ -23,7 +26,7 @@ import Loading from '@/components/common/Loading'
 
 type FlatListType = FlatListProps<LX.List.MyListInfo>
 
-const ITEM_HEIGHT = scaleSizeH(40)
+const ITEM_HEIGHT = scaleSizeH(48)
 
 const ListItem = memo(
   ({
@@ -44,6 +47,7 @@ const ListItem = memo(
     ) => void
   }) => {
     const theme = useTheme()
+    const sp = getSP(theme.isDark)
     const moreButtonRef = useRef<TouchableOpacity>(null)
     const fetching = useListFetching(item.id)
 
@@ -74,22 +78,26 @@ const ListItem = memo(
             style={styles.listActiveIcon}
             name="chevron-right"
             size={12}
-            color={theme['c-primary-font']}
+            color={sp.colors.text}
           />
         ) : null}
         {fetching ? (
           <Loading
-            color={active ? theme['c-primary-font'] : theme['c-font']}
+            color={active ? sp.colors.accent : sp.colors.textSecondary}
             style={styles.loading}
           />
         ) : null}
         <TouchableOpacity style={styles.listName} onPress={handlePress}>
-          <Text numberOfLines={1} color={active ? theme['c-primary-font'] : theme['c-font']}>
+          <Text
+            numberOfLines={1}
+            size={sp.font.rowTitle}
+            style={{ fontWeight: sp.font.rowTitleWeight, color: sp.colors.text }}
+          >
             {item.name}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleShowMenu} ref={moreButtonRef} style={styles.listMoreBtn}>
-          <Icon name="dots-vertical" color={theme['c-350']} size={12} />
+          <Icon name="dots-vertical" color={sp.colors.textTertiary} size={16} />
         </TouchableOpacity>
       </View>
     )
@@ -112,7 +120,10 @@ export default ({
 }) => {
   const flatListRef = useRef<FlatList>(null)
   const allList = useMyList()
+  // 「试听列表」(default) 只是播单曲时的临时队列，不再作为歌单展示
+  const lists = useMemo(() => allList.filter(item => item.id !== LIST_IDS.DEFAULT), [allList])
   const activeListId = useActiveListId()
+  const lastScrollOffset = useRef(0)
 
   const handleToggleList = (item: LX.List.MyListInfo) => {
     // setVisiblePanel(false)
@@ -123,7 +134,13 @@ export default ({
   }
 
   const handleScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
-    void saveListPosition(LIST_SCROLL_POSITION_KEY, nativeEvent.contentOffset.y)
+    const offsetY = nativeEvent.contentOffset.y
+    const deltaY = offsetY - lastScrollOffset.current
+    lastScrollOffset.current = offsetY
+    if (Math.abs(deltaY) >= 1) {
+      global.app_event.setBottomBarHidden(deltaY > 0)
+    }
+    void saveListPosition(LIST_SCROLL_POSITION_KEY, offsetY)
   }
 
   const showMenu = (listInfo: LX.List.MyListInfo, index: number, position: Position) => {
@@ -155,8 +172,10 @@ export default ({
     <FlatList
       ref={flatListRef}
       onScroll={handleScroll}
+      scrollEventThrottle={16}
       style={styles.container}
-      data={allList}
+      contentContainerStyle={[styles.content, { paddingBottom: HOME_BOTTOM_OVERLAY_HEIGHT }]}
+      data={lists}
       maxToRenderPerBatch={9}
       // updateCellsBatchingPeriod={80}
       windowSize={9}
@@ -175,22 +194,19 @@ const styles = createStyle({
     flexShrink: 1,
     flexGrow: 0,
   },
-  // listContainer: {
-  //   // borderBottomWidth: BorderWidths.normal2,
-  // },
-
+  content: {
+    paddingTop: 6,
+    paddingBottom: 24,
+  },
   listItem: {
     height: 'auto',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingRight: 5,
-    paddingLeft: 5,
-    // borderBottomWidth: BorderWidths.normal,
+    paddingRight: 8,
+    paddingLeft: 16,
   },
   listActiveIcon: {
-    // width: 18,
     marginLeft: 3,
-    // paddingRight: 5,
     textAlign: 'center',
   },
   loading: {
@@ -198,27 +214,15 @@ const styles = createStyle({
   },
   listName: {
     height: '100%',
-    // height: 46,
-    // paddingTop: 12,
-    // paddingBottom: 12,
     justifyContent: 'center',
     flexGrow: 1,
     flexShrink: 1,
     paddingLeft: 5,
-    // backgroundColor: 'rgba(0,0,0,0.1)',
   },
-  // listNameText: {
-  //   // height: 46,
-  //   fontSize: 14,
-  // },
   listMoreBtn: {
     height: '100%',
     width: 36,
-    // height: 46,
-    // paddingTop: 12,
-    // paddingBottom: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    // backgroundColor: 'rgba(0,0,0,0.1)',
   },
 })

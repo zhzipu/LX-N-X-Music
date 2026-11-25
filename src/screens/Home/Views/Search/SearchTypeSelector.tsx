@@ -1,19 +1,23 @@
+/**
+ * 搜索类型切换（歌曲 / 歌单 / 歌手 / 专辑）。
+ *
+ * spoti.pw 里这类筛选是「系统玻璃上的胶囊」，这里用统一的 `Chip`：
+ * 未选中 16% 白填充、选中 26% 白填充 + 纯白文字，不画描边。
+ */
+
 import { useEffect, useMemo, useState } from 'react'
-import { ScrollView, TouchableOpacity } from 'react-native'
+import { ScrollView, View } from 'react-native'
 
 import { createStyle } from '@/utils/tools'
 import { type SearchType } from '@/store/search/state'
 import { useI18n } from '@/lang'
-import Text from '@/components/common/Text'
-import { useTheme } from '@/store/theme/hook'
 import { getSearchSetting } from '@/utils/data'
-import { BorderWidths } from '@/theme'
+import Chip from '@/components/spotify/Chip'
 
 const SEARCH_TYPE_LIST = ['music', 'songlist', 'singer', 'album'] as const
 
 export default () => {
   const t = useI18n()
-  const theme = useTheme()
   const [type, setType] = useState<SearchType>('music')
 
   useEffect(() => {
@@ -32,26 +36,21 @@ export default () => {
   }
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps={'always'} horizontal={true}>
-      {list.map((t) => (
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
-            handleTypeChange(t.id)
-          }}
-          key={t.id}
-        >
-          <Text
-            style={{
-              ...styles.buttonText,
-              borderBottomColor:
-                type == t.id ? theme['c-font-label'] : 'transparent',
-            }}
-            color={type == t.id ? theme['c-font-label'] : theme['c-font']}
-          >
-            {t.label}
-          </Text>
-        </TouchableOpacity>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps={'always'}
+      horizontal={true}
+      showsHorizontalScrollIndicator={false}
+    >
+      {list.map((item) => (
+        <View key={item.id} style={styles.chipWrap}>
+          <Chip
+            label={item.label}
+            active={type === item.id}
+            onPress={() => { handleTypeChange(item.id) }}
+          />
+        </View>
       ))}
     </ScrollView>
   )
@@ -59,32 +58,13 @@ export default () => {
 
 const styles = createStyle({
   container: {
-    height: '100%',
     flexGrow: 0,
-    flexShrink: 1,
-    // paddingLeft: 5,
-    // paddingRight: 5,
-    // backgroundColor: 'rgba(0,0,0,0.1)',
+    flexShrink: 0,
   },
-  button: {
-    // height: 38,
-    // lineHeight: 38,
-    justifyContent: 'center',
-    paddingLeft: 8,
-    paddingRight: 8,
-    // width: 80,
-    // backgroundColor: 'rgba(0,0,0,0.1)',
+  content: {
+    alignItems: 'center',
   },
-  buttonText: {
-    // height: 38,
-    // lineHeight: 38,
-    textAlign: 'center',
-    paddingLeft: 2,
-    paddingRight: 2,
-    // paddingTop: 10,
-    paddingTop: 3,
-    paddingBottom: 3,
-    borderBottomWidth: BorderWidths.normal3,
-    // width: 80,
+  chipWrap: {
+    marginRight: 8,
   },
 })

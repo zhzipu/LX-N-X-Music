@@ -15,6 +15,8 @@ export interface MusicListProps {
   isCreator: boolean
   onListUpdate: OnlineListProps['onListUpdate']
   playingId: string | null
+  /** 页头（详情大图）随列表一起滚动 */
+  ListHeaderComponent?: OnlineListProps['ListHeaderComponent']
 }
 
 export interface MusicListType {
@@ -22,7 +24,7 @@ export interface MusicListType {
   scrollToInfo: (info: LX.Music.MusicInfoOnline) => void
 }
 
-export default forwardRef<MusicListType, MusicListProps>(({componentId, isCreator, playingId }, ref) => {
+export default forwardRef<MusicListType, MusicListProps>(({componentId, isCreator, playingId, ListHeaderComponent }, ref) => {
   const listRef = useRef<OnlineListType>(null)
   const isUnmountedRef = useRef(false)
   const info = useListInfo()
@@ -206,6 +208,7 @@ export default forwardRef<MusicListType, MusicListProps>(({componentId, isCreato
                 listId={`${info.source}__${info.id}`}
                 isCreator={isCreator}
                 playingId={playingId}
+                ListHeaderComponent={ListHeaderComponent}
     />
   )
 })

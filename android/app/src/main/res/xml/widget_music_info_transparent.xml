@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 透明样式：背景纯透明、文字纯白。尺寸/拉伸规则与默认样式保持一致。 -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/widget_music_4x1_transparent"
+    android:minWidth="250dp"
+    android:minHeight="70dp"
+    android:resizeMode="horizontal"
+    android:minResizeWidth="180dp"
+    android:updatePeriodMillis="0"
+    android:previewImage="@mipmap/ic_launcher"
+    android:widgetCategory="home_screen"
+    android:label="@string/widget_label_transparent"
+    android:description="@string/widget_description_transparent" />

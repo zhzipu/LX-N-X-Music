@@ -1,7 +1,6 @@
-import { TouchableOpacity } from 'react-native'
+import { TouchableOpacity, type LayoutChangeEvent } from 'react-native'
 import { navigations } from '@/navigation'
 import { usePlayerMusicInfo } from '@/store/player/hook'
-// import { toast } from '@/utils/tools'
 import { useSettingValue } from '@/store/setting/hook'
 import { useTheme } from '@/store/theme/hook'
 import commonState from '@/store/common/state'
@@ -9,13 +8,15 @@ import playerState from '@/store/player/state'
 import Text from '@/components/common/Text'
 import { LIST_IDS } from '@/config/constant'
 import { createStyle, formatMusicName } from '@/utils/tools'
-import {useRef} from "react";
+import { useRef } from 'react'
+import { getSP, SP_FONT } from '@/theme/spotify/tokens'
 
-export default ({ isHome }: { isHome: boolean }) => {
-  // const { t } = useTranslation()
+/** 迷你播放条歌名：16 / 500，单行省略 */
+export default ({ isHome, onLayout }: { isHome: boolean, onLayout: (event: LayoutChangeEvent) => void }) => {
   const musicInfo = usePlayerMusicInfo()
   const downloadFileName = useSettingValue('download.fileName')
   const theme = useTheme()
+  const sp = getSP(theme.isDark)
   const longPressedRef = useRef(false)
 
   const handlePress = () => {
@@ -23,11 +24,7 @@ export default ({ isHome }: { isHome: boolean }) => {
       longPressedRef.current = false
       return
     }
-    // console.log('')
-    // console.log(playMusicInfo)
-    if (!musicInfo.id) return
     navigations.pushPlayDetailScreen(commonState.componentIds[commonState.componentIds.length - 1]?.id!)
-    // toast(global.i18n.t('play_detail_todo_tip'), 'long')
   }
 
   const handleLongPress = () => {
@@ -36,54 +33,33 @@ export default ({ isHome }: { isHome: boolean }) => {
     if (!listId || listId == LIST_IDS.DOWNLOAD) return
     global.app_event.jumpListPosition()
   }
-  // console.log('render title')
 
   const title = musicInfo.id
     ? musicInfo.singer
       ? formatMusicName(downloadFileName, musicInfo.name, musicInfo.singer)
       : musicInfo.name
     : ''
-  // console.log(playMusicInfo)
+
   return (
     <TouchableOpacity
+      onLayout={onLayout}
       style={styles.container}
       onLongPress={handleLongPress}
       onPress={handlePress}
       activeOpacity={0.7}
     >
-      <Text color={theme['c-font-label']} numberOfLines={1}>
+      <Text style={styles.title} color={sp.colors.text} size={SP_FONT.rowTitle} numberOfLines={1}>
         {title}
       </Text>
     </TouchableOpacity>
   )
 }
-// const Singer = () => {
-//   const playMusicInfo = useGetter('player', 'playMusicInfo')
-//   return (
-//     <View style={{ flexGrow: 0, flexShrink: 0 }}>
-//       <Text style={{ width: '100%', color: AppColors.normal }} numberOfLines={1}>
-//         {playMusicInfo ? playMusicInfo.musicInfo.singer : ''}
-//       </Text>
-//     </View>
-//   )
-// }
-// const MusicName = () => {
-//   const playMusicInfo = useGetter('player', 'playMusicInfo')
-//   return (
-//     <View style={{ flexGrow: 0, flexShrink: 1 }}>
-//       <Text style={{ width: '100%', color: AppColors.normal }} numberOfLines={1}>
-//         {playMusicInfo ? playMusicInfo.musicInfo.name : '^-^'}
-//       </Text>
-//     </View>
-//   )
-// }
 
 const styles = createStyle({
   container: {
     width: '100%',
-    paddingHorizontal: 2,
-    // paddingBottom: 4,
-    // height: '50%',
-    // backgroundColor: 'rgba(0, 0, 0, .1)',
+  },
+  title: {
+    fontWeight: SP_FONT.rowTitleWeight,
   },
 })

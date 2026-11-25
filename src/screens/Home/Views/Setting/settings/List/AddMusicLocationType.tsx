@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import SubTitle from '../../components/SubTitle'
-import CheckBox from '@/components/common/CheckBox'
+import CheckBox from '../../components/ChoiceItem'
 import { useSettingValue } from '@/store/setting/hook'
 import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'

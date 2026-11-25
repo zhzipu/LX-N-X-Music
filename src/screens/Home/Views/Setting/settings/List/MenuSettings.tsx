@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 import SubTitle from '../../components/SubTitle';
-import CheckBox from '@/components/common/CheckBox';
+import CheckBox from '../../components/CheckBoxItem';
 import { useI18n } from '@/lang';
 import { useSettingValue } from '@/store/setting/hook';
 import { updateSetting } from '@/core/common';
@@ -48,9 +48,6 @@ export default memo(() => {
 
 const styles = createStyle({
   content: {
-    marginTop: 5,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingLeft: -25,
+    width: '100%',
   },
 });

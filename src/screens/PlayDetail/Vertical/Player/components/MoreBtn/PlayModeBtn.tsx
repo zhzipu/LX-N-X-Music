@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react'
 import { toast } from '@/utils/tools'
 import { MUSIC_TOGGLE_MODE_LIST, MUSIC_TOGGLE_MODE } from '@/config/constant'
 import { useSettingValue } from '@/store/setting/hook'
+import { useTheme } from '@/store/theme/hook'
 import { useI18n } from '@/lang'
 import { updateSetting } from '@/core/common'
 import Btn from './Btn'
@@ -11,8 +12,9 @@ import wyApi from '@/utils/musicSdk/wy'
 import { playOnlineList } from '@/core/list'
 import settingState from '@/store/setting/state'
 
-export default memo(() => {
+export default memo(({ iconSize, iconColor }: { iconSize?: number, iconColor?: string }) => {
   const togglePlayMethod = useSettingValue('player.togglePlayMethod')
+  const theme = useTheme()
   const t = useI18n()
 
   const toggleNextPlayMode = async () => {
@@ -112,5 +114,13 @@ export default memo(() => {
     return playModeIcon
   }, [togglePlayMethod])
 
-  return <Btn icon={playModeIcon} onPress={toggleNextPlayMode} />
+  // 所有模式统一用同一颜色（不要再用「非默认才高亮」，否则列表循环会显得发灰）
+  return (
+    <Btn
+      icon={playModeIcon}
+      onPress={toggleNextPlayMode}
+      iconSize={iconSize}
+      color={iconColor ?? theme['c-font']}
+    />
+  )
 })

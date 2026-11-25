@@ -10,11 +10,15 @@ const defaultSetting: LX.AppSetting = {
   'common.autoHidePlayBar': true,
   'common.drawerLayoutPosition': 'left',
   'common.homePageScroll': true,
+  'common.hotBoards': '',
   'common.showBackBtn': false,
   'common.showExitBtn': false,
   'common.useSystemFileSelector': true,
   'common.wy_cookie': '',
   'common.wy_serpapi_key': '',
+  'common.asrApiKey': '',
+  'common.translateAppId': '',
+  'common.translateApiKey': '',
   'common.yt_cookie': '',
   'common.bili_cookie': '',
   'common.alwaysKeepStatusbarHeight': false,
@@ -22,7 +26,6 @@ const defaultSetting: LX.AppSetting = {
   'common.navStatus': {
     nav_songlist: true,
     nav_top: true,
-    nav_love: true,
     nav_daily_rec: true,
     nav_my_playlist: true,
     nav_followed_artists: true,
@@ -47,10 +50,11 @@ const defaultSetting: LX.AppSetting = {
   'player.isShowLyricTranslation': true,
   'player.isShowLyricRoma': false,
   'player.isShowNotificationImage': true,
-  'player.isS2t': true,
+  'player.isS2t': false,
   'player.isShowBluetoothLyric': false,
 
-  'playDetail.isCoverSpin': true,
+  // 仿 Spotify / Chroma：封面默认方形圆角，不再默认转盘
+  'playDetail.isCoverSpin': false,
   'playDetail.style.align': 'center',
   'playDetail.vertical.style.lrcFontSize': 200,
   'playDetail.horizontal.style.lrcFontSize': 220,
@@ -117,14 +121,14 @@ const defaultSetting: LX.AppSetting = {
   'sync.webdav.path': '/LX_Music/',
   'sync.webdav.lastSyncTimeLists': 0,
 
-  'theme.id': 'tachiyomi',
-  'theme.darkMode': false,
+  'theme.id': 'myspotify',
+  'theme.darkMode': true,
   'theme.hideBgDark': false,
   'theme.dynamicBg': true,
-  'theme.blur': 18,
+  'theme.blur': 24,
   'theme.fontShadow': false,
   'theme.customBgPicPath': '',
-  'theme.picOpacity': 76,
+  'theme.picOpacity': 55,
 }
 
 export default defaultSetting

@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState, useCallback } from 'react';
 import { View } from 'react-native';
 import PageContent from '@/components/PageContent';
-import Header from './Header';
+import PageScrim from '@/components/spotify/PageScrim';
 import SongList from './SongList';
 import wyApi from '@/utils/musicSdk/wy/artist';
 import biliApi from '@/utils/musicSdk/bili/artist';
@@ -17,6 +17,7 @@ import listState from '@/store/list/state'
 import { LIST_IDS } from '@/config/constant'
 import { type OnlineListType } from '@/components/OnlineList'
 import {usePlayerMusicInfo} from "@/store/player/hook.ts";
+import { useBottomBarMotion, useWideLayout } from '@/utils/hooks'
 
 const SONG_LIMIT = 100;
 const ALBUM_LIMIT = 100;
@@ -34,6 +35,8 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
   const pendingScrollInfoRef = useRef<LX.Music.MusicInfoOnline | null>(null)
   const isFirstSortEffect = useRef(true)
   const playerMusicInfo = usePlayerMusicInfo()
+  const isWide = useWideLayout()
+  const bottomMotion = useBottomBarMotion({ initialHidden: !isWide, broadcast: !isWide })
 
   const handleSongListUpdate = useCallback((newList: LX.Music.MusicInfoOnline[]) => {
     setSongs(prev => ({
@@ -232,12 +235,20 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
   const displayArtist = artistDetail?.artist || artistInfo
   return (
     <PageContent>
-      <View style={styles.container}>
-        <Header artist={displayArtist} componentId={componentIdRef.current} source={artistInfo.source} />
+      <View
+        style={styles.container}
+        onTouchStart={isWide ? undefined : bottomMotion.onTouchStart}
+        onTouchMove={isWide ? undefined : bottomMotion.onTouchMove}
+        onTouchEnd={isWide ? undefined : bottomMotion.onTouchEnd}
+        onTouchCancel={isWide ? undefined : bottomMotion.onTouchEnd}
+      >
+        {/* 页面级渐黑遮罩：第一个子节点，压在内容下面、全局背景上面 */}
+        <PageScrim />
         <SongList
           componentId={componentId}
           songs={songs}
           albums={albums}
+          artist={displayArtist}
           activeTab={activeTab}
           ref={songListRef as any}
           artistId={artistInfo.id}
@@ -252,7 +263,7 @@ export default memo(({ componentId, artistInfo }: { componentId: string, artistI
           onSongListUpdate={handleSongListUpdate}
           playingId={playerMusicInfo.id}
         />
-        <PlayerBar componentId={componentId} />
+        <PlayerBar componentId={componentId} autoHideOnScroll={!isWide} />
       </View>
     </PageContent>
   );

@@ -26,21 +26,42 @@ const buildData = (key: string, value: any, datas: Array<[string, string]>) => {
 
 // 1.4.0 之前的数据分片存储方式，存在key的内容与分隔符冲突的问题
 // 1.4.0 开始改用数组存储，不再使用分隔符的方式
-const handleGetDataOld = async <T>(partKeys: string): Promise<T> => {
+const handleGetDataOld = async <T>(partKeys: string): Promise<T | null> => {
   const keys = partKeys.replace(partKeyPrefixRxp, '').split(keySplit)
 
   return AsyncStorage.multiGet(keys).then((datas) => {
-    return JSON.parse(datas.map((data) => data[1]).join(''))
+    return parseJsonSafe<T>(datas.map((data) => data[1]).join(''), partKeys)
   })
 }
 
-const handleGetData = async <T>(partKeys: string): Promise<T> => {
+const handleGetData = async <T>(partKeys: string): Promise<T | null> => {
   if (partKeys.startsWith(partKeyPrefix)) return handleGetDataOld<T>(partKeys)
 
-  const keys = JSON.parse(partKeys.replace(partKeyArrPrefixRxp, '')) as string[]
+  let keys: string[]
+  try {
+    keys = JSON.parse(partKeys.replace(partKeyArrPrefixRxp, '')) as string[]
+  } catch (e: any) {
+    // 分片索引本身被写坏：当作数据不存在处理，别让启动流程炸掉
+    log.error('storage error[getData/keys]:', partKeys, e.message)
+    return null
+  }
   return AsyncStorage.multiGet(keys).then((datas) => {
-    return JSON.parse(datas.map((data) => data[1]).join(''))
+    return parseJsonSafe<T>(datas.map((data) => data[1]).join(''), partKeys)
   })
+}
+
+/**
+ * 存储里的 JSON 被写坏（写到一半 / 版本冲突）时不要把异常抛给启动流程：
+ * 之前这里裸 `JSON.parse`，坏一次就每次启动都抛，最终被全局兜底渲染成 Fatal 弹窗。
+ * 解析失败按「没有这份数据」处理，调用方本来就有默认值。
+ */
+const parseJsonSafe = <T>(text: string, key: string): T | null => {
+  try {
+    return JSON.parse(text) as T
+  } catch (e: any) {
+    log.error('storage error[parse]:', key, e.message)
+    return null
+  }
 }
 
 export const saveData = async (key: string, value: any) => {
@@ -69,7 +90,7 @@ export const getData = async <T = unknown>(key: string): Promise<T | null> => {
   if (value && (partKeyPrefixRxp.test(value) || partKeyArrPrefixRxp.test(value))) {
     return handleGetData<T>(value)
   } else if (value == null) return value
-  return JSON.parse(value)
+  return parseJsonSafe<T>(value, key)
 }
 
 export const removeData = async (key: string) => {
@@ -139,12 +160,12 @@ export const getDataMultiple = async <T extends readonly string[]>(keys: T) => {
     log.error('storage error[getDataMultiple]:', e.message)
     throw e
   }
-  const promises: Array<Promise<ReadonlyArray<[unknown | null]>>> = []
-  for (const [, value] of datas) {
+  const promises: Array<Promise<unknown>> = []
+  for (const [key, value] of datas) {
     if (value && (partKeyPrefixRxp.test(value) || partKeyArrPrefixRxp.test(value))) {
       promises.push(handleGetData(value))
     } else {
-      promises.push(Promise.resolve(value ? JSON.parse(value) : value))
+      promises.push(Promise.resolve(value ? parseJsonSafe(value, key) : value))
     }
   }
   return Promise.all(promises).then((values) => {

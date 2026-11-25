@@ -1,12 +1,17 @@
+/**
+ * 设置页顶部分组导航（横向滚动）：选中项用 accent 文字 + 16% 白胶囊，
+ * 未选中用次级文字；去掉旧版底部分割线与整体 0.7 透明度。
+ */
+
 import { memo, useCallback, useState } from 'react'
 import { View, TouchableOpacity, ScrollView } from 'react-native'
 
 import { useTheme } from '@/store/theme/hook'
+import { getSP } from '@/theme/spotify/tokens'
 import { createStyle } from '@/utils/tools'
 import Text from '@/components/common/Text'
 import { SETTING_SCREENS, type SettingScreenIds } from '../Main'
 import { useI18n } from '@/lang'
-import { BorderRadius, BorderWidths } from '@/theme'
 
 const ListItem = memo(
   ({
@@ -19,6 +24,7 @@ const ListItem = memo(
     id: SettingScreenIds
   }) => {
     const theme = useTheme()
+    const sp = getSP(theme.isDark)
     const t = useI18n()
 
     const active = activeId == id
@@ -31,11 +37,16 @@ const ListItem = memo(
       <View
         style={{
           ...styles.listItem,
-          backgroundColor: active ? theme['c-primary-background-active'] : 'transparent',
+          backgroundColor: active ? sp.colors.chipBg : 'transparent',
         }}
       >
         <TouchableOpacity style={styles.listName} onPress={handlePress}>
-          <Text numberOfLines={1} color={active ? theme['c-primary-font'] : theme['c-font']}>
+          <Text
+            numberOfLines={1}
+            size={15}
+            style={{ color: active ? sp.colors.accent : sp.colors.textSecondary, fontWeight: '500' }}
+            allowFontScaling={false}
+          >
             {t(`setting_${id}`)}
           </Text>
         </TouchableOpacity>
@@ -53,7 +64,6 @@ const ListItem = memo(
 
 export default ({ onChangeId }: { onChangeId: (id: SettingScreenIds) => void }) => {
   const [activeId, setActiveId] = useState(global.lx.settingActiveId)
-  const theme = useTheme()
 
   const handleChangeId = useCallback((id: SettingScreenIds) => {
     onChangeId(id)
@@ -64,7 +74,7 @@ export default ({ onChangeId }: { onChangeId: (id: SettingScreenIds) => void }) 
   return (
     <ScrollView
       horizontal
-      style={{ ...styles.container, borderBottomColor: theme['c-border-background'] }}
+      style={styles.container}
       contentContainerStyle={styles.contentContainer}
       keyboardShouldPersistTaps={'always'}
     >
@@ -80,38 +90,23 @@ const styles = createStyle({
     height: 50,
     flexGrow: 0,
     flexShrink: 0,
-    borderBottomWidth: BorderWidths.normal,
-    opacity: 0.7,
   },
   contentContainer: {
     flexDirection: 'row',
     flexWrap: 'nowrap',
-    padding: 5,
-    // backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    gap: 8,
   },
-  // listContainer: {
-  //   // borderBottomWidth: BorderWidths.normal2,
-  // },
-
   listItem: {
-    // width: '33.33%',
-    height: 40,
-    paddingLeft: 15,
-    paddingRight: 15,
-    // height: 'auto',
-    // flexDirection: 'row',
-    // alignItems: 'center',
-    paddingHorizontal: 5,
-    // paddingVertical: 10,
-    borderRadius: BorderRadius.normal,
-    marginBottom: 5,
-    // backgroundColor: 'rgba(0,0,0,0.1)',
+    height: 34,
+    paddingLeft: 14,
+    paddingRight: 14,
+    borderRadius: 500,
+    justifyContent: 'center',
   },
   listName: {
     justifyContent: 'center',
     alignItems: 'center',
-    flex: 1,
-    // paddingLeft: 5,
-    // backgroundColor: 'rgba(0,0,0,0.1)',
   },
 })

@@ -1,21 +1,22 @@
 import { Linking } from 'react-native'
 import { httpGet } from '@/utils/request'
-import { author, name } from '../../package.json'
+import { name, repository } from '../../package.json'
 import { downloadFile, stopDownload, temporaryDirectoryPath } from '@/utils/fs'
 import { getSupportedAbis, installApk } from '@/utils/nativeModules/utils'
 import { APP_PROVIDER_NAME } from '@/config/constant'
 
 const abis = ['arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86', 'universal']
+const repositorySlug = repository.url.replace(/^git\+https:\/\/github\.com\//, '').replace(/\.git$/, '')
 
 const address = [
   [
-    `https://raw.githubusercontent.com/${author.name}/${name}/main/publish/version.json`,
+    `https://raw.githubusercontent.com/${repositorySlug}/main/publish/version.json`,
     'direct',
   ],
   // ['https://registry.npmjs.org/lx-music-mobile-version-info/latest', 'npm'],
-  [`https://cdn.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
-  [`https://fastly.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
-  [`https://gcore.jsdelivr.net/gh/${author.name}/${name}/publish/version.json`, 'direct'],
+  [`https://cdn.jsdelivr.net/gh/${repositorySlug}/publish/version.json`, 'direct'],
+  [`https://fastly.jsdelivr.net/gh/${repositorySlug}/publish/version.json`, 'direct'],
+  [`https://gcore.jsdelivr.net/gh/${repositorySlug}/publish/version.json`, 'direct'],
   // ['https://registry.npmmirror.com/lx-music-mobile-version-info/latest', 'npm'],
   // ['http://cdn.stsky.cn/lx-music/mobile/version.json', 'direct'],
 ]
@@ -82,12 +83,12 @@ const getTargetAbi = async () => {
 }
 
 /** 项目 GitHub 仓库地址 */
-const repoUrl = `https://github.com/${author.name}/${name}`
+const repoUrl = `https://github.com/${repositorySlug}`
 
 /**
  * 新版 APK 的下载直链。
  * 包名与 .github/workflows/release.yml 上传的产物保持一致：
- *   LX-N-X-Music-v<version>-<abi>.apk
+ *   milky-music-v<version>-<abi>.apk
  */
 export const getNewVersionApkUrl = async (version) => {
   const abi = await getTargetAbi()

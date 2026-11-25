@@ -10,9 +10,7 @@ export default () => {
     }
 
     const remove = windowSizeTools.onSizeChanged(onChange)
-    return () => {
-      remove()
-    }
+    return remove
   }, [])
 
   return size
